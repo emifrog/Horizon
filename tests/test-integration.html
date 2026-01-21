@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tests d'intégration - Simulateur Retraite SPP</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #f5f5f5;
+    }
+    h1 { color: #C8102E; }
+    .test-section {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-section h2 {
+      color: #1E3A5F;
+      margin-top: 0;
+      border-bottom: 2px solid #C8102E;
+      padding-bottom: 0.5rem;
+    }
+    .test-result {
+      padding: 0.5rem;
+      margin: 0.25rem 0;
+      border-radius: 4px;
+    }
+    .test-result.pass {
+      background: #d4edda;
+      color: #155724;
+    }
+    .test-result.fail {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .summary {
+      font-size: 1.25rem;
+      font-weight: bold;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .summary.all-pass {
+      background: #28A745;
+      color: white;
+    }
+    .summary.has-fails {
+      background: #DC3545;
+      color: white;
+    }
+    pre {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.875rem;
+    }
+    .detail { color: #666; font-size: 0.875rem; margin-left: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Tests d'intégration - Simulateur Retraite SPP</h1>
+
+  <div id="results"></div>
+
+  <div id="summary"></div>
+
+  <script type="module">
+    // Imports des modules
+    import { getDureeAssuranceRequise, getMajorationSPV, AGES, TAUX, PFR, POINT_INDICE } from '../js/config/parametres.js';
+    import { calculerDurees } from '../js/modules/duree.js';
+    import { calculerDateTauxPlein, genererScenariosDepart, calculerDateOuvertureDroits } from '../js/modules/ages.js';
+    import { calculerPension } from '../js/modules/pension.js';
+    import { calculerPFR } from '../js/modules/pfr.js';
+    import { calculerNBI } from '../js/modules/nbi.js';
+    import { calculerSurcote, appliquerSurcote } from '../js/modules/surcote.js';
+    import { creerProfil, enrichirProfil } from '../js/modules/profil.js';
+
+    const resultsDiv = document.getElementById('results');
+    const summaryDiv = document.getElementById('summary');
+
+    let passCount = 0;
+    let failCount = 0;
+
+    function createSection(title) {
+      const section = document.createElement('div');
+      section.className = 'test-section';
+      section.innerHTML = `<h2>${title}</h2>`;
+      resultsDiv.appendChild(section);
+      return section;
+    }
+
+    function addResult(section, name, passed, detail = '') {
+      const div = document.createElement('div');
+      div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+      div.innerHTML = `${passed ? '✅' : '❌'} ${name}`;
+      if (detail) {
+        div.innerHTML += `<div class="detail">${detail}</div>`;
+      }
+      section.appendChild(div);
+      if (passed) passCount++;
+      else failCount++;
+    }
+
+    function approx(a, b, tolerance = 0.01) {
+      return Math.abs(a - b) <= tolerance;
+    }
+
+    // ===================================================================
+    // TEST 1: Simulation complète - Profil type Adjudant
+    // ===================================================================
+    const section1 = createSection('Test 1: Simulation complète - Profil type Adjudant');
+
+    try {
+      const profilAdjudant = {
+        dateNaissance: new Date(1975, 5, 15),
+        dateEntreeSPP: new Date(2000, 0, 1),
+        quotite: 1,
+        anneesSPV: 5,
+        trimestresAutresRegimes: 8,
+        enfantsAvant2004: 1,
+        indiceBrut: 562,
+        pointsNBI: 20,
+        dureeNBI: 10,
+      };
+
+      // Créer et enrichir le profil
+      const profil = creerProfil(profilAdjudant);
+      addResult(section1, 'Création du profil réussie', profil !== null);
+
+      const profilEnrichi = enrichirProfil(profil);
+      addResult(section1, 'Enrichissement du profil réussi', profilEnrichi !== null);
+      addResult(section1, 'Profil valide', profilEnrichi.valide === true,
+        profilEnrichi.valide ? '' : `Erreurs: ${JSON.stringify(profilEnrichi.erreurs)}`);
+
+      // Calcul des durées
+      const anneeNaissance = profilAdjudant.dateNaissance.getFullYear();
+      const trimestresRequis = getDureeAssuranceRequise(anneeNaissance);
+      addResult(section1, `Durée requise génération ${anneeNaissance} = ${trimestresRequis} trimestres`,
+        trimestresRequis === 172);
+
+      // Calcul date taux plein
+      const resultatTauxPlein = calculerDateTauxPlein({
+        dateNaissance: profilAdjudant.dateNaissance,
+        dateEntreeSPP: profilAdjudant.dateEntreeSPP,
+        quotite: profilAdjudant.quotite,
+        trimestresAutresRegimes: profilAdjudant.trimestresAutresRegimes,
+        anneesSPV: profilAdjudant.anneesSPV,
+        enfantsAvant2004: profilAdjudant.enfantsAvant2004,
+      });
+
+      addResult(section1, 'Calcul date taux plein réussi', resultatTauxPlein.date instanceof Date,
+        `Date: ${resultatTauxPlein.date.toLocaleDateString('fr-FR')}, Par durée: ${resultatTauxPlein.atteintParDuree}, Par âge: ${resultatTauxPlein.atteintParAge}`);
+
+      // Calcul des durées à la date du taux plein
+      const durees = calculerDurees({
+        dateEntreeSPP: profilAdjudant.dateEntreeSPP,
+        dateDepart: resultatTauxPlein.date,
+        quotite: profilAdjudant.quotite,
+        trimestresAutresRegimes: profilAdjudant.trimestresAutresRegimes,
+        anneesSPV: profilAdjudant.anneesSPV,
+        enfantsAvant2004: profilAdjudant.enfantsAvant2004,
+      }, anneeNaissance);
+
+      addResult(section1, 'Calcul des durées réussi', durees.trimestresServicesEffectifs > 0,
+        `Services effectifs: ${durees.trimestresServicesEffectifs}, Liquidables: ${durees.trimestresLiquidables}, Assurance totale: ${durees.trimestresAssuranceTotale}`);
+
+      addResult(section1, 'Bonification 1/5ème calculée', durees.trimestresBonificationCinquieme > 0,
+        `Bonification: ${durees.trimestresBonificationCinquieme} trimestres`);
+
+      addResult(section1, 'Condition 17 ans services actifs', durees.conditionServicesActifs !== undefined,
+        durees.conditionServicesActifs ? 'Remplie' : 'Non remplie');
+
+      // Calcul de la pension
+      const pension = calculerPension({
+        indiceBrut: profilAdjudant.indiceBrut,
+        trimestresLiquidables: durees.trimestresLiquidables,
+        trimestresAssurance: durees.trimestresAssuranceTotale,
+        trimestresRequis,
+        dateNaissance: profilAdjudant.dateNaissance,
+        dateDepart: resultatTauxPlein.date,
+      });
+
+      addResult(section1, 'Calcul pension réussi', pension.pensionBruteMensuelle > 0,
+        `Pension brute: ${pension.pensionBruteMensuelle.toFixed(2)} €/mois`);
+
+      addResult(section1, 'Taux de liquidation correct', pension.tauxLiquidationBrut <= 75,
+        `Taux: ${pension.tauxLiquidationBrut.toFixed(2)}%`);
+
+      addResult(section1, 'Pension nette calculée', pension.pensionNetteMensuelle > 0 && pension.pensionNetteMensuelle < pension.pensionBruteMensuelle,
+        `Pension nette: ${pension.pensionNetteMensuelle.toFixed(2)} €/mois`);
+
+      // Calcul PFR
+      const pfr = calculerPFR({
+        indiceBrut: profilAdjudant.indiceBrut,
+        anneesCotisation: Math.max(0, resultatTauxPlein.date.getFullYear() - 2005),
+      });
+
+      addResult(section1, 'Calcul PFR réussi', pfr.montantPFRAnnuel > 0,
+        `PFR annuelle: ${pfr.montantPFRAnnuel.toFixed(2)} €`);
+
+      addResult(section1, 'Rente RAFP calculée', pfr.renteRAFPMensuelle >= 0,
+        `Rente RAFP: ${pfr.renteRAFPMensuelle.toFixed(2)} €/mois`);
+
+      // Calcul NBI
+      const nbi = calculerNBI({
+        pointsNBI: profilAdjudant.pointsNBI,
+        dureeMoisNBI: profilAdjudant.dureeNBI * 12,
+        dureeServicesTotal: durees.trimestresLiquidables,
+        tauxLiquidation: pension.tauxLiquidationNet,
+      });
+
+      addResult(section1, 'Calcul NBI réussi', nbi.eligible !== undefined,
+        nbi.eligible ? `Supplément: ${nbi.supplementMensuel.toFixed(2)} €/mois` : 'Non éligible');
+
+      // Total retraite
+      const totalRetraite = pension.pensionBruteMensuelle +
+        (nbi.eligible ? nbi.supplementMensuel : 0) +
+        pfr.renteRAFPMensuelle;
+
+      addResult(section1, 'Total retraite calculé', totalRetraite > 0,
+        `Total: ${totalRetraite.toFixed(2)} €/mois brut`);
+
+    } catch (error) {
+      addResult(section1, 'Test 1 exécuté sans erreur', false, error.message);
+    }
+
+    // ===================================================================
+    // TEST 2: Scénarios de départ
+    // ===================================================================
+    const section2 = createSection('Test 2: Génération des scénarios de départ');
+
+    try {
+      const donneesScenario = {
+        dateNaissance: new Date(1970, 0, 1),
+        dateEntreeSPP: new Date(1995, 0, 1),
+        quotite: 1,
+        trimestresAutresRegimes: 0,
+        anneesSPV: 0,
+        enfantsAvant2004: 0,
+      };
+
+      const scenarios = genererScenariosDepart(donneesScenario);
+
+      addResult(section2, 'Scénarios générés', scenarios.length >= 2,
+        `Nombre de scénarios: ${scenarios.length}`);
+
+      const scenarioAnticipe = scenarios.find(s => s.type === 'anticipé');
+      addResult(section2, 'Scénario anticipé présent', scenarioAnticipe !== undefined,
+        scenarioAnticipe ? `Date: ${scenarioAnticipe.date.toLocaleDateString('fr-FR')}, Âge: ${scenarioAnticipe.age} ans` : '');
+
+      const scenarioTauxPlein = scenarios.find(s => s.type === 'taux_plein');
+      addResult(section2, 'Scénario taux plein présent', scenarioTauxPlein !== undefined,
+        scenarioTauxPlein ? `Date: ${scenarioTauxPlein.date.toLocaleDateString('fr-FR')}, Âge: ${scenarioTauxPlein.age} ans` : '');
+
+      const scenarioLimite = scenarios.find(s => s.type === 'limite');
+      addResult(section2, 'Scénario limite présent', scenarioLimite !== undefined,
+        scenarioLimite ? `Date: ${scenarioLimite.date.toLocaleDateString('fr-FR')}, Âge: ${scenarioLimite.age} ans` : '');
+
+      // Vérifier la cohérence des dates
+      if (scenarioAnticipe && scenarioTauxPlein) {
+        addResult(section2, 'Date taux plein >= date anticipée',
+          scenarioTauxPlein.date >= scenarioAnticipe.date);
+      }
+
+      if (scenarioTauxPlein && scenarioLimite) {
+        addResult(section2, 'Date limite >= date taux plein',
+          scenarioLimite.date >= scenarioTauxPlein.date);
+      }
+
+    } catch (error) {
+      addResult(section2, 'Test 2 exécuté sans erreur', false, error.message);
+    }
+
+    // ===================================================================
+    // TEST 3: Cas limites et protections
+    // ===================================================================
+    const section3 = createSection('Test 3: Cas limites et protections');
+
+    try {
+      // Test division par zéro
+      const pensionZero = calculerPension({
+        indiceBrut: 500,
+        trimestresLiquidables: 100,
+        trimestresAssurance: 100,
+        trimestresRequis: 0, // Division par zéro
+        dateNaissance: new Date(1970, 0, 1),
+        dateDepart: new Date(2030, 0, 1),
+      });
+
+      addResult(section3, 'Protection division par zéro (pension)',
+        pensionZero.tauxLiquidationBrut === 0 || pensionZero.tauxLiquidationBrut <= 75);
+
+      // Test PFR avec indice zéro
+      const pfrZero = calculerPFR({ indiceBrut: 0, anneesCotisation: 20 });
+      addResult(section3, 'Protection indice zéro (PFR)', pfrZero.montantPFRAnnuel === 0);
+
+      // Test NBI avec points null
+      const nbiNull = calculerNBI({
+        pointsNBI: null,
+        dureeMoisNBI: 180,
+        dureeServicesTotal: 172,
+        tauxLiquidation: 75,
+      });
+      addResult(section3, 'Protection points NBI null', nbiNull.supplementMensuel === 0);
+
+      // Test durée négative
+      const dureesNegatives = calculerDurees({
+        dateEntreeSPP: new Date(2030, 0, 1),
+        dateDepart: new Date(2000, 0, 1), // Avant entrée
+        quotite: 1,
+        trimestresAutresRegimes: 0,
+        anneesSPV: 0,
+        enfantsAvant2004: 0,
+      }, 1970);
+
+      addResult(section3, 'Protection dates inversées', dureesNegatives.trimestresServicesEffectifs === 0);
+
+      // Test majoration SPV valeurs extrêmes
+      addResult(section3, 'Majoration SPV 0 ans = 0', getMajorationSPV(0) === 0);
+      addResult(section3, 'Majoration SPV 100 ans = 3 (max)', getMajorationSPV(100) === 3);
+
+    } catch (error) {
+      addResult(section3, 'Test 3 exécuté sans erreur', false, error.message);
+    }
+
+    // ===================================================================
+    // TEST 4: Calcul de surcote
+    // ===================================================================
+    const section4 = createSection('Test 4: Calcul de surcote');
+
+    try {
+      const donneesSurcote = {
+        dateNaissance: new Date(1965, 0, 1),
+        dateDepart: new Date(2028, 0, 1), // 63 ans
+        trimestresAssurance: 180, // > 172 requis
+        trimestresRequis: 172,
+        dateTauxPlein: new Date(2024, 0, 1),
+      };
+
+      const surcote = calculerSurcote(donneesSurcote);
+
+      addResult(section4, 'Surcote éligible', surcote.eligible === true);
+      addResult(section4, 'Trimestres de surcote calculés', surcote.trimestresSurcote > 0,
+        `Trimestres: ${surcote.trimestresSurcote}`);
+      addResult(section4, 'Coefficient de majoration > 1', surcote.coefficientMajoration > 1,
+        `Coefficient: ${surcote.coefficientMajoration.toFixed(4)}`);
+
+      // Application de la surcote
+      const pensionBase = 2000;
+      const pensionMajoree = appliquerSurcote(pensionBase, surcote.coefficientMajoration);
+      addResult(section4, 'Application surcote correcte', pensionMajoree > pensionBase,
+        `Base: ${pensionBase} €, Majorée: ${pensionMajoree.toFixed(2)} €`);
+
+      // Test non éligible
+      const surcoteNonEligible = calculerSurcote({
+        ...donneesSurcote,
+        trimestresAssurance: 160, // < 172 requis
+      });
+      addResult(section4, 'Surcote non éligible si trimestres insuffisants',
+        surcoteNonEligible.eligible === false);
+
+    } catch (error) {
+      addResult(section4, 'Test 4 exécuté sans erreur', false, error.message);
+    }
+
+    // ===================================================================
+    // TEST 5: Valeurs réglementaires
+    // ===================================================================
+    const section5 = createSection('Test 5: Vérification des valeurs réglementaires');
+
+    addResult(section5, 'Âge ouverture droits = 57 ans', AGES.OUVERTURE_DROITS === 57);
+    addResult(section5, 'Âge annulation décote = 62 ans', AGES.ANNULATION_DECOTE === 62);
+    addResult(section5, 'Âge limite activité = 62 ans', AGES.LIMITE_ACTIVITE === 62);
+    addResult(section5, 'Taux plein = 75%', TAUX.PLEIN === 75);
+    addResult(section5, 'Décote par trimestre = 1.25%', TAUX.DECOTE_PAR_TRIMESTRE === 1.25);
+    addResult(section5, 'Surcote par trimestre = 1.25%', TAUX.SURCOTE_PAR_TRIMESTRE === 1.25);
+    addResult(section5, 'Décote max = 20 trimestres', TAUX.DECOTE_MAX_TRIMESTRES === 20);
+    addResult(section5, 'Année création RAFP = 2005', PFR.ANNEE_CREATION_RAFP === 2005);
+    addResult(section5, 'Valeur point indice définie', POINT_INDICE.VALEUR_ANNUELLE > 0,
+      `Valeur: ${POINT_INDICE.VALEUR_ANNUELLE} €`);
+
+    // Durées par génération
+    addResult(section5, 'Durée 1960 = 167 trimestres', getDureeAssuranceRequise(1960) === 167);
+    addResult(section5, 'Durée 1965 = 172 trimestres', getDureeAssuranceRequise(1965) === 172);
+    addResult(section5, 'Durée >= 1973 = 172 trimestres', getDureeAssuranceRequise(1973) === 172);
+
+    // ===================================================================
+    // Résumé final
+    // ===================================================================
+    const total = passCount + failCount;
+    const allPass = failCount === 0;
+
+    summaryDiv.className = `summary ${allPass ? 'all-pass' : 'has-fails'}`;
+    summaryDiv.innerHTML = `
+      Résultat: ${passCount}/${total} tests réussis
+      ${allPass ? ' - TOUS LES TESTS PASSENT !' : ` - ${failCount} test(s) échoué(s)`}
+    `;
+
+  </script>
+</body>
+</html>

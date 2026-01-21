@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Simulateur de retraite pour les sapeurs-pompiers professionnels (SPP).">
+  <meta name="author" content="XRWeb">
+  <title>Simulateur de retraite SPP</title>
+
+  <!-- Police Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/main.css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico">
+</head>
+<body>
+  <div class="app">
+    <!-- En-tête -->
+    <header class="header">
+      <div class="header__container">
+        <div class="header__logo">
+          <div class="header__logo-icon">
+            <img src="assets/logo.svg" alt="Logo" class="header__logo-img">
+          </div>
+          <div>
+            <h1 class="header__title">Simulateur Retraite SPP</h1>
+            <span class="header__subtitle">Régime CNRACL - Catégorie active</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <main class="main">
+      <div class="container">
+        <div class="simulator">
+          <!-- Section formulaire -->
+          <section class="simulator__form-section">
+            <div class="simulator__form-header">
+              <h2 class="simulator__form-title">Votre simulation</h2>
+            </div>
+
+            <div class="simulator__form-body">
+              <!-- Stepper -->
+              <nav class="stepper" aria-label="Étapes du formulaire" role="tablist">
+                <div class="stepper__progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progression du formulaire">
+                  <div class="stepper__progress-fill" style="width: 0%"></div>
+                </div>
+
+                <div class="stepper__step stepper__step--active" data-step="1" role="tab" aria-selected="true" aria-controls="step-1">
+                  <span class="stepper__step-number" aria-hidden="true">1</span>
+                  <span class="stepper__step-label">Profil</span>
+                </div>
+                <div class="stepper__step" data-step="2" role="tab" aria-selected="false" aria-controls="step-2">
+                  <span class="stepper__step-number" aria-hidden="true">2</span>
+                  <span class="stepper__step-label">Carrière</span>
+                </div>
+                <div class="stepper__step" data-step="3" role="tab" aria-selected="false" aria-controls="step-3">
+                  <span class="stepper__step-number" aria-hidden="true">3</span>
+                  <span class="stepper__step-label">Rémunération</span>
+                </div>
+                <div class="stepper__step" data-step="4" role="tab" aria-selected="false" aria-controls="step-4">
+                  <span class="stepper__step-number" aria-hidden="true">4</span>
+                  <span class="stepper__step-label">Résultats</span>
+                </div>
+              </nav>
+
+              <!-- Formulaire -->
+              <form id="simulator-form" novalidate>
+                <!-- Étape 1 : Profil -->
+                <div class="step step--active" data-step-content="1" id="step-1" role="tabpanel" aria-labelledby="step-tab-1">
+                  <h3 class="step__title">
+                    <svg class="step__title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Informations personnelles
+                  </h3>
+                  <p class="step__description">Renseignez vos informations de base pour commencer la simulation.</p>
+
+                  <div class="form-group">
+                    <label for="dateNaissance" class="form-label form-label--required">Date de naissance</label>
+                    <input type="date" id="dateNaissance" name="dateNaissance" class="form-input" required
+                           min="1955-01-01" max="2010-12-31"
+                           aria-required="true" aria-describedby="dateNaissance-hint">
+                    <span class="form-hint" id="dateNaissance-hint">Votre date de naissance détermine votre génération et la durée d'assurance requise.</span>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="dateEntreeSPP" class="form-label form-label--required">Date d'entrée en qualité de SPP</label>
+                    <input type="date" id="dateEntreeSPP" name="dateEntreeSPP" class="form-input" required
+                           min="1970-01-01"
+                           aria-required="true" aria-describedby="dateEntreeSPP-hint">
+                    <span class="form-hint" id="dateEntreeSPP-hint">Date de votre titularisation en tant que sapeur-pompier professionnel.</span>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="quotite" class="form-label">Quotité de travail</label>
+                      <select id="quotite" name="quotite" class="form-select" aria-describedby="quotite-hint">
+                        <option value="1">Temps plein (100%)</option>
+                        <option value="0.9">90%</option>
+                        <option value="0.8">80%</option>
+                        <option value="0.7">70%</option>
+                        <option value="0.6">60%</option>
+                        <option value="0.5">50%</option>
+                      </select>
+                      <span class="form-hint" id="quotite-hint">Quotité moyenne sur l'ensemble de votre carrière.</span>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="anneesSPV" class="form-label">Années d'engagement SPV</label>
+                      <input type="number" id="anneesSPV" name="anneesSPV" class="form-input"
+                             min="0" max="50" value="0" aria-describedby="anneesSPV-hint">
+                      <span class="form-hint" id="anneesSPV-hint">Années reconnues comme sapeur-pompier volontaire.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Étape 2 : Carrière -->
+                <div class="step" data-step-content="2" id="step-2" role="tabpanel" aria-labelledby="step-tab-2" hidden>
+                  <h3 class="step__title">
+                    <svg class="step__title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                    Carrière et services
+                  </h3>
+                  <p class="step__description">Précisez votre parcours professionnel et les trimestres acquis.</p>
+
+                  <div class="form-group">
+                    <label for="trimestresAutresRegimes" class="form-label">Trimestres acquis hors CNRACL</label>
+                    <input type="number" id="trimestresAutresRegimes" name="trimestresAutresRegimes" class="form-input"
+                           min="0" max="200" value="0" aria-describedby="trimestresAutresRegimes-hint">
+                    <span class="form-hint" id="trimestresAutresRegimes-hint">Trimestres validés dans d'autres régimes (privé, MSA, etc.).</span>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="enfantsAvant2004" class="form-label">Enfants nés avant 2004</label>
+                    <input type="number" id="enfantsAvant2004" name="enfantsAvant2004" class="form-input"
+                           min="0" max="20" value="0" aria-describedby="enfantsAvant2004-hint">
+                    <span class="form-hint" id="enfantsAvant2004-hint">Nombre d'enfants nés ou adoptés avant le 1er janvier 2004 (bonification de 4 trimestres par enfant).</span>
+                  </div>
+
+                  <div class="alert alert--info" role="note">
+                    <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="16" x2="12" y2="12"/>
+                      <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <div class="alert__content">
+                      <strong>Bonification du 1/5ème</strong>
+                      <p>En tant que SPP (catégorie active), vous bénéficiez automatiquement d'une bonification de 1 trimestre pour 5 trimestres de services actifs, dans la limite de 20 trimestres.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Étape 3 : Rémunération -->
+                <div class="step" data-step-content="3" id="step-3" role="tabpanel" aria-labelledby="step-tab-3" hidden>
+                  <h3 class="step__title">
+                    <svg class="step__title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    Rémunération
+                  </h3>
+                  <p class="step__description">Indiquez votre indice et les éléments de rémunération complémentaires.</p>
+
+                  <div class="form-group">
+                    <label for="indiceBrut" class="form-label form-label--required">Indice brut actuel</label>
+                    <input type="number" id="indiceBrut" name="indiceBrut" class="form-input" required
+                           min="367" max="1027" placeholder="ex: 562"
+                           aria-required="true" aria-describedby="indiceBrut-hint">
+                    <span class="form-hint" id="indiceBrut-hint">Votre indice brut figure sur votre bulletin de paie (entre 367 et 1027).</span>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="pointsNBI" class="form-label">Points NBI</label>
+                      <input type="number" id="pointsNBI" name="pointsNBI" class="form-input"
+                             min="0" max="100" value="0" aria-describedby="pointsNBI-hint">
+                      <span class="form-hint" id="pointsNBI-hint">Nouvelle Bonification Indiciaire (si applicable).</span>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="dureeNBI" class="form-label">Années de perception NBI</label>
+                      <input type="number" id="dureeNBI" name="dureeNBI" class="form-input"
+                             min="0" max="45" value="0" aria-describedby="dureeNBI-hint">
+                      <span class="form-hint" id="dureeNBI-hint">Durée totale de perception de la NBI.</span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="montantPFR" class="form-label">Prime de feu annuelle brute (optionnel)</label>
+                    <input type="number" id="montantPFR" name="montantPFR" class="form-input"
+                           min="0" step="0.01" placeholder="Laisser vide pour calcul automatique"
+                           aria-describedby="montantPFR-hint">
+                    <span class="form-hint" id="montantPFR-hint">Si non renseigné, sera calculé automatiquement (25% du traitement indiciaire).</span>
+                  </div>
+                </div>
+
+                <!-- Étape 4 : Résultats -->
+                <div class="step" data-step-content="4" id="step-4" role="tabpanel" aria-labelledby="step-tab-4" hidden>
+                  <h3 class="step__title">
+                    <svg class="step__title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22,4 12,14.01 9,11.01"/>
+                    </svg>
+                    Résultats de la simulation
+                  </h3>
+                  <p class="step__description">Voici l'estimation de votre retraite selon différents scénarios.</p>
+
+                  <div id="results-container" class="results-container" role="region" aria-live="polite" aria-label="Résultats de la simulation">
+                    <div class="results-placeholder">
+                      <svg class="results-placeholder__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
+                      </svg>
+                      <p>Calcul en cours...</p>
+                    </div>
+                  </div>
+
+                  <div class="export-buttons" style="margin-top: var(--spacing-xl); display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                    <button type="button" class="btn btn--outline" data-action="export-pdf" aria-label="Exporter les résultats en PDF">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <polyline points="9,15 12,18 15,15"/>
+                      </svg>
+                      Exporter en PDF
+                    </button>
+                    <button type="button" class="btn btn--ghost" data-action="export-json" aria-label="Exporter les données en JSON">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <path d="M8 13h2"/>
+                        <path d="M8 17h2"/>
+                        <path d="M14 13h2"/>
+                        <path d="M14 17h2"/>
+                      </svg>
+                      Exporter en JSON
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="form-navigation">
+                  <button type="button" class="btn btn--ghost" data-action="prev-step" style="visibility: hidden;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="15,18 9,12 15,6"/>
+                    </svg>
+                    Précédent
+                  </button>
+
+                  <button type="button" class="btn btn--primary" data-action="next-step">
+                    Suivant
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9,18 15,12 9,6"/>
+                    </svg>
+                  </button>
+
+                  <button type="submit" class="btn btn--primary btn--lg" data-action="submit" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22,4 12,14.01 9,11.01"/>
+                    </svg>
+                    Calculer ma retraite
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <!-- Section aperçu -->
+          <aside class="simulator__results-section" role="complementary" aria-label="Aperçu des résultats">
+            <h2 class="results-section__title">
+              <svg class="results-section__title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Aperçu de votre situation
+            </h2>
+
+            <div id="preview-container" role="status" aria-live="polite">
+              <div class="results-placeholder">
+                <svg class="results-placeholder__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                <p>Complétez le formulaire pour voir l'aperçu de votre simulation</p>
+              </div>
+            </div>
+
+            <div class="alert alert--warning" style="margin-top: var(--spacing-xl);" role="alert">
+              <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div class="alert__content">
+                <strong>Simulation indicative</strong>
+                <p>Cet outil fournit une estimation à titre informatif. Seule la CNRACL est habilitée à calculer vos droits définitifs.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <!-- Pied de page -->
+    <footer class="footer">
+      <p>Simulateur Retraite SPP - Outil indicatif et non contractuel</p>
+      <p>Développé par XRWeb</p>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

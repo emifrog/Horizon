@@ -1,0 +1,184 @@
+/**
+ * Variables CSS - Simulateur Retraite SPP
+ *
+ * Ce fichier définit toutes les variables CSS réutilisables.
+ */
+
+:root {
+  /* ========================================
+     COULEURS PRINCIPALES
+     ======================================== */
+
+  /* Rouge pompier - Couleur primaire */
+  --color-primary: #C8102E;
+  --color-primary-dark: #a00d24;
+  --color-primary-light: #e8132f;
+  --color-primary-bg: #fef2f4;
+
+  /* Bleu marine - Couleur secondaire */
+  --color-secondary: #144190;
+  --color-secondary-dark: #0a2549;
+  --color-secondary-light: #2a5080;
+
+  /* ========================================
+     COULEURS SÉMANTIQUES
+     ======================================== */
+
+  --color-success: #28A745;
+  --color-success-bg: #d4edda;
+  --color-success-border: #c3e6cb;
+
+  --color-warning: #FFC107;
+  --color-warning-bg: #fff3cd;
+  --color-warning-border: #ffeeba;
+
+  --color-error: #DC3545;
+  --color-error-bg: #f8d7da;
+  --color-error-border: #f5c6cb;
+
+  --color-info: #17A2B8;
+  --color-info-bg: #d1ecf1;
+  --color-info-border: #bee5eb;
+
+  /* ========================================
+     COULEURS NEUTRES
+     ======================================== */
+
+  --color-white: #FFFFFF;
+  --color-gray-50: #F9FAFB;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-600: #4B5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1F2937;
+  --color-gray-900: #111827;
+
+  --color-text: var(--color-gray-800);
+  --color-text-muted: var(--color-gray-500);
+  --color-text-light: var(--color-gray-400);
+
+  --color-bg: var(--color-white);
+  --color-bg-alt: var(--color-gray-50);
+  --color-bg-elevated: var(--color-white);
+
+  --color-border: var(--color-gray-200);
+  --color-border-light: var(--color-gray-100);
+
+  /* ========================================
+     ESPACEMENTS
+     ======================================== */
+
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 1rem;       /* 16px */
+  --spacing-lg: 1.5rem;     /* 24px */
+  --spacing-xl: 2rem;       /* 32px */
+  --spacing-2xl: 3rem;      /* 48px */
+  --spacing-3xl: 4rem;      /* 64px */
+
+  /* ========================================
+     TYPOGRAPHIE
+     ======================================== */
+
+  --font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* ========================================
+     BORDURES ET ARRONDIS
+     ======================================== */
+
+  --radius-sm: 0.25rem;   /* 4px */
+  --radius: 0.375rem;     /* 6px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-full: 9999px;
+
+  --border-width: 1px;
+  --border-width-thick: 2px;
+
+  /* ========================================
+     OMBRES
+     ======================================== */
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* ========================================
+     TRANSITIONS
+     ======================================== */
+
+  --transition-fast: 150ms ease;
+  --transition: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* ========================================
+     Z-INDEX
+     ======================================== */
+
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-popover: 400;
+  --z-tooltip: 500;
+  --z-notification: 600;
+
+  /* ========================================
+     DIMENSIONS
+     ======================================== */
+
+  --header-height: 4rem;
+  --sidebar-width: 280px;
+  --container-max: 1200px;
+  --form-max-width: 600px;
+
+  /* ========================================
+     FORMULAIRES
+     ======================================== */
+
+  --input-height: 2.75rem;
+  --input-padding-x: 0.875rem;
+  --input-padding-y: 0.625rem;
+  --input-border-color: var(--color-gray-300);
+  --input-focus-ring: 0 0 0 3px rgba(200, 16, 46, 0.15);
+}
+
+/* ========================================
+   MODE SOMBRE (optionnel pour le futur)
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root.auto-dark {
+    --color-text: var(--color-gray-100);
+    --color-text-muted: var(--color-gray-400);
+    --color-bg: var(--color-gray-900);
+    --color-bg-alt: var(--color-gray-800);
+    --color-bg-elevated: var(--color-gray-800);
+    --color-border: var(--color-gray-700);
+    --color-border-light: var(--color-gray-800);
+  }
+}
