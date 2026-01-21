@@ -139,12 +139,12 @@ a:hover {
 }
 
 .footer {
-  background-color: var(--color-white);
+  background-color: #144190;
   border-top: var(--border-width) solid var(--color-border);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-sm);
   text-align: center;
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  color: #fff;
 }
 
 /* ========================================
@@ -318,7 +318,7 @@ a:hover {
 
   .form-navigation {
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
   }
 
   .form-navigation .btn {
