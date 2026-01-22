@@ -133,12 +133,12 @@ a:hover {
    ======================================== */
 
 .hamburger {
-  display: flex;
+  display: none; /* Masqué par défaut sur desktop */
   flex-direction: column;
   justify-content: center;
   gap: 5px;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.2rem;
+  height: 2.2rem;
   padding: 0.5rem;
   background: white;
   border: none;
@@ -160,7 +160,7 @@ a:hover {
 .hamburger__line {
   display: block;
   width: 100%;
-  height: 3px;
+  height: 2px;
   background-color: var(--color-text);
   border-radius: 2px;
   transition: transform var(--transition), opacity var(--transition);
@@ -168,7 +168,7 @@ a:hover {
 
 /* État ouvert du hamburger */
 .hamburger.is-active .hamburger__line:nth-child(1) {
-  transform: translateY(8px) rotate(45deg);
+  transform: translateY(7px) rotate(45deg);
 }
 
 .hamburger.is-active .hamburger__line:nth-child(2) {
@@ -176,7 +176,7 @@ a:hover {
 }
 
 .hamburger.is-active .hamburger__line:nth-child(3) {
-  transform: translateY(-8px) rotate(-45deg);
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 /* ========================================
@@ -209,6 +209,13 @@ a:hover {
 
 .nav-menu__item {
   margin: 0;
+}
+
+.nav-menu__item img {
+  width: 20%;
+  height: 20%;
+  margin: 0 auto;
+  display: block;  
 }
 
 .nav-menu__link {
@@ -255,7 +262,7 @@ a:hover {
 }
 
 .nav-overlay.is-visible {
-
+  opacity: 1;
   visibility: visible;
 }
 
@@ -277,6 +284,7 @@ a:hover {
   font-size: var(--font-size-sm);
   color: #fff;
 }
+
 
 /* ========================================
    FORMULAIRE PRINCIPAL
@@ -421,6 +429,11 @@ a:hover {
 @media (max-width: 768px) {
   html {
     font-size: 14px;
+  }
+
+  /* Afficher le hamburger en mobile */
+  .hamburger {
+    display: flex;
   }
 
   .header__container {

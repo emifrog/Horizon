@@ -145,9 +145,15 @@ function setupHamburgerMenu() {
   // Gestion des liens du menu
   navMenu.querySelectorAll('[data-action]').forEach(link => {
     link.addEventListener('click', (e) => {
-      e.preventDefault();
       const action = link.dataset.action;
       
+      // Pour les liens avec href réel (documentation), laisser la navigation se faire
+      if (action === 'documentation') {
+        closeMenu();
+        return; // Laisser le navigateur suivre le lien href
+      }
+      
+      e.preventDefault();
       closeMenu();
       
       switch (action) {

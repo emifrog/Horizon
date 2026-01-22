@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Documentation réglementaire sur la retraite des sapeurs-pompiers professionnels">
+    <title>Documentation Réglementaire | Horizon</title>
+
+    <!-- Police Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/reglementaire.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+
+</head>
+
+<body>
+    <div class="app">
+        <!-- En-tête -->
+        <header class="header">
+            <div class="header__container">
+                <div class="header__logo">
+                    <div class="header__logo-icon">
+                        <a href="../index.html">
+                            <img src="../assets/logo.svg" alt="Logo" class="header__logo-img">
+                        </a>
+                    </div>
+                    <div>
+                        <h1 class="header__title">Documentation Réglementaire</h1>
+                    </div>
+                </div>
+                
+                <!-- Menu hamburger -->
+                <button class="hamburger" id="hamburger-btn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="nav-menu">
+                <span class="hamburger__line"></span>
+                <span class="hamburger__line"></span>
+                <span class="hamburger__line"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Contenu principal -->
+        <main class="main">
+            <div class="doc-container">
+                <a href="../index.html" class="back-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15,18 9,12 15,6" />
+                    </svg>
+                    Retour au simulateur
+                </a>
+
+                <div class="doc-header">
+                    <h1 class="doc-header__title">Retraite des Sapeurs-Pompiers Professionnels</h1>
+                    <p class="doc-header__subtitle">Textes réglementaires, références et articles essentiels</p>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="doc-nav">
+                    <h2 class="doc-nav__title">Sommaire</h2>
+                    <ul class="doc-nav__list">
+                        <li><a href="#cnracl" class="doc-nav__link">CNRACL</a></li>
+                        <li><a href="#categorie-active" class="doc-nav__link">Catégorie active</a></li>
+                        <li><a href="#duree-assurance" class="doc-nav__link">Durée d'assurance</a></li>
+                        <li><a href="#bonification" class="doc-nav__link">Bonification 1/5ème</a></li>
+                        <li><a href="#decote-surcote" class="doc-nav__link">Décote et Surcote</a></li>
+                        <li><a href="#prime-feu" class="doc-nav__link">Prime de feu</a></li>
+                        <li><a href="#rafp" class="doc-nav__link">RAFP</a></li>
+                        <li><a href="#nbi" class="doc-nav__link">NBI</a></li>
+                        <li><a href="#pfr-spv" class="doc-nav__link">PFR SPV</a></li>
+                        <li><a href="#minimum-garanti" class="doc-nav__link">Minimum garanti</a></li>
+                    </ul>
+                </nav>
+
+                <!-- Section CNRACL -->
+                <section id="cnracl" class="doc-section">
+                    <h2 class="doc-section__title">CNRACL - Caisse Nationale de Retraites des Agents des Collectivités
+                        Locales</h2>
+                    <div class="doc-section__content">
+                        <p>La <strong>CNRACL</strong> est le régime de retraite obligatoire des fonctionnaires
+                            territoriaux et hospitaliers, dont font partie les sapeurs-pompiers professionnels.</p>
+
+                        <h3>Conditions d'affiliation</h3>
+                        <ul>
+                            <li>Être fonctionnaire titulaire d'une collectivité territoriale ou d'un établissement
+                                public hospitalier</li>
+                            <li>Occuper un emploi permanent à temps complet ou à temps non complet d'au moins 28 heures
+                                hebdomadaires</li>
+                        </ul>
+
+                        <h3>Calcul de la pension</h3>
+                        <p>La pension CNRACL est calculée selon la formule :</p>
+                        <div class="highlight-box highlight-box--info">
+                            <strong>Pension = Traitement indiciaire × (Trimestres liquidables / Trimestres requis) ×
+                                75%</strong>
+                        </div>
+                        <p>Le traitement indiciaire pris en compte est celui des 6 derniers mois d'activité (hors
+                            primes, sauf exceptions).</p>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Décret n°2003-1306</strong> du 26 décembre 2003 relatif au régime de
+                                        retraite des fonctionnaires affiliés à la CNRACL</li>
+                                    <li><strong>Code des pensions civiles et militaires de retraite</strong> (articles
+                                        L1 à L95)</li>
+                                    <li><a href="https://www.cnracl.retraites.fr" target="_blank" rel="noopener">Site
+                                            officiel CNRACL</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section Catégorie active -->
+                <section id="categorie-active" class="doc-section">
+                    <h2 class="doc-section__title">Catégorie active</h2>
+                    <div class="doc-section__content">
+                        <p>Les sapeurs-pompiers professionnels appartiennent à la <strong>catégorie active</strong>, ce
+                            qui leur confère des droits spécifiques en matière de retraite.</p>
+
+                        <h3>Définition</h3>
+                        <p>Un emploi de catégorie active est un emploi présentant un risque particulier ou des fatigues
+                            exceptionnelles. Les SPP sont classés en catégorie "insalubre" (anciennement catégorie B
+                            active).</p>
+
+                        <h3>Avantages</h3>
+                        <ul>
+                            <li><strong>Âge d'ouverture des droits</strong> : 57 ans (au lieu de 62 ans pour la
+                                catégorie sédentaire)</li>
+                            <li><strong>Âge limite d'activité</strong> : 62 ans (au lieu de 67 ans)</li>
+                            <li><strong>Bonification du 1/5ème</strong> : 1 an de bonification pour 5 ans de services
+                                actifs</li>
+                        </ul>
+
+                        <h3>Condition des 17 ans de services actifs</h3>
+                        <p>Pour bénéficier de l'âge d'ouverture des droits à 57 ans, il faut justifier d'au moins
+                            <strong>17 ans de services actifs</strong>.</p>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Article L24 du Code des pensions civiles et militaires</strong></li>
+                                    <li><strong>Décret n°2011-2103</strong> du 30 décembre 2011 (réforme des retraites)
+                                    </li>
+                                    <li><strong>Arrêté du 12 novembre 1969</strong> classant les emplois de SPP en
+                                        catégorie active</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section Durée d'assurance -->
+                <section id="duree-assurance" class="doc-section">
+                    <h2 class="doc-section__title">Durée d'assurance requise</h2>
+                    <div class="doc-section__content">
+                        <p>La durée d'assurance requise pour obtenir une pension à taux plein (75%) dépend de votre
+                            <strong>année de naissance</strong>.</p>
+
+                        <div class="table-wrapper">
+                            <table class="doc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Année de naissance</th>
+                                        <th>Trimestres requis</th>
+                                        <th>Années équivalentes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1958</td>
+                                        <td>167</td>
+                                        <td>41 ans et 9 mois</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1959</td>
+                                        <td>167</td>
+                                        <td>41 ans et 9 mois</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1960 (janv-août)</td>
+                                        <td>167</td>
+                                        <td>41 ans et 9 mois</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1960 (sept-déc)</td>
+                                        <td>169</td>
+                                        <td>42 ans et 3 mois</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1961</td>
+                                        <td>169</td>
+                                        <td>42 ans et 3 mois</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1962</td>
+                                        <td>169</td>
+                                        <td>42 ans et 3 mois</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1963</td>
+                                        <td>170</td>
+                                        <td>42 ans et 6 mois</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1964</td>
+                                        <td>171</td>
+                                        <td>42 ans et 9 mois</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1965 et après</td>
+                                        <td>172</td>
+                                        <td>43 ans</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3>Composition de la durée d'assurance</h3>
+                        <ul>
+                            <li><strong>Services effectifs</strong> : périodes réellement travaillées</li>
+                            <li><strong>Bonifications</strong> : 1/5ème, enfants, campagnes militaires</li>
+                            <li><strong>Majorations</strong> : SPV, handicap</li>
+                            <li><strong>Trimestres autres régimes</strong> : régime général, MSA, etc.</li>
+                        </ul>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Article L14 du Code des pensions civiles et militaires</strong></li>
+                                    <li><strong>Loi n°2023-270</strong> du 14 avril 2023 de financement rectificative de
+                                        la sécurité sociale (réforme 2023)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section Bonification 1/5ème -->
+                <section id="bonification" class="doc-section">
+                    <h2 class="doc-section__title">Bonification du 1/5ème</h2>
+                    <div class="doc-section__content">
+                        <p>La bonification du 1/5ème est un avantage accordé aux fonctionnaires de catégorie active,
+                            dont les SPP.</p>
+
+                        <h3>Principe</h3>
+                        <p>Pour chaque période de <strong>5 ans de services actifs</strong>, vous bénéficiez d'<strong>1
+                                an de bonification</strong> (soit 4 trimestres).</p>
+
+                        <div class="highlight-box highlight-box--success">
+                            <strong>Exemple :</strong> 25 ans de services actifs = 5 ans de bonification = 20 trimestres
+                            supplémentaires
+                        </div>
+
+                        <h3>Limites</h3>
+                        <ul>
+                            <li>La bonification est plafonnée à <strong>5 ans maximum</strong> (20 trimestres)</li>
+                            <li>Elle ne peut pas porter le taux de liquidation au-delà de 75%</li>
+                            <li>Elle compte pour la durée de liquidation mais pas pour la durée d'assurance (décote)
+                            </li>
+                        </ul>
+
+                        <h3>Calcul</h3>
+                        <div class="table-wrapper">
+                            <table class="doc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Années de services actifs</th>
+                                        <th>Bonification</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>5 ans</td>
+                                        <td>1 an (4 trimestres)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>10 ans</td>
+                                        <td>2 ans (8 trimestres)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>15 ans</td>
+                                        <td>3 ans (12 trimestres)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>20 ans</td>
+                                        <td>4 ans (16 trimestres)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>25 ans et +</td>
+                                        <td>5 ans (20 trimestres) - Maximum</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Article L12 du Code des pensions civiles et militaires</strong> (alinéa
+                                        a)</li>
+                                    <li><strong>Décret n°2003-1306</strong> article 15</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section Décote et Surcote -->
+                <section id="decote-surcote" class="doc-section">
+                    <h2 class="doc-section__title">Décote et Surcote</h2>
+                    <div class="doc-section__content">
+
+                        <h3>La Décote</h3>
+                        <p>La décote est une réduction de la pension appliquée lorsque vous partez à la retraite sans
+                            avoir le nombre de trimestres requis.</p>
+
+                        <ul>
+                            <li><strong>Taux de décote</strong> : 1,25% par trimestre manquant</li>
+                            <li><strong>Maximum</strong> : 20 trimestres (soit 25% de réduction maximum)</li>
+                            <li><strong>Âge d'annulation</strong> : 62 ans pour les catégories actives</li>
+                        </ul>
+
+                        <div class="highlight-box">
+                            <strong>Important :</strong> La décote est calculée sur le plus petit écart entre :
+                            <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                                <li>Le nombre de trimestres manquants pour atteindre la durée requise</li>
+                                <li>Le nombre de trimestres entre l'âge de départ et l'âge d'annulation de la décote
+                                </li>
+                            </ul>
+                        </div>
+
+                        <h3>La Surcote</h3>
+                        <p>La surcote est une majoration de la pension accordée si vous continuez à travailler après
+                            avoir atteint le taux plein.</p>
+
+                        <ul>
+                            <li><strong>Taux de surcote</strong> : 1,25% par trimestre supplémentaire</li>
+                            <li><strong>Conditions</strong> : avoir atteint l'âge d'ouverture des droits ET la durée
+                                d'assurance requise</li>
+                            <li><strong>Pas de plafond</strong> : la surcote n'est pas limitée</li>
+                        </ul>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Article L14 du Code des pensions</strong> (décote)</li>
+                                    <li><strong>Article L17 du Code des pensions</strong> (surcote)</li>
+                                    <li><strong>Décret n°2006-941</strong> du 28 juillet 2006</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section Prime de feu -->
+                <section id="prime-feu" class="doc-section">
+                    <h2 class="doc-section__title">Prime de feu (Indemnité de feu)</h2>
+                    <div class="doc-section__content">
+                        <p>La <strong>prime de feu</strong> (ou indemnité de feu) est une indemnité spécifique aux
+                            sapeurs-pompiers professionnels.</p>
+
+                        <h3>Montant</h3>
+                        <ul>
+                            <li><strong>Taux</strong> : 25% du traitement indiciaire brut</li>
+                            <li>Versée mensuellement</li>
+                            <li>Soumise à cotisations retraite (CNRACL et RAFP)</li>
+                        </ul>
+
+                        <h3>Intégration dans la retraite</h3>
+                        <p>Depuis le <strong>1er janvier 2005</strong>, la prime de feu est intégrée dans le calcul de
+                            la retraite via le <strong>RAFP</strong> (Régime Additionnel de la Fonction Publique).</p>
+
+                        <div class="highlight-box highlight-box--info">
+                            <strong>Attention :</strong> La prime de feu n'est pas intégrée directement dans le calcul
+                            de la pension CNRACL. Elle génère des points RAFP qui donnent droit à une rente
+                            complémentaire.
+                        </div>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Décret n°98-442</strong> du 5 juin 1998 relatif à l'indemnité de feu
+                                    </li>
+                                    <li><strong>Décret n°2003-1164</strong> du 8 décembre 2003 (revalorisation à 25%)
+                                    </li>
+                                    <li><strong>Arrêté du 6 décembre 2001</strong> fixant les modalités de calcul</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section RAFP -->
+                <section id="rafp" class="doc-section">
+                    <h2 class="doc-section__title">RAFP - Régime Additionnel de la Fonction Publique</h2>
+                    <div class="doc-section__content">
+                        <p>Le <strong>RAFP</strong> est un régime de retraite complémentaire obligatoire par points,
+                            créé en 2005.</p>
+
+                        <h3>Principe</h3>
+                        <p>Les primes et indemnités (dont la prime de feu) génèrent des cotisations qui sont converties
+                            en points RAFP. Ces points donnent droit à une rente viagère à la retraite.</p>
+
+                        <h3>Cotisations</h3>
+                        <ul>
+                            <li><strong>Taux global</strong> : 10% (5% agent + 5% employeur)</li>
+                            <li><strong>Assiette</strong> : primes et indemnités, plafonnées à 20% du traitement
+                                indiciaire brut</li>
+                        </ul>
+
+                        <h3>Calcul de la rente</h3>
+                        <div class="highlight-box highlight-box--info">
+                            <strong>Rente annuelle = Nombre de points × Valeur de service du point</strong><br>
+                            <small>Valeur de service 2024 : 0,05170 €</small>
+                        </div>
+
+                        <h3>Modalités de versement</h3>
+                        <ul>
+                            <li><strong>Moins de 5 125 points</strong> : versement en capital unique</li>
+                            <li><strong>5 125 points et plus</strong> : rente viagère mensuelle</li>
+                        </ul>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Loi n°2003-775</strong> du 21 août 2003 (article 76)</li>
+                                    <li><strong>Décret n°2004-569</strong> du 18 juin 2004 relatif au RAFP</li>
+                                    <li><a href="https://www.rafp.fr" target="_blank" rel="noopener">Site officiel
+                                            RAFP</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section NBI -->
+                <section id="nbi" class="doc-section">
+                    <h2 class="doc-section__title">NBI - Nouvelle Bonification Indiciaire</h2>
+                    <div class="doc-section__content">
+                        <p>La <strong>NBI</strong> est un complément de rémunération attribué pour certaines fonctions
+                            comportant une responsabilité ou une technicité particulière.</p>
+
+                        <h3>Fonctions ouvrant droit à la NBI chez les SPP</h3>
+                        <ul>
+                            <li>Chef de centre de secours</li>
+                            <li>Adjoint au chef de centre</li>
+                            <li>Chef de service</li>
+                            <li>Fonctions d'encadrement spécifiques</li>
+                        </ul>
+
+                        <h3>Impact sur la retraite</h3>
+                        <p>La NBI peut être intégrée dans le calcul de la pension sous certaines conditions :</p>
+
+                        <div class="highlight-box highlight-box--success">
+                            <strong>Condition :</strong> Avoir perçu la NBI pendant au moins <strong>15 ans</strong>
+                            pour qu'elle soit intégrée sur la base des 6 derniers mois.<br>
+                            <small>Si la durée est inférieure à 15 ans, le supplément est proratisé.</small>
+                        </div>
+
+                        <h3>Calcul du supplément NBI</h3>
+                        <p>Le supplément de pension est calculé selon la formule :</p>
+                        <ul>
+                            <li><strong>Supplément = Points NBI × Valeur du point × Taux de liquidation</strong></li>
+                            <li>Proratisé si durée de perception &lt; 15 ans</li>
+                        </ul>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Décret n°2006-779</strong> du 3 juillet 2006 (NBI dans la FPT)</li>
+                                    <li><strong>Article 27 du décret n°2003-1306</strong> (intégration dans la pension)
+                                    </li>
+                                    <li><strong>Décret n°93-863</strong> du 18 juin 1993 (NBI des SPP)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section PFR SPV -->
+                <section id="pfr-spv" class="doc-section">
+                    <h2 class="doc-section__title">PFR SPV - Prestation de Fidélité et de Reconnaissance</h2>
+                    <div class="doc-section__content">
+                        <p>La <strong>PFR</strong> (anciennement Allocation de Vétérance) est une rente viagère versée
+                            aux anciens sapeurs-pompiers volontaires.</p>
+
+                        <h3>Conditions d'éligibilité</h3>
+                        <ul>
+                            <li>Avoir cessé définitivement son activité de SPV</li>
+                            <li>Avoir accompli au moins <strong>20 ans de services</strong> en tant que SPV</li>
+                            <li>Avoir atteint l'âge de <strong>55 ans</strong></li>
+                        </ul>
+
+                        <div class="highlight-box">
+                            <strong>Cas particulier :</strong> En cas d'incapacité opérationnelle, l'éligibilité est
+                            possible dès 15 ans de services.
+                        </div>
+
+                        <h3>Barème de la PFR (montants annuels)</h3>
+                        <div class="table-wrapper">
+                            <table class="doc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Années de service SPV</th>
+                                        <th>Montant annuel</th>
+                                        <th>Montant mensuel</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>15 ans (incapacité)</td>
+                                        <td>512 €</td>
+                                        <td>≈ 43 €</td>
+                                    </tr>
+                                    <tr>
+                                        <td>20 ans</td>
+                                        <td>1 025 €</td>
+                                        <td>≈ 85 €</td>
+                                    </tr>
+                                    <tr>
+                                        <td>25 ans</td>
+                                        <td>2 050 €</td>
+                                        <td>≈ 171 €</td>
+                                    </tr>
+                                    <tr>
+                                        <td>30 ans</td>
+                                        <td>2 690 €</td>
+                                        <td>≈ 224 €</td>
+                                    </tr>
+                                    <tr>
+                                        <td>35 ans et plus</td>
+                                        <td>3 075 €</td>
+                                        <td>≈ 256 €</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3>Double statut SPP/SPV</h3>
+                        <p>Un sapeur-pompier professionnel ayant également été SPV peut cumuler sa pension CNRACL avec
+                            la PFR SPV, sous réserve de remplir les conditions d'éligibilité.</p>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Loi n°96-370</strong> du 3 mai 1996 relative au développement du
+                                        volontariat</li>
+                                    <li><strong>Décret n°2005-1150</strong> du 13 septembre 2005 relatif à la PFR</li>
+                                    <li><strong>Arrêté du 19 août 2019</strong> fixant les montants de la PFR</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section Minimum garanti -->
+                <section id="minimum-garanti" class="doc-section">
+                    <h2 class="doc-section__title">Minimum garanti</h2>
+                    <div class="doc-section__content">
+                        <p>Le <strong>minimum garanti</strong> est un montant plancher de pension assuré aux
+                            fonctionnaires ayant une carrière complète.</p>
+
+                        <h3>Conditions</h3>
+                        <ul>
+                            <li>Avoir atteint l'âge d'annulation de la décote (62 ans pour les actifs)</li>
+                            <li>OU avoir la durée d'assurance requise pour le taux plein</li>
+                            <li>OU partir pour invalidité, infirmité ou maladie incurable</li>
+                        </ul>
+
+                        <h3>Montant</h3>
+                        <p>Le minimum garanti est calculé en fonction du nombre d'années de services :</p>
+                        <ul>
+                            <li><strong>Jusqu'à 15 ans</strong> : 57,5% de l'indice majoré 227</li>
+                            <li><strong>De 15 à 40 ans</strong> : +2,5% par année supplémentaire</li>
+                            <li><strong>Au-delà de 40 ans</strong> : +0,5% par année (plafonné)</li>
+                        </ul>
+
+                        <div class="highlight-box highlight-box--info">
+                            <strong>Montant indicatif 2024 :</strong> Environ 1 200 € brut/mois pour une carrière
+                            complète.
+                        </div>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Article L17 du Code des pensions civiles et militaires</strong></li>
+                                    <li><strong>Décret n°2003-1306</strong> article 26</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer -->
+                <footer class="doc-footer">
+                    <p><strong>Horizon</strong> - Simulateur de retraite SPP</p>
+                    <p>Document à titre informatif. Seule la CNRACL est habilitée à calculer vos droits définitifs.</p>
+                    <p>Dernière mise à jour : Janvier 2026</p>
+                </footer>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
