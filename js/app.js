@@ -86,6 +86,12 @@ function init() {
   // Menu hamburger
   setupHamburgerMenu();
 
+  // Lien À propos dans la navbar desktop
+  document.querySelector('.nav-desktop [data-action="about"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleAbout();
+  });
+
   console.log('Application initialisée.');
 }
 

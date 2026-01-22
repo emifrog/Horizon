@@ -11,8 +11,9 @@
     }
 
     .doc-header__title {
-      font-size: var(--font-size-3xl);
-      color: var(--color-primary);
+      font-size: var(--font-size-xl);
+      text-align: center;
+      color: var(--color-gray-900);
       margin-bottom: var(--spacing-sm);
     }
 
@@ -191,6 +192,11 @@
       padding-top: var(--spacing-xl);
       border-top: 1px solid var(--color-gray-200);
       text-align: center;
-      color: var(--color-text-muted);
+      background-color: var(--color-secondary);
+      color: var(--color-white);
       font-size: var(--font-size-sm);
+    }
+    
+    .doc-footer__date {
+      font-style: italic;
     }

@@ -118,7 +118,7 @@ a:hover {
 .header__title {
   margin: 0;
   color: black;
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -126,6 +126,33 @@ a:hover {
   color: white;
   font-size: var(--font-size-sm);
   opacity: 0.8;
+}
+
+/* ========================================
+   NAVIGATION DESKTOP
+   ======================================== */
+
+.nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.nav-desktop__link {
+  color: white;
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius);
+  transition: background-color var(--transition), opacity var(--transition);
+  opacity: 0.9;
+}
+
+.nav-desktop__link:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  opacity: 1;
+  text-decoration: none;
 }
 
 /* ========================================
@@ -261,10 +288,10 @@ a:hover {
   transition: opacity var(--transition), visibility var(--transition);
 }
 
-.nav-overlay.is-visible {
+/*.nav-overlay.is-visible {
   opacity: 1;
   visibility: visible;
-}
+}*/
 
 .main {
   flex: 1;
@@ -277,12 +304,12 @@ a:hover {
 }
 
 .footer {
-  background-color: #144190;
+  background-color: var(--color-secondary);
   border-top: var(--border-width) solid var(--color-border);
   padding: var(--spacing-sm);
   text-align: center;
   font-size: var(--font-size-sm);
-  color: #fff;
+  color: var(--color-white);
 }
 
 
@@ -318,7 +345,14 @@ a:hover {
 .simulator__form-title {
   margin: 0;
   color: var(--color-secondary);
+  font-size: var(--font-size-2xl);
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--color-primary);
 }
+
+
 
 .simulator__form-body {
   padding: var(--spacing-xl);
@@ -429,6 +463,11 @@ a:hover {
 @media (max-width: 768px) {
   html {
     font-size: 14px;
+  }
+
+  /* Masquer la navbar desktop en mobile */
+  .nav-desktop {
+    display: none;
   }
 
   /* Afficher le hamburger en mobile */
