@@ -83,7 +83,195 @@ function init() {
   document.querySelector('[data-action="export-pdf"]')?.addEventListener('click', handleExportPDF);
   document.querySelector('[data-action="export-csv"]')?.addEventListener('click', handleExportCSV);
 
+  // Menu hamburger
+  setupHamburgerMenu();
+
   console.log('Application initialisée.');
+}
+
+/**
+ * Configure le menu hamburger
+ */
+function setupHamburgerMenu() {
+  const hamburger = document.getElementById('hamburger-btn');
+  const navMenu = document.getElementById('nav-menu');
+  
+  if (!hamburger || !navMenu) return;
+
+  // Créer l'overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'nav-overlay';
+  overlay.id = 'nav-overlay';
+  document.body.appendChild(overlay);
+
+  // Toggle du menu
+  function toggleMenu() {
+    const isOpen = navMenu.classList.contains('is-open');
+    
+    if (isOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  }
+
+  function openMenu() {
+    hamburger.classList.add('is-active');
+    hamburger.setAttribute('aria-expanded', 'true');
+    navMenu.classList.add('is-open');
+    overlay.classList.add('is-visible');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMenu() {
+    hamburger.classList.remove('is-active');
+    hamburger.setAttribute('aria-expanded', 'false');
+    navMenu.classList.remove('is-open');
+    overlay.classList.remove('is-visible');
+    document.body.style.overflow = '';
+  }
+
+  // Événements
+  hamburger.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', closeMenu);
+
+  // Fermer avec Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navMenu.classList.contains('is-open')) {
+      closeMenu();
+    }
+  });
+
+  // Gestion des liens du menu
+  navMenu.querySelectorAll('[data-action]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const action = link.dataset.action;
+      
+      closeMenu();
+      
+      switch (action) {
+        case 'new-simulation':
+          handleNewSimulation();
+          break;
+        case 'export-pdf':
+          handleExportPDF();
+          break;
+        case 'export-csv':
+          handleExportCSV();
+          break;
+        case 'about':
+          handleAbout();
+          break;
+      }
+    });
+  });
+}
+
+/**
+ * Réinitialise le formulaire pour une nouvelle simulation
+ */
+function handleNewSimulation() {
+  const form = document.getElementById('simulator-form');
+  if (form) {
+    form.reset();
+    goToStep(1);
+    appState.profil = null;
+    appState.resultats = null;
+    appState.isCalculated = false;
+    
+    // Réinitialiser l'aperçu
+    const previewContainer = document.getElementById('preview-container');
+    if (previewContainer) {
+      previewContainer.innerHTML = `
+        <div class="results-placeholder">
+          <svg class="results-placeholder__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+          <p>Complétez le formulaire pour voir l'aperçu de votre simulation</p>
+        </div>
+      `;
+    }
+    
+    // Réinitialiser les résultats
+    const resultsContainer = document.getElementById('results-container');
+    if (resultsContainer) {
+      resultsContainer.innerHTML = `
+        <div class="results-placeholder">
+          <svg class="results-placeholder__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12,6 12,12 16,14"/>
+          </svg>
+          <p>Calcul en cours...</p>
+        </div>
+      `;
+    }
+    
+    // Masquer les champs SPV
+    const spvFields = document.getElementById('spv-fields');
+    if (spvFields) {
+      spvFields.style.display = 'none';
+    }
+    
+    showNotification('Formulaire réinitialisé', 'info');
+  }
+}
+
+/**
+ * Affiche la modale À propos
+ */
+function handleAbout() {
+  // Créer une modale simple
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">À propos d'Horizon</h3>
+        <button class="modal__close" aria-label="Fermer">&times;</button>
+      </div>
+      <div class="modal__body">
+        <p><strong>Horizon</strong> est un simulateur de retraite pour les sapeurs-pompiers professionnels (SPP).</p>
+        <p>Cet outil fournit une estimation indicative de votre future pension selon différents scénarios de départ.</p>
+        <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--color-gray-200);">
+        <p style="font-size: 0.875rem; color: var(--color-text-muted);">
+          <strong>Version :</strong> 1.0.0<br>
+          <strong>Développé par :</strong> XRWeb<br>
+          <strong>Dernière mise à jour :</strong> Janvier 2026
+        </p>
+        <div class="alert alert--warning" style="margin-top: 1rem;">
+          <div class="alert__content">
+            <strong>Avertissement</strong>
+            <p style="margin: 0;">Cette simulation est fournie à titre indicatif. Seule la CNRACL est habilitée à calculer vos droits définitifs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
+  
+  // Fermer la modale
+  const closeModal = () => {
+    modal.remove();
+    document.body.style.overflow = '';
+  };
+  
+  modal.querySelector('.modal__close').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+  document.addEventListener('keydown', function escHandler(e) {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', escHandler);
+    }
+  });
 }
 
 /**

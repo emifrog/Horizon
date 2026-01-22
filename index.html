@@ -32,6 +32,59 @@
             <!--<span class="header__subtitle">Régime CNRACL - Catégorie active</span>-->
           </div>
         </div>
+
+        <!-- Menu hamburger -->
+        <button class="hamburger" id="hamburger-btn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="nav-menu">
+          <span class="hamburger__line"></span>
+          <span class="hamburger__line"></span>
+          <span class="hamburger__line"></span>
+        </button>
+
+        <!-- Menu de navigation -->
+        <nav class="nav-menu" id="nav-menu" aria-label="Menu principal">
+          <ul class="nav-menu__list">
+            <li class="nav-menu__item">
+              <a href="#" class="nav-menu__link" data-action="new-simulation">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Nouvelle simulation
+              </a>
+            </li>
+            <li class="nav-menu__item">
+              <a href="#" class="nav-menu__link" data-action="export-pdf">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <polyline points="9,15 12,18 15,15"/>
+                </svg>
+                Exporter PDF
+              </a>
+            </li>
+            <li class="nav-menu__item">
+              <a href="#" class="nav-menu__link" data-action="export-csv">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <path d="M8 13h2M8 17h2M14 13h2M14 17h2"/>
+                </svg>
+                Exporter CSV
+              </a>
+            </li>
+            <li class="nav-menu__separator"></li>
+            <li class="nav-menu__item">
+              <a href="#" class="nav-menu__link" data-action="about">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="16" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                À propos
+              </a>
+            </li>
+          </ul>
+        </nav>
       </div>
     </header>
 

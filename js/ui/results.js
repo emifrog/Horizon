@@ -315,8 +315,9 @@ function creerSectionGraphique(scenarios) {
 
   section.innerHTML = `
     <h2 class="results-section__title">Évolution de la pension selon l'âge de départ</h2>
-    <div class="graphique-container" style="background: var(--color-white); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-lg);">
-      <canvas id="pension-chart" width="600" height="300" style="width: 100%; max-width: 600px; height: auto;" aria-label="Graphique d'évolution de la pension selon l'âge de départ" role="img"></canvas>
+    <div class="graphique-container" style="background: var(--color-white); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-lg); position: relative;">
+      <canvas id="pension-chart" style="width: 100%; max-width: 600px; height: auto;" aria-label="Graphique d'évolution de la pension selon l'âge de départ" role="img"></canvas>
+      <div id="chart-tooltip" class="chart-tooltip" style="display: none;"></div>
     </div>
   `;
 
@@ -359,16 +360,33 @@ function creerAvertissement() {
 }
 
 /**
- * Crée un graphique d'évolution de la pension
+ * Crée un graphique d'évolution de la pension avec support Retina et tooltips
  * @param {Array} scenarios - Scénarios de départ
  * @param {HTMLCanvasElement} canvas - Élément canvas
  */
 export function afficherGraphiquePension(scenarios, canvas) {
   if (!canvas || !scenarios.length) return;
 
+  // Support Retina / HiDPI
+  const dpr = window.devicePixelRatio || 1;
+  const displayWidth = 600;
+  const displayHeight = 300;
+
+  // Définir la taille CSS
+  canvas.style.width = displayWidth + 'px';
+  canvas.style.height = displayHeight + 'px';
+
+  // Définir la taille réelle du canvas (pour Retina)
+  canvas.width = displayWidth * dpr;
+  canvas.height = displayHeight * dpr;
+
   const ctx = canvas.getContext('2d');
-  const width = canvas.width;
-  const height = canvas.height;
+
+  // Mettre à l'échelle le contexte pour Retina
+  ctx.scale(dpr, dpr);
+
+  const width = displayWidth;
+  const height = displayHeight;
   const padding = 50;
 
   // Effacer le canvas
@@ -385,6 +403,14 @@ export function afficherGraphiquePension(scenarios, canvas) {
   // Échelle
   const xScale = (width - 2 * padding) / (maxAge - minAge || 1);
   const yScale = (height - 2 * padding) / (maxPension || 1);
+
+  // Stocker les positions des points pour les tooltips
+  const pointsData = scenarios.map((scenario, i) => ({
+    x: padding + (Math.floor(scenario.age) - minAge) * xScale,
+    y: height - padding - (scenario.pension?.pensionBruteMensuelle || 0) * yScale,
+    scenario: scenario,
+    index: i
+  }));
 
   // Axes
   ctx.strokeStyle = '#ccc';
@@ -408,7 +434,7 @@ export function afficherGraphiquePension(scenarios, canvas) {
   ctx.textAlign = 'center';
 
   // Labels X (âges)
-  ages.forEach((age, i) => {
+  ages.forEach((age) => {
     const x = padding + (age - minAge) * xScale;
     ctx.fillText(`${age} ans`, x, height - padding + 20);
   });
@@ -435,33 +461,134 @@ export function afficherGraphiquePension(scenarios, canvas) {
   ctx.lineWidth = 3;
   ctx.beginPath();
 
-  scenarios.forEach((scenario, i) => {
-    const x = padding + (Math.floor(scenario.age) - minAge) * xScale;
-    const y = height - padding - (scenario.pension?.pensionBruteMensuelle || 0) * yScale;
-
+  pointsData.forEach((point, i) => {
     if (i === 0) {
-      ctx.moveTo(x, y);
+      ctx.moveTo(point.x, point.y);
     } else {
-      ctx.lineTo(x, y);
+      ctx.lineTo(point.x, point.y);
     }
   });
 
   ctx.stroke();
 
   // Points
-  scenarios.forEach((scenario, i) => {
-    const x = padding + (Math.floor(scenario.age) - minAge) * xScale;
-    const y = height - padding - (scenario.pension?.pensionBruteMensuelle || 0) * yScale;
-
-    ctx.fillStyle = i === 1 ? '#28A745' : '#C8102E';
+  pointsData.forEach((point) => {
+    ctx.fillStyle = point.index === 1 ? '#28A745' : '#C8102E';
     ctx.beginPath();
-    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
     ctx.fill();
+  });
+
+  // Gestion des tooltips
+  const tooltip = canvas.parentElement?.querySelector('#chart-tooltip');
+  if (tooltip) {
+    setupChartTooltip(canvas, tooltip, pointsData);
+  }
+}
+
+/**
+ * Configure les événements de tooltip pour le graphique
+ * @param {HTMLCanvasElement} canvas - Élément canvas
+ * @param {HTMLElement} tooltip - Élément tooltip
+ * @param {Array} pointsData - Données des points
+ */
+function setupChartTooltip(canvas, tooltip, pointsData) {
+  const hitRadius = 15; // Rayon de détection du survol
+
+  /**
+   * Trouve le point survolé
+   * @param {MouseEvent} e - Événement souris
+   * @returns {Object|null} Point survolé ou null
+   */
+  function getHoveredPoint(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.offsetWidth / (canvas.width / (window.devicePixelRatio || 1));
+    const scaleY = canvas.offsetHeight / (canvas.height / (window.devicePixelRatio || 1));
+
+    const mouseX = (e.clientX - rect.left) / scaleX;
+    const mouseY = (e.clientY - rect.top) / scaleY;
+
+    for (const point of pointsData) {
+      const dx = mouseX - point.x;
+      const dy = mouseY - point.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance <= hitRadius) {
+        return point;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Affiche le tooltip
+   * @param {Object} point - Données du point
+   * @param {MouseEvent} e - Événement souris
+   */
+  function showTooltip(point, e) {
+    const scenario = point.scenario;
+    const pension = scenario.pension?.pensionBruteMensuelle || 0;
+    const isRecommended = point.index === 1;
+
+    let statusText = '';
+    if (scenario.decote) {
+      statusText = '<span style="color: #dc3545;">Avec décote</span>';
+    } else if (scenario.surcote) {
+      statusText = '<span style="color: #28a745;">Avec surcote</span>';
+    } else {
+      statusText = '<span style="color: #0d6efd;">Taux plein</span>';
+    }
+
+    tooltip.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 4px;">
+        ${escapeHtml(scenario.description)}
+        ${isRecommended ? '<span style="color: #28a745;"> ✓</span>' : ''}
+      </div>
+      <div style="margin-bottom: 2px;"><strong>${pension.toLocaleString('fr-FR')} €</strong> /mois</div>
+      <div style="font-size: 11px; color: #666;">
+        ${Math.floor(scenario.age)} ans · ${statusText}
+      </div>
+    `;
+
+    // Positionnement du tooltip
+    const rect = canvas.getBoundingClientRect();
+    const containerRect = canvas.parentElement.getBoundingClientRect();
+
+    const tooltipX = e.clientX - containerRect.left + 10;
+    const tooltipY = e.clientY - containerRect.top - 10;
+
+    tooltip.style.left = tooltipX + 'px';
+    tooltip.style.top = tooltipY + 'px';
+    tooltip.style.display = 'block';
+  }
+
+  /**
+   * Cache le tooltip
+   */
+  function hideTooltip() {
+    tooltip.style.display = 'none';
+  }
+
+  // Événements
+  canvas.addEventListener('mousemove', (e) => {
+    const point = getHoveredPoint(e);
+    if (point) {
+      canvas.style.cursor = 'pointer';
+      showTooltip(point, e);
+    } else {
+      canvas.style.cursor = 'default';
+      hideTooltip();
+    }
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    canvas.style.cursor = 'default';
+    hideTooltip();
   });
 }
 
