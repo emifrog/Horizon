@@ -19,6 +19,7 @@ import { calculerTrimestresDecote } from './ages.js';
  * @property {number} trimestresRequis - Trimestres requis pour le taux plein
  * @property {Date} dateNaissance - Date de naissance
  * @property {Date} dateDepart - Date de départ
+ * @property {number} [pointsNBIIntegres] - Points NBI à intégrer au TIB (si perception ≥ 15 ans)
  */
 
 /**
@@ -40,16 +41,28 @@ import { calculerTrimestresDecote } from './ages.js';
 /**
  * Calcule le traitement indiciaire brut à partir de l'indice
  * Réf: Article L15 du Code des pensions
+ *
+ * Si la NBI a été perçue pendant 15 ans ou plus, elle est intégrée au TIB
+ * Réf: Décret n°2006-779, Art. 2
+ *
  * @param {number} indiceBrut - Indice brut
- * @returns {{annuel: number, mensuel: number}} Traitement annuel et mensuel
+ * @param {number} [pointsNBIIntegres=0] - Points NBI à intégrer au TIB (si perception ≥ 15 ans)
+ * @returns {{annuel: number, mensuel: number, nbiIntegre: boolean, pointsNBI: number}} Traitement annuel et mensuel
  */
-export function calculerTraitementIndiciaire(indiceBrut) {
-  const annuel = indiceBrut * POINT_INDICE.VALEUR_ANNUELLE;
+export function calculerTraitementIndiciaire(indiceBrut, pointsNBIIntegres = 0) {
+  // TIB de base
+  const tibBase = indiceBrut * POINT_INDICE.VALEUR_ANNUELLE;
+
+  // Ajout NBI si intégrée (perception ≥ 15 ans)
+  const nbiIntegree = pointsNBIIntegres * POINT_INDICE.VALEUR_ANNUELLE;
+  const annuel = tibBase + nbiIntegree;
   const mensuel = annuel / 12;
 
   return {
     annuel: Math.round(annuel * 100) / 100,
     mensuel: Math.round(mensuel * 100) / 100,
+    nbiIntegre: pointsNBIIntegres > 0,
+    pointsNBI: pointsNBIIntegres,
   };
 }
 
@@ -173,10 +186,11 @@ export function calculerPension(donnees) {
     trimestresRequis,
     dateNaissance,
     dateDepart,
+    pointsNBIIntegres = 0,
   } = donnees;
 
-  // Calcul du traitement indiciaire
-  const traitement = calculerTraitementIndiciaire(indiceBrut);
+  // Calcul du traitement indiciaire (avec NBI intégrée si ≥ 15 ans de perception)
+  const traitement = calculerTraitementIndiciaire(indiceBrut, pointsNBIIntegres);
 
   // Calcul du taux de liquidation brut
   const tauxLiquidationBrut = calculerTauxLiquidationBrut(trimestresLiquidables, trimestresRequis);
@@ -221,6 +235,9 @@ export function calculerPension(donnees) {
     pensionNetteMensuelle,
     minimumGaranti: Math.round(minimumGaranti * 100) / 100,
     minimumGarantiApplique,
+    // Information sur la NBI intégrée au TIB
+    nbiIntegre: traitement.nbiIntegre,
+    pointsNBIIntegres: traitement.pointsNBI,
   };
 }
 

@@ -175,9 +175,9 @@ a:hover {
   z-index: calc(var(--z-modal) + 1);
 }
 
-.hamburger:hover {
+/*.hamburger:hover {
   background-color: rgba(0, 0, 0, 0.1);
-}
+}*/
 
 .hamburger:focus {
   outline: none;

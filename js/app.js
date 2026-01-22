@@ -79,6 +79,9 @@ function init() {
   // Gestion du double statut SPP/SPV
   setupDoubleStatutToggle();
 
+  // Gestion des services militaires (BSPP/BMPM)
+  setupServicesMilitairesToggle();
+
   // Boutons d'export
   document.querySelector('[data-action="export-pdf"]')?.addEventListener('click', handleExportPDF);
   document.querySelector('[data-action="export-csv"]')?.addEventListener('click', handleExportCSV);
@@ -292,10 +295,33 @@ function handleAbout() {
 function setupDoubleStatutToggle() {
   const checkbox = document.getElementById('doubleStatut');
   const spvFields = document.getElementById('spv-fields');
-  
+
   if (checkbox && spvFields) {
     checkbox.addEventListener('change', () => {
       spvFields.style.display = checkbox.checked ? 'block' : 'none';
+    });
+  }
+}
+
+/**
+ * Configure l'affichage conditionnel des champs services militaires (BSPP/BMPM)
+ */
+function setupServicesMilitairesToggle() {
+  const select = document.getElementById('servicesMilitaires');
+  const fieldsContainer = document.getElementById('services-militaires-fields');
+
+  if (select && fieldsContainer) {
+    select.addEventListener('change', () => {
+      const hasServiceMilitaire = select.value !== 'aucun';
+      fieldsContainer.style.display = hasServiceMilitaire ? 'flex' : 'none';
+
+      // Réinitialiser les valeurs si "aucun" est sélectionné
+      if (!hasServiceMilitaire) {
+        const anneesInput = document.getElementById('dureeServicesMilitairesAnnees');
+        const moisInput = document.getElementById('dureeServicesMilitairesMois');
+        if (anneesInput) anneesInput.value = '0';
+        if (moisInput) moisInput.value = '0';
+      }
     });
   }
 }
@@ -468,6 +494,11 @@ function collectFormData() {
   const form = document.getElementById('simulator-form');
   const formData = new FormData(form);
 
+  // Services militaires (BSPP/BMPM)
+  const servicesMilitaires = formData.get('servicesMilitaires') || 'aucun';
+  const dureeServicesMilitairesAnnees = parseInt(formData.get('dureeServicesMilitairesAnnees'), 10) || 0;
+  const dureeServicesMilitairesMois = parseInt(formData.get('dureeServicesMilitairesMois'), 10) || 0;
+
   return {
     dateNaissance: formData.get('dateNaissance') ? new Date(formData.get('dateNaissance')) : null,
     dateEntreeSPP: formData.get('dateEntreeSPP') ? new Date(formData.get('dateEntreeSPP')) : null,
@@ -483,6 +514,14 @@ function collectFormData() {
     // Double statut SPP/SPV (utilise anneesSPV du profil)
     doubleStatut: formData.get('doubleStatut') === 'on',
     montantPFRSPV: parseFloat(formData.get('montantPFRSPV')) || 0,
+    // Services militaires (BSPP/BMPM)
+    servicesMilitaires: servicesMilitaires,
+    dureeServicesMilitairesAnnees: dureeServicesMilitairesAnnees,
+    dureeServicesMilitairesMois: dureeServicesMilitairesMois,
+    // Durée totale en trimestres (pour les calculs)
+    trimestresServicesMilitaires: servicesMilitaires !== 'aucun'
+      ? Math.floor((dureeServicesMilitairesAnnees * 12 + dureeServicesMilitairesMois) / 3)
+      : 0,
   };
 }
 
@@ -504,6 +543,9 @@ function effectuerCalculs(formData, profilEnrichi) {
     trimestresAutresRegimes: formData.trimestresAutresRegimes,
     anneesSPV: formData.anneesSPV,
     enfantsAvant2004: formData.enfantsAvant2004,
+    // Services militaires (BSPP/BMPM)
+    servicesMilitaires: formData.servicesMilitaires,
+    trimestresServicesMilitaires: formData.trimestresServicesMilitaires,
   };
 
   const scenarios = genererScenariosDepart(donneesDepart);
@@ -519,7 +561,13 @@ function effectuerCalculs(formData, profilEnrichi) {
     anneeNaissance
   );
 
-  // 3. Calculer la pension pour chaque scénario
+  // 3. Déterminer si la NBI doit être intégrée au TIB (perception ≥ 15 ans)
+  // Réf: Décret n°2006-779, Art. 2 - NBI intégrée si perçue 15 ans ou plus
+  const dureeNBIAnnees = formData.dureeNBI || 0;
+  const nbiIntegrable = dureeNBIAnnees >= 15;
+  const pointsNBIIntegres = nbiIntegrable ? (formData.pointsNBI || 0) : 0;
+
+  // 4. Calculer la pension pour chaque scénario
   const scenariosAvecPension = scenarios.map((scenario) => {
     const duree = calculerDurees(
       {
@@ -536,6 +584,7 @@ function effectuerCalculs(formData, profilEnrichi) {
       trimestresRequis,
       dateNaissance: formData.dateNaissance,
       dateDepart: scenario.date,
+      pointsNBIIntegres,
     });
 
     // Calculer la surcote si applicable
@@ -571,7 +620,7 @@ function effectuerCalculs(formData, profilEnrichi) {
     };
   });
 
-  // 4. Calculer la pension au taux plein (scénario principal)
+  // 5. Calculer la pension au taux plein (scénario principal)
   const pensionTauxPlein = calculerPension({
     indiceBrut: formData.indiceBrut,
     trimestresLiquidables: dureeTauxPlein.trimestresLiquidables,
@@ -579,9 +628,10 @@ function effectuerCalculs(formData, profilEnrichi) {
     trimestresRequis,
     dateNaissance: formData.dateNaissance,
     dateDepart: dateTauxPlein,
+    pointsNBIIntegres,
   });
 
-  // 5. Calculer la PFR et le RAFP
+  // 6. Calculer la PFR et le RAFP
   // Utiliser les années de cotisation RAFP du formulaire si renseignées,
   // sinon calculer automatiquement depuis 2005
   let anneesRAFP = formData.anneesCotisationRAFP;
@@ -602,31 +652,53 @@ function effectuerCalculs(formData, profilEnrichi) {
     anneesCotisation: anneesRAFP,
   });
 
-  // 6. Calculer le supplément NBI
-  const nbi = calculerNBI({
-    pointsNBI: formData.pointsNBI,
-    dureeMoisNBI: formData.dureeNBI * 12,
-    dureeServicesTotal: dureeTauxPlein.trimestresLiquidables,
-    tauxLiquidation: pensionTauxPlein.tauxLiquidationNet,
-  });
+  // 7. Calculer le supplément NBI
+  // Note : Si la NBI est intégrée au TIB (≥ 15 ans), le supplément séparé est nul
+  // car la NBI fait déjà partie du calcul de la pension principale
+  let nbi;
+  if (nbiIntegrable) {
+    // NBI intégrée au TIB - pas de supplément séparé
+    nbi = {
+      eligible: true,
+      integreTIB: true,
+      pointsNBI: formData.pointsNBI,
+      dureeMoisNBI: formData.dureeNBI * 12,
+      dureeAnneesNBI: formData.dureeNBI,
+      moyennePonderee: formData.pointsNBI, // 100% car ≥ 15 ans
+      supplementMensuel: 0, // Intégré au TIB, pas de supplément séparé
+      supplementAnnuel: 0,
+      motifIneligibilite: '',
+    };
+  } else {
+    // NBI en supplément séparé (prorata)
+    nbi = calculerNBI({
+      pointsNBI: formData.pointsNBI,
+      dureeMoisNBI: formData.dureeNBI * 12,
+      dureeServicesTotal: dureeTauxPlein.trimestresLiquidables,
+      tauxLiquidation: pensionTauxPlein.tauxLiquidationNet,
+    });
+    if (nbi.eligible) {
+      nbi.integreTIB = false;
+    }
+  }
 
-  // 7. Calculer la PFR SPV (double statut) - utilise anneesSPV du profil
+  // 8. Calculer la PFR SPV (double statut) - utilise anneesSPV du profil
   const pfrSPV = calculerPFRSPV(formData.doubleStatut, formData.anneesSPV, formData.montantPFRSPV);
 
-  // 8. Calculer le total retraite
+  // 9. Calculer le total retraite
   const totalRetraite =
     pensionTauxPlein.pensionBruteMensuelle +
     (nbi.eligible ? nbi.supplementMensuel : 0) +
     pfr.renteRAFPMensuelle +
     (pfrSPV.eligible ? pfrSPV.montantMensuel : 0);
 
-  // 9. Calculer l'âge au taux plein
+  // 10. Calculer l'âge au taux plein
   const ageTauxPlein = Math.floor(
     (dateTauxPlein.getTime() - formData.dateNaissance.getTime()) /
     (365.25 * 24 * 60 * 60 * 1000)
   );
 
-  // 10. Générer les scénarios de surcote (si taux plein atteint par durée)
+  // 11. Générer les scénarios de surcote (si taux plein atteint par durée)
   let scenariosSurcote = [];
   if (resultatDateTauxPlein.atteintParDuree) {
     scenariosSurcote = simulerScenariosSurcote(
@@ -688,6 +760,8 @@ function updatePreview() {
         trimestresAutresRegimes: formData.trimestresAutresRegimes,
         anneesSPV: formData.anneesSPV,
         enfantsAvant2004: formData.enfantsAvant2004,
+        servicesMilitaires: formData.servicesMilitaires,
+        trimestresServicesMilitaires: formData.trimestresServicesMilitaires,
       },
       anneeNaissance
     );
@@ -718,6 +792,12 @@ function updatePreview() {
             <div class="details-list__item">
               <dt>Majoration SPV</dt>
               <dd>+${profilEnrichi.majorationSPV} trimestres</dd>
+            </div>
+          ` : ''}
+          ${dureeActuelle.trimestresServicesMilitaires > 0 ? `
+            <div class="details-list__item">
+              <dt>Services ${dureeActuelle.servicesMilitaires.toUpperCase()}</dt>
+              <dd>+${dureeActuelle.trimestresServicesMilitaires} trim. (+${dureeActuelle.trimestresBonificationMilitaire} bonif.)</dd>
             </div>
           ` : ''}
           <div class="details-list__item">

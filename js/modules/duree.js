@@ -21,6 +21,8 @@ import { calculerTrimestresEntreDates, calculerAnneesEntreDates } from '../utils
  * @property {number} trimestresAutresRegimes - Trimestres validés hors CNRACL
  * @property {number} anneesSPV - Années d'engagement SPV
  * @property {number} enfantsAvant2004 - Nombre d'enfants nés avant 2004
+ * @property {string} servicesMilitaires - Type de service militaire (aucun, bspp, bmpm)
+ * @property {number} trimestresServicesMilitaires - Trimestres de services militaires BSPP/BMPM
  */
 
 /**
@@ -30,6 +32,8 @@ import { calculerTrimestresEntreDates, calculerAnneesEntreDates } from '../utils
  * @property {number} trimestresBonificationCinquieme - Bonification du 1/5e
  * @property {number} trimestresBonificationEnfants - Bonification pour enfants
  * @property {number} trimestresMajorationSPV - Majoration SPV
+ * @property {number} trimestresServicesMilitaires - Trimestres services militaires (BSPP/BMPM)
+ * @property {number} trimestresBonificationMilitaire - Bonification du 1/5e sur services militaires
  * @property {number} trimestresLiquidables - Total trimestres liquidables CNRACL
  * @property {number} trimestresAutresRegimes - Trimestres autres régimes
  * @property {number} trimestresAssuranceTotale - Durée d'assurance tous régimes
@@ -115,10 +119,12 @@ export function verifierConditionDureePension(trimestresServices) {
 /**
  * Calcule la durée totale liquidable CNRACL
  * @param {Object} params - Paramètres de calcul
- * @param {number} params.trimestresServicesEffectifs - Services effectifs
- * @param {number} params.trimestresBonificationCinquieme - Bonification du 1/5e
+ * @param {number} params.trimestresServicesEffectifs - Services effectifs SPP
+ * @param {number} params.trimestresBonificationCinquieme - Bonification du 1/5e (SPP)
  * @param {number} params.trimestresBonificationEnfants - Bonification enfants
  * @param {number} params.trimestresMajorationSPV - Majoration SPV
+ * @param {number} params.trimestresServicesMilitaires - Services militaires (BSPP/BMPM)
+ * @param {number} params.trimestresBonificationMilitaire - Bonification du 1/5e sur services militaires
  * @returns {number} Total trimestres liquidables
  */
 export function calculerTrimestresLiquidables({
@@ -126,12 +132,16 @@ export function calculerTrimestresLiquidables({
   trimestresBonificationCinquieme,
   trimestresBonificationEnfants,
   trimestresMajorationSPV,
+  trimestresServicesMilitaires = 0,
+  trimestresBonificationMilitaire = 0,
 }) {
   return (
     trimestresServicesEffectifs +
     trimestresBonificationCinquieme +
     trimestresBonificationEnfants +
-    trimestresMajorationSPV
+    trimestresMajorationSPV +
+    trimestresServicesMilitaires +
+    trimestresBonificationMilitaire
   );
 }
 
@@ -169,19 +179,33 @@ export function calculerDurees(donnees, anneeNaissance) {
     trimestresAutresRegimes = 0,
     anneesSPV = 0,
     enfantsAvant2004 = 0,
+    servicesMilitaires = 'aucun',
+    trimestresServicesMilitaires = 0,
   } = donnees;
 
-  // Calcul des services effectifs
+  // Calcul des services effectifs SPP
   const trimestresServicesEffectifs = calculerTrimestresServicesEffectifs(
     dateEntreeSPP,
     dateDepart,
     quotite
   );
 
-  // Calcul des bonifications
+  // Calcul des bonifications SPP
   const trimestresBonificationCinquieme = calculerBonificationCinquieme(trimestresServicesEffectifs);
   const trimestresBonificationEnfants = calculerBonificationEnfants(enfantsAvant2004);
   const trimestresMajorationSPV = getMajorationSPV(anneesSPV);
+
+  // Services militaires (BSPP/BMPM) - comptent comme services actifs
+  // Réf: Code des pensions civiles et militaires de retraite
+  // Les services militaires sont repris en catégorie active
+  const trimServicesMilitaires = servicesMilitaires !== 'aucun' ? trimestresServicesMilitaires : 0;
+
+  // Bonification du 1/5e sur les services militaires (catégorie active)
+  // La bonification s'applique également aux services BSPP/BMPM
+  const trimestresBonificationMilitaire = calculerBonificationCinquieme(trimServicesMilitaires);
+
+  // Total des services actifs (SPP + militaires) pour la condition des 17 ans
+  const totalServicesActifs = trimestresServicesEffectifs + trimServicesMilitaires;
 
   // Calcul des totaux
   const trimestresLiquidables = calculerTrimestresLiquidables({
@@ -189,6 +213,8 @@ export function calculerDurees(donnees, anneeNaissance) {
     trimestresBonificationCinquieme,
     trimestresBonificationEnfants,
     trimestresMajorationSPV,
+    trimestresServicesMilitaires: trimServicesMilitaires,
+    trimestresBonificationMilitaire,
   });
 
   const trimestresAssuranceTotale = calculerDureeAssuranceTotale(
@@ -202,15 +228,18 @@ export function calculerDurees(donnees, anneeNaissance) {
   // Écart avec le taux plein
   const ecartTauxPlein = calculerEcartTauxPlein(trimestresAssuranceTotale, trimestresRequis);
 
-  // Vérification des conditions
-  const conditionServicesActifs = verifierConditionServicesActifs(trimestresServicesEffectifs);
-  const conditionDureePension = verifierConditionDureePension(trimestresServicesEffectifs);
+  // Vérification des conditions - inclut les services militaires pour la condition des 17 ans
+  const conditionServicesActifs = verifierConditionServicesActifs(totalServicesActifs);
+  const conditionDureePension = verifierConditionDureePension(totalServicesActifs);
 
   return {
     trimestresServicesEffectifs,
     trimestresBonificationCinquieme,
     trimestresBonificationEnfants,
     trimestresMajorationSPV,
+    trimestresServicesMilitaires: trimServicesMilitaires,
+    trimestresBonificationMilitaire,
+    totalServicesActifs,
     trimestresLiquidables,
     trimestresAutresRegimes,
     trimestresAssuranceTotale,
@@ -218,6 +247,8 @@ export function calculerDurees(donnees, anneeNaissance) {
     ecartTauxPlein,
     conditionServicesActifs,
     conditionDureePension,
+    // Informations sur le type de service militaire
+    servicesMilitaires,
   };
 }
 

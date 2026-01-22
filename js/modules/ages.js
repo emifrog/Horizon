@@ -22,6 +22,8 @@ import { calculerDurees, verifierConditionServicesActifs } from './duree.js';
  * @property {number} trimestresAutresRegimes - Trimestres hors CNRACL
  * @property {number} anneesSPV - Années SPV
  * @property {number} enfantsAvant2004 - Enfants nés avant 2004
+ * @property {string} servicesMilitaires - Type de service militaire (aucun, bspp, bmpm)
+ * @property {number} trimestresServicesMilitaires - Trimestres de services militaires
  */
 
 /**
@@ -76,12 +78,18 @@ export function calculerDateLimite(dateNaissance) {
  */
 export function verifierEligibiliteAgeAnticipe(donnees) {
   const dateOuverture = calculerDateOuvertureDroits(donnees.dateNaissance);
+
+  // Calculer les trimestres de services actifs SPP
   const trimestresADateOuverture = calculerTrimestresEntreDates(
     donnees.dateEntreeSPP,
     dateOuverture
   );
 
-  const conditionRemplie = trimestresADateOuverture >= SERVICES.DUREE_MIN_SERVICES_ACTIFS;
+  // Ajouter les services militaires (BSPP/BMPM) qui comptent comme services actifs
+  const trimestresServicesMilitaires = donnees.trimestresServicesMilitaires || 0;
+  const totalServicesActifs = trimestresADateOuverture + trimestresServicesMilitaires;
+
+  const conditionRemplie = totalServicesActifs >= SERVICES.DUREE_MIN_SERVICES_ACTIFS;
 
   if (conditionRemplie) {
     return {
@@ -92,8 +100,11 @@ export function verifierEligibiliteAgeAnticipe(donnees) {
   }
 
   // Calculer la date à laquelle les 17 ans seront atteints
+  // En tenant compte des services militaires déjà effectués
+  const trimestresRestants = SERVICES.DUREE_MIN_SERVICES_ACTIFS - trimestresServicesMilitaires;
+  const anneesRestantes = Math.max(0, Math.ceil(trimestresRestants / 4));
   const dateAtteinte17Ans = new Date(donnees.dateEntreeSPP);
-  dateAtteinte17Ans.setFullYear(dateAtteinte17Ans.getFullYear() + 17);
+  dateAtteinte17Ans.setFullYear(dateAtteinte17Ans.getFullYear() + anneesRestantes);
 
   return {
     eligible: false,
@@ -143,6 +154,8 @@ export function calculerDateTauxPlein(donnees) {
         trimestresAutresRegimes: donnees.trimestresAutresRegimes,
         anneesSPV: donnees.anneesSPV,
         enfantsAvant2004: donnees.enfantsAvant2004,
+        servicesMilitaires: donnees.servicesMilitaires,
+        trimestresServicesMilitaires: donnees.trimestresServicesMilitaires,
       },
       anneeNaissance
     );
@@ -171,6 +184,8 @@ export function calculerDateTauxPlein(donnees) {
       trimestresAutresRegimes: donnees.trimestresAutresRegimes,
       anneesSPV: donnees.anneesSPV,
       enfantsAvant2004: donnees.enfantsAvant2004,
+      servicesMilitaires: donnees.servicesMilitaires,
+      trimestresServicesMilitaires: donnees.trimestresServicesMilitaires,
     },
     anneeNaissance
   );
@@ -209,6 +224,8 @@ export function genererScenariosDepart(donnees) {
       trimestresAutresRegimes: donnees.trimestresAutresRegimes,
       anneesSPV: donnees.anneesSPV,
       enfantsAvant2004: donnees.enfantsAvant2004,
+      servicesMilitaires: donnees.servicesMilitaires,
+      trimestresServicesMilitaires: donnees.trimestresServicesMilitaires,
     },
     anneeNaissance
   );
@@ -242,6 +259,8 @@ export function genererScenariosDepart(donnees) {
       trimestresAutresRegimes: donnees.trimestresAutresRegimes,
       anneesSPV: donnees.anneesSPV,
       enfantsAvant2004: donnees.enfantsAvant2004,
+      servicesMilitaires: donnees.servicesMilitaires,
+      trimestresServicesMilitaires: donnees.trimestresServicesMilitaires,
     },
     anneeNaissance
   );
@@ -287,6 +306,8 @@ export function genererScenariosDepart(donnees) {
       trimestresAutresRegimes: donnees.trimestresAutresRegimes,
       anneesSPV: donnees.anneesSPV,
       enfantsAvant2004: donnees.enfantsAvant2004,
+      servicesMilitaires: donnees.servicesMilitaires,
+      trimestresServicesMilitaires: donnees.trimestresServicesMilitaires,
     },
     anneeNaissance
   );

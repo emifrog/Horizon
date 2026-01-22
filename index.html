@@ -30,8 +30,8 @@
             </a>
           </div>
           <div>
-            <h1 class="header__title">Simulateur de retraite SPP</h1>
-            <!--<span class="header__subtitle">Régime CNRACL - Catégorie active</span>-->
+            <h1 class="header__title">HorizonSP</h1>
+            <span class="header__subtitle">Simulateur de retraite SPP</span>
           </div>
         </div>
 
@@ -179,6 +179,31 @@
                     Carrière et services
                   </h3>
                   <p class="step__description">Précisez votre parcours professionnel et les trimestres acquis.</p>
+
+                  <!-- Section services militaires pompiers -->
+                  <div class="form-group">
+                    <label for="servicesMilitaires" class="form-label">Services militaires pompiers</label>
+                    <select id="servicesMilitaires" name="servicesMilitaires" class="form-select" aria-describedby="servicesMilitaires-hint">
+                      <option value="aucun">Aucun</option>
+                      <option value="bspp">BSPP - Brigade de Sapeurs-Pompiers de Paris</option>
+                      <option value="bmpm">BMPM - Bataillon de Marins-Pompiers de Marseille</option>
+                    </select>
+                    <span class="form-hint" id="servicesMilitaires-hint">Si vous avez servi à la BSPP ou au BMPM avant de devenir SPP civil.</span>
+                  </div>
+
+                  <div id="services-militaires-fields" class="form-row">
+                    <div class="form-group">
+                      <label for="dureeServicesMilitairesAnnees" class="form-label">Durée des services (années)</label>
+                      <input type="number" id="dureeServicesMilitairesAnnees" name="dureeServicesMilitairesAnnees" class="form-input"
+                             min="0" max="35" value="0" aria-describedby="dureeServicesMilitaires-hint">
+                    </div>
+                    <div class="form-group">
+                      <label for="dureeServicesMilitairesMois" class="form-label">Mois supplémentaires</label>
+                      <input type="number" id="dureeServicesMilitairesMois" name="dureeServicesMilitairesMois" class="form-input"
+                             min="0" max="11" value="0">
+                      <span class="form-hint" id="dureeServicesMilitaires-hint">Ces services comptent comme services actifs et ouvrent droit à la bonification du 1/5ème.</span>
+                    </div>
+                  </div>
 
                   <div class="form-group">
                     <label for="trimestresAutresRegimes" class="form-label">Trimestres acquis hors CNRACL</label>

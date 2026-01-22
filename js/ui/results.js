@@ -48,6 +48,12 @@ export function afficherResultats(resultats, container) {
   const detailsSection = creerSectionDetails(resultats);
   container.appendChild(detailsSection);
 
+  // Section surcote (si applicable)
+  if (resultats.scenariosSurcote && resultats.scenariosSurcote.length > 0) {
+    const surcoteSection = creerSectionSurcote(resultats);
+    container.appendChild(surcoteSection);
+  }
+
   // Section graphique
   const graphiqueSection = creerSectionGraphique(resultats.scenarios);
   container.appendChild(graphiqueSection);
@@ -230,6 +236,16 @@ function creerSectionDetails(resultats) {
             <dt>Majoration SPV</dt>
             <dd>+${resultats.duree?.trimestresMajorationSPV || 0} trim.</dd>
           </div>
+          ${resultats.duree?.trimestresServicesMilitaires > 0 ? `
+          <div class="details-list__item">
+            <dt>Services ${resultats.duree?.servicesMilitaires?.toUpperCase() || 'militaires'}</dt>
+            <dd>+${resultats.duree?.trimestresServicesMilitaires || 0} trim.</dd>
+          </div>
+          <div class="details-list__item">
+            <dt>Bonif. 1/5ème militaire</dt>
+            <dd>+${resultats.duree?.trimestresBonificationMilitaire || 0} trim.</dd>
+          </div>
+          ` : ''}
           <div class="details-list__item">
             <dt>Autres régimes</dt>
             <dd>+${resultats.duree?.trimestresAutresRegimes || 0} trim.</dd>
@@ -246,9 +262,15 @@ function creerSectionDetails(resultats) {
         <h3 class="details-card__title">Calcul de la pension</h3>
         <dl class="details-list">
           <div class="details-list__item">
-            <dt>Traitement indiciaire brut</dt>
+            <dt>Traitement indiciaire brut${resultats.pensionTauxPlein?.nbiIntegre ? ' (NBI incluse)' : ''}</dt>
             <dd>${formaterMontant(resultats.pensionTauxPlein?.traitementIndiciaireAnnuel)}/an</dd>
           </div>
+          ${resultats.pensionTauxPlein?.nbiIntegre ? `
+          <div class="details-list__item">
+            <dt>dont NBI intégrée</dt>
+            <dd>${resultats.pensionTauxPlein.pointsNBIIntegres} pts</dd>
+          </div>
+          ` : ''}
           <div class="details-list__item">
             <dt>Taux de liquidation</dt>
             <dd>${formaterPourcentage(resultats.pensionTauxPlein?.tauxLiquidationBrut)}</dd>
@@ -274,7 +296,15 @@ function creerSectionDetails(resultats) {
       <div class="details-card">
         <h3 class="details-card__title">Compléments</h3>
         <dl class="details-list">
-          ${resultats.nbi?.eligible ? `
+          ${resultats.nbi?.eligible && resultats.nbi?.integreTIB ? `
+            <div class="details-list__item">
+              <dt>NBI intégrée au TIB</dt>
+              <dd>
+                <span class="badge badge--success">Oui (${resultats.nbi.pointsNBI} pts)</span>
+                <br><small class="text--muted">${resultats.nbi.dureeAnneesNBI} ans de perception</small>
+              </dd>
+            </div>
+          ` : resultats.nbi?.eligible ? `
             <div class="details-list__item">
               <dt>Supplément NBI</dt>
               <dd>+${formaterMontant(resultats.nbi.supplementMensuel)}/mois</dd>
@@ -298,6 +328,89 @@ function creerSectionDetails(resultats) {
           </div>
         </dl>
       </div>
+    </div>
+  `;
+
+  return section;
+}
+
+/**
+ * Crée la section surcote avec scénarios détaillés
+ * @param {Object} resultats - Résultats complets
+ * @returns {HTMLElement} Section surcote
+ */
+function creerSectionSurcote(resultats) {
+  const section = document.createElement('section');
+  section.className = 'results-section results-section--surcote';
+
+  const scenariosSurcote = resultats.scenariosSurcote;
+  const pensionBase = resultats.pensionTauxPlein?.pensionBruteMensuelle || 0;
+
+  const scenariosHTML = scenariosSurcote.map((scenario) => {
+    const dateFormatee = formaterDateLongueFR(scenario.dateDepart);
+    const gainMensuelFormate = formaterMontant(scenario.gainMensuel);
+    const gainAnnuelFormate = formaterMontant(scenario.gainAnnuel);
+    const pensionFormatee = formaterMontant(scenario.pensionMensuelle);
+
+    return `
+      <tr>
+        <td><strong>+${scenario.anneesSupplémentaires} an${scenario.anneesSupplémentaires > 1 ? 's' : ''}</strong></td>
+        <td>${escapeHtml(dateFormatee)}</td>
+        <td>${Math.floor(scenario.ageDepart)} ans</td>
+        <td>${scenario.trimestresSurcote} trim.</td>
+        <td class="text--success">+${scenario.tauxSurcote.toFixed(2)} %</td>
+        <td><strong>${escapeHtml(pensionFormatee)}</strong></td>
+        <td class="text--success">
+          <strong>+${escapeHtml(gainMensuelFormate)}/mois</strong>
+          <br><small class="text--muted">(+${escapeHtml(gainAnnuelFormate)}/an)</small>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  section.innerHTML = `
+    <h2 class="results-section__title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; color: var(--color-success);">
+        <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/>
+        <polyline points="17,6 23,6 23,12"/>
+      </svg>
+      Simulation de surcote
+    </h2>
+    <p class="text--muted" style="margin-bottom: 1rem;">
+      Si vous continuez à travailler après la date du taux plein, vous bénéficiez d'une <strong>surcote de ${formaterPourcentage(1.25)} par trimestre supplémentaire</strong>.
+      Voici l'impact financier sur votre pension :
+    </p>
+
+    <div class="alert alert--info" style="margin-bottom: 1.5rem;">
+      <div class="alert__content">
+        <strong>Pension de référence au taux plein :</strong> ${formaterMontant(pensionBase)}/mois
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="table table--surcote">
+        <thead>
+          <tr>
+            <th>Durée supplémentaire</th>
+            <th>Date de départ</th>
+            <th>Âge</th>
+            <th>Surcote</th>
+            <th>Majoration</th>
+            <th>Pension brute</th>
+            <th>Gain</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${scenariosHTML}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="surcote-summary" style="margin-top: 1.5rem; padding: 1rem; background: var(--color-success-bg, #d4edda); border-radius: var(--radius-md); border-left: 4px solid var(--color-success);">
+      <p style="margin: 0; font-size: 0.95rem;">
+        <strong>Bon à savoir :</strong> La surcote n'est pas plafonnée. Plus vous travaillez au-delà du taux plein,
+        plus votre pension augmente. Chaque trimestre supplémentaire vous rapporte <strong>${formaterMontant(pensionBase * 0.0125)}</strong> de plus par mois.
+      </p>
     </div>
   `;
 

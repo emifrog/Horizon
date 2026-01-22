@@ -1,7 +1,6 @@
 .doc-container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: var(--spacing-xl);
+  max-width: var(--container-max);
+  margin: 0 auto;
     }
 
     .doc-header {
@@ -13,13 +12,17 @@
     .doc-header__title {
       font-size: var(--font-size-xl);
       text-align: center;
-      color: var(--color-gray-900);
+      color: var(--color-secondary);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      text-decoration-color: var(--color-primary);
       margin-bottom: var(--spacing-sm);
     }
 
     .doc-header__subtitle {
       color: var(--color-text-muted);
       font-size: var(--font-size-lg);
+      text-align: center;
     }
 
     .doc-nav {
@@ -65,7 +68,7 @@
     }
 
     .doc-section__title {
-      font-size: var(--font-size-2xl);
+      font-size: var(--font-size-xl);
       color: var(--color-secondary);
       margin-bottom: var(--spacing-lg);
       padding-bottom: var(--spacing-sm);

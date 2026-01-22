@@ -313,6 +313,16 @@ function genererContenuImpression(resultats, profil) {
         <td>Majoration SPV</td>
         <td class="text-right">+${resultats.duree?.trimestresMajorationSPV || 0} trimestres</td>
       </tr>
+      ${resultats.duree?.trimestresServicesMilitaires > 0 ? `
+      <tr>
+        <td>Services ${resultats.duree?.servicesMilitaires?.toUpperCase() || 'militaires'}</td>
+        <td class="text-right">+${resultats.duree?.trimestresServicesMilitaires || 0} trimestres</td>
+      </tr>
+      <tr>
+        <td>Bonification 1/5ème militaire</td>
+        <td class="text-right">+${resultats.duree?.trimestresBonificationMilitaire || 0} trimestres</td>
+      </tr>
+      ` : ''}
       <tr>
         <td>Trimestres autres régimes</td>
         <td class="text-right">+${resultats.duree?.trimestresAutresRegimes || 0} trimestres</td>
@@ -328,9 +338,15 @@ function genererContenuImpression(resultats, profil) {
   <table>
     <tbody>
       <tr>
-        <td>Traitement indiciaire brut annuel</td>
+        <td>Traitement indiciaire brut annuel${resultats.pensionTauxPlein?.nbiIntegre ? ' (NBI incluse)' : ''}</td>
         <td class="text-right">${formaterMontant(resultats.pensionTauxPlein?.traitementIndiciaireAnnuel)}</td>
       </tr>
+      ${resultats.pensionTauxPlein?.nbiIntegre ? `
+      <tr>
+        <td>dont NBI intégrée (${resultats.pensionTauxPlein.pointsNBIIntegres} points)</td>
+        <td class="text-right">${formaterMontant(resultats.pensionTauxPlein.pointsNBIIntegres * 4.92278)}</td>
+      </tr>
+      ` : ''}
       <tr>
         <td>Taux de liquidation brut</td>
         <td class="text-right">${formaterPourcentage(resultats.pensionTauxPlein?.tauxLiquidationBrut)}</td>
@@ -358,7 +374,12 @@ function genererContenuImpression(resultats, profil) {
     <h2>Compléments</h2>
     <table>
       <tbody>
-        ${resultats.nbi?.eligible ? `
+        ${resultats.nbi?.eligible && resultats.nbi?.integreTIB ? `
+          <tr>
+            <td>NBI intégrée au TIB (${resultats.nbi.pointsNBI} points, ${resultats.nbi.dureeAnneesNBI} ans)</td>
+            <td class="text-right"><span class="badge badge-success">Incluse dans la pension</span></td>
+          </tr>
+        ` : resultats.nbi?.eligible ? `
           <tr>
             <td>Supplément NBI (${resultats.nbi.pointsNBI} points)</td>
             <td class="text-right">+${formaterMontant(resultats.nbi.supplementMensuel)}/mois</td>
@@ -462,13 +483,19 @@ export function exporterCSV(resultats, profil) {
   csv += `Bonification 1/5ème${separator}${resultats.duree?.trimestresBonificationCinquieme || 0} trimestres\n`;
   csv += `Bonification enfants${separator}${resultats.duree?.trimestresBonificationEnfants || 0} trimestres\n`;
   csv += `Majoration SPV${separator}${resultats.duree?.trimestresMajorationSPV || 0} trimestres\n`;
+  if (resultats.duree?.trimestresServicesMilitaires > 0) {
+    csv += `Services ${resultats.duree?.servicesMilitaires?.toUpperCase() || 'militaires'}${separator}${resultats.duree?.trimestresServicesMilitaires || 0} trimestres\n`;
+    csv += `Bonification 1/5ème militaire${separator}${resultats.duree?.trimestresBonificationMilitaire || 0} trimestres\n`;
+  }
   csv += `Autres régimes${separator}${resultats.duree?.trimestresAutresRegimes || 0} trimestres\n`;
   csv += `TOTAL${separator}${resultats.duree?.trimestresAssuranceTotale || 0} trimestres\n`;
   csv += `\n`;
   
   // Section Compléments
   csv += `COMPLÉMENTS\n`;
-  if (resultats.nbi?.eligible) {
+  if (resultats.nbi?.eligible && resultats.nbi?.integreTIB) {
+    csv += `NBI intégrée au TIB (${resultats.nbi.pointsNBI} pts, ${resultats.nbi.dureeAnneesNBI} ans)${separator}Incluse dans la pension principale\n`;
+  } else if (resultats.nbi?.eligible) {
     csv += `Supplément NBI (${resultats.nbi.pointsNBI} pts)${separator}+${resultats.nbi.supplementMensuel?.toFixed(2)} €/mois\n`;
   }
   if (resultats.pfr?.renteRAFPMensuelle) {
