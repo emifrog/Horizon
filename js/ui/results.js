@@ -8,12 +8,31 @@ import { formaterMontant, formaterPourcentage, formaterTrimestres } from '../uti
 import { formaterDateLongueFR } from '../utils/dates.js';
 
 /**
+ * Échappe les caractères HTML pour prévenir les attaques XSS
+ * @param {string} text - Texte à échapper
+ * @returns {string} Texte échappé
+ */
+function escapeHtml(text) {
+  if (text === null || text === undefined) return '';
+  const str = String(text);
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/**
  * Affiche les résultats complets de la simulation
  * @param {Object} resultats - Résultats de la simulation
  * @param {HTMLElement} container - Conteneur d'affichage
  */
 export function afficherResultats(resultats, container) {
   if (!container) return;
+  
+  // Protection contre les résultats invalides
+  if (!resultats) {
+    console.error('Aucun résultat à afficher');
+    return;
+  }
 
   container.innerHTML = '';
 
@@ -28,6 +47,10 @@ export function afficherResultats(resultats, container) {
   // Section détails
   const detailsSection = creerSectionDetails(resultats);
   container.appendChild(detailsSection);
+
+  // Section graphique
+  const graphiqueSection = creerSectionGraphique(resultats.scenarios);
+  container.appendChild(graphiqueSection);
 
   // Section avertissement
   const avertissement = creerAvertissement();
@@ -123,16 +146,25 @@ function creerSectionScenarios(scenarios) {
   const section = document.createElement('section');
   section.className = 'results-section results-section--scenarios';
 
+  // Protection contre scenarios undefined
+  if (!scenarios || !Array.isArray(scenarios) || scenarios.length === 0) {
+    section.innerHTML = `
+      <h2 class="results-section__title">Scénarios de départ</h2>
+      <p class="text--muted">Aucun scénario disponible.</p>
+    `;
+    return section;
+  }
+
   const scenariosHTML = scenarios.map((scenario, index) => `
     <tr class="${index === 1 ? 'scenario--recommended' : ''}">
       <td>
-        <strong>${scenario.description}</strong>
+        <strong>${escapeHtml(scenario.description)}</strong>
         ${index === 1 ? '<span class="badge badge--success">Recommandé</span>' : ''}
       </td>
-      <td>${formaterDateLongueFR(scenario.date)}</td>
-      <td>${Math.floor(scenario.age)} ans</td>
-      <td>${formaterTrimestres(scenario.trimestresLiquidables)}</td>
-      <td class="${scenario.decote ? 'text--warning' : ''}">${formaterPourcentage(scenario.tauxLiquidation)}</td>
+      <td>${escapeHtml(formaterDateLongueFR(scenario.date))}</td>
+      <td>${escapeHtml(Math.floor(scenario.age))} ans</td>
+      <td>${escapeHtml(formaterTrimestres(scenario.trimestresLiquidables))}</td>
+      <td class="${scenario.decote ? 'text--warning' : ''}">${escapeHtml(formaterPourcentage(scenario.tauxLiquidation))}</td>
       <td>
         ${scenario.decote ? '<span class="badge badge--warning">Décote</span>' : ''}
         ${scenario.surcote ? '<span class="badge badge--success">Surcote</span>' : ''}
@@ -254,6 +286,12 @@ function creerSectionDetails(resultats) {
               <dd>+${formaterMontant(resultats.pfr.renteRAFPMensuelle)}/mois</dd>
             </div>
           ` : ''}
+          ${resultats.pfrSPV?.eligible ? `
+            <div class="details-list__item">
+              <dt>PFR SPV (${escapeHtml(resultats.pfrSPV.anneesSPV)} ans)</dt>
+              <dd>+${formaterMontant(resultats.pfrSPV.montantMensuel)}/mois</dd>
+            </div>
+          ` : ''}
           <div class="details-list__item details-list__item--total">
             <dt>Total retraite estimé</dt>
             <dd><strong>${formaterMontant(resultats.totalRetraite)}</strong>/mois</dd>
@@ -262,6 +300,33 @@ function creerSectionDetails(resultats) {
       </div>
     </div>
   `;
+
+  return section;
+}
+
+/**
+ * Crée la section graphique
+ * @param {Array} scenarios - Scénarios de départ
+ * @returns {HTMLElement} Section graphique
+ */
+function creerSectionGraphique(scenarios) {
+  const section = document.createElement('section');
+  section.className = 'results-section results-section--graphique';
+
+  section.innerHTML = `
+    <h2 class="results-section__title">Évolution de la pension selon l'âge de départ</h2>
+    <div class="graphique-container" style="background: var(--color-white); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-lg);">
+      <canvas id="pension-chart" width="600" height="300" style="width: 100%; max-width: 600px; height: auto;" aria-label="Graphique d'évolution de la pension selon l'âge de départ" role="img"></canvas>
+    </div>
+  `;
+
+  // Afficher le graphique après insertion dans le DOM
+  requestAnimationFrame(() => {
+    const canvas = section.querySelector('#pension-chart');
+    if (canvas && scenarios?.length) {
+      afficherGraphiquePension(scenarios, canvas);
+    }
+  });
 
   return section;
 }

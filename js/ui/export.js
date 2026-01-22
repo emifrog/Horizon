@@ -411,23 +411,88 @@ export function preparerImpression() {
 }
 
 /**
- * Exporte les résultats au format JSON
+ * Exporte les résultats au format CSV
  * @param {Object} resultats - Résultats
  * @param {Object} profil - Profil
  */
-export function exporterJSON(resultats, profil) {
-  const data = {
-    dateGeneration: new Date().toISOString(),
-    profil,
-    resultats,
-  };
+export function exporterCSV(resultats, profil) {
+  const dateGeneration = formaterDateFR(new Date());
+  const separator = ';'; // Point-virgule pour compatibilité Excel FR
+  
+  // En-tête du fichier
+  let csv = `Simulation Retraite SPP - Généré le ${dateGeneration}\n\n`;
+  
+  // Section Profil
+  csv += `PROFIL\n`;
+  csv += `Année de naissance${separator}${profil.anneeNaissance || ''}\n`;
+  csv += `Date d'entrée SPP${separator}${profil.dateEntreeSPP ? formaterDateFR(profil.dateEntreeSPP) : ''}\n`;
+  csv += `Indice brut${separator}${profil.indiceBrut || ''}\n`;
+  csv += `Quotité${separator}${profil.quotite === 1 ? '100%' : `${Math.round(profil.quotite * 100)}%`}\n`;
+  csv += `\n`;
+  
+  // Section Résumé
+  csv += `RÉSUMÉ\n`;
+  csv += `Pension estimée (taux plein)${separator}${resultats.pensionTauxPlein?.pensionBruteMensuelle?.toFixed(2) || ''} €/mois\n`;
+  csv += `Taux de liquidation${separator}${resultats.pensionTauxPlein?.tauxLiquidationNet?.toFixed(2) || ''}%\n`;
+  csv += `Durée d'assurance${separator}${resultats.duree?.trimestresAssuranceTotale || ''} trimestres\n`;
+  csv += `Trimestres requis${separator}${resultats.duree?.trimestresRequis || ''} trimestres\n`;
+  csv += `\n`;
+  
+  // Section Scénarios
+  csv += `SCÉNARIOS DE DÉPART\n`;
+  csv += `Scénario${separator}Date${separator}Âge${separator}Trimestres${separator}Taux${separator}Pension brute${separator}Statut\n`;
+  
+  if (resultats.scenarios && Array.isArray(resultats.scenarios)) {
+    resultats.scenarios.forEach(s => {
+      const statut = s.decote ? 'Décote' : (s.surcote ? 'Surcote' : 'Taux plein');
+      csv += `${s.description}${separator}`;
+      csv += `${formaterDateFR(s.date)}${separator}`;
+      csv += `${Math.floor(s.age)} ans${separator}`;
+      csv += `${s.trimestresLiquidables}${separator}`;
+      csv += `${s.tauxLiquidation?.toFixed(2)}%${separator}`;
+      csv += `${s.pension?.pensionBruteMensuelle?.toFixed(2)} €${separator}`;
+      csv += `${statut}\n`;
+    });
+  }
+  csv += `\n`;
+  
+  // Section Durée d'assurance
+  csv += `DÉTAIL DURÉE D'ASSURANCE\n`;
+  csv += `Services effectifs SPP${separator}${resultats.duree?.trimestresServicesEffectifs || 0} trimestres\n`;
+  csv += `Bonification 1/5ème${separator}${resultats.duree?.trimestresBonificationCinquieme || 0} trimestres\n`;
+  csv += `Bonification enfants${separator}${resultats.duree?.trimestresBonificationEnfants || 0} trimestres\n`;
+  csv += `Majoration SPV${separator}${resultats.duree?.trimestresMajorationSPV || 0} trimestres\n`;
+  csv += `Autres régimes${separator}${resultats.duree?.trimestresAutresRegimes || 0} trimestres\n`;
+  csv += `TOTAL${separator}${resultats.duree?.trimestresAssuranceTotale || 0} trimestres\n`;
+  csv += `\n`;
+  
+  // Section Compléments
+  csv += `COMPLÉMENTS\n`;
+  if (resultats.nbi?.eligible) {
+    csv += `Supplément NBI (${resultats.nbi.pointsNBI} pts)${separator}+${resultats.nbi.supplementMensuel?.toFixed(2)} €/mois\n`;
+  }
+  if (resultats.pfr?.renteRAFPMensuelle) {
+    csv += `Rente RAFP${separator}+${resultats.pfr.renteRAFPMensuelle?.toFixed(2)} €/mois\n`;
+  }
+  if (resultats.pfrSPV?.eligible) {
+    csv += `PFR SPV (${resultats.pfrSPV.anneesSPV} ans)${separator}+${resultats.pfrSPV.montantMensuel?.toFixed(2)} €/mois\n`;
+  }
+  csv += `Total retraite estimé${separator}${resultats.totalRetraite?.toFixed(2)} €/mois\n`;
+  csv += `\n`;
+  
+  // Avertissement
+  csv += `AVERTISSEMENT\n`;
+  csv += `Cette simulation est fournie à titre indicatif. Seule la CNRACL est habilitée à calculer vos droits définitifs.\n`;
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  // Créer et télécharger le fichier
+  // BOM UTF-8 pour que Excel reconnaisse l'encodage
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement('a');
   link.href = url;
-  link.download = `simulation-retraite-${formaterDateFR(new Date()).replace(/\//g, '-')}.json`;
+  link.download = `simulation-retraite-${dateGeneration.replace(/\//g, '-')}.csv`;
   link.click();
 
   URL.revokeObjectURL(url);

@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="css/main.css">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <body>
   <div class="app">
@@ -28,8 +28,8 @@
             <img src="assets/logo.svg" alt="Logo" class="header__logo-img">
           </div>
           <div>
-            <h1 class="header__title">Simulateur Retraite SPP</h1>
-            <span class="header__subtitle">Régime CNRACL - Catégorie active</span>
+            <h1 class="header__title">Simulateur de retraite SPP</h1>
+            <!--<span class="header__subtitle">Régime CNRACL - Catégorie active</span>-->
           </div>
         </div>
       </div>
@@ -188,19 +188,63 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="dureeNBI" class="form-label">Années de perception NBI</label>
+                      <label for="dureeNBI" class="form-label">
+                        Années de perception NBI
+                        <span class="tooltip" tabindex="0" aria-label="Information sur la NBI">
+                          <img src="assets/icons/info.svg" alt="" class="tooltip__icon" aria-hidden="true">
+                          <span class="tooltip__content">Si vous avez perçu la NBI pendant au moins 15 ans, elle est intégrée dans le calcul de la pension sur la base des 6 derniers mois. Si la durée est inférieure à 15 ans, le supplément est proratisé.</span>
+                        </span>
+                      </label>
                       <input type="number" id="dureeNBI" name="dureeNBI" class="form-input"
                              min="0" max="45" value="0" aria-describedby="dureeNBI-hint">
                       <span class="form-hint" id="dureeNBI-hint">Durée totale de perception de la NBI.</span>
                     </div>
                   </div>
 
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="montantPFR" class="form-label">Prime de feu annuelle brute (optionnel)</label>
+                      <input type="number" id="montantPFR" name="montantPFR" class="form-input"
+                             min="0" step="0.01" placeholder="Calcul auto si vide"
+                             aria-describedby="montantPFR-hint">
+                      <span class="form-hint" id="montantPFR-hint">Si non renseigné, calcul automatique (25% du TIB).</span>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="anneesCotisationRAFP" class="form-label">Années de cotisation RAFP</label>
+                      <input type="number" id="anneesCotisationRAFP" name="anneesCotisationRAFP" class="form-input"
+                             min="0" max="45" value="0" aria-describedby="anneesCotisationRAFP-hint">
+                      <span class="form-hint" id="anneesCotisationRAFP-hint">Depuis 2005 (création du RAFP).</span>
+                    </div>
+                  </div>
+
+                  <!-- Section double statut SPP/SPV -->
                   <div class="form-group">
-                    <label for="montantPFR" class="form-label">Prime de feu annuelle brute (optionnel)</label>
-                    <input type="number" id="montantPFR" name="montantPFR" class="form-input"
-                           min="0" step="0.01" placeholder="Laisser vide pour calcul automatique"
-                           aria-describedby="montantPFR-hint">
-                    <span class="form-hint" id="montantPFR-hint">Si non renseigné, sera calculé automatiquement (25% du traitement indiciaire).</span>
+                    <div class="form-checkbox">
+                      <input type="checkbox" id="doubleStatut" name="doubleStatut" class="form-checkbox__input">
+                      <label for="doubleStatut" class="form-checkbox__label">J'ai également un statut de sapeur-pompier volontaire (SPV)</label>
+                    </div>
+                  </div>
+
+                  <div id="spv-fields" class="form-group" style="display: none;">
+                    <div class="alert alert--info" role="note" style="margin-bottom: var(--spacing-md);">
+                      <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                      </svg>
+                      <div class="alert__content">
+                        <strong>Prestation de Fidélité et de Reconnaissance (PFR) SPV</strong>
+                        <p>En tant qu'ancien SPV, vous pouvez percevoir une rente annuelle à vie si vous avez au moins 20 ans de service et 55 ans.</p>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="montantPFRSPV" class="form-label">Montant PFR SPV annuel (optionnel)</label>
+                      <input type="number" id="montantPFRSPV" name="montantPFRSPV" class="form-input"
+                             min="0" step="1" placeholder="Calcul auto selon années SPV" aria-describedby="montantPFRSPV-hint">
+                      <span class="form-hint" id="montantPFRSPV-hint">Calculé automatiquement selon vos années SPV : 20 ans→1025€, 25 ans→2050€, 30 ans→2690€, 35 ans→3075€/an.</span>
+                    </div>
                   </div>
                 </div>
 
@@ -235,7 +279,7 @@
                       </svg>
                       Exporter en PDF
                     </button>
-                    <button type="button" class="btn btn--ghost" data-action="export-json" aria-label="Exporter les données en JSON">
+                    <button type="button" class="btn btn--ghost" data-action="export-csv" aria-label="Exporter les données en CSV">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14,2 14,8 20,8"/>
@@ -244,14 +288,14 @@
                         <path d="M14 13h2"/>
                         <path d="M14 17h2"/>
                       </svg>
-                      Exporter en JSON
+                      Exporter en CSV
                     </button>
                   </div>
                 </div>
 
                 <!-- Navigation -->
                 <div class="form-navigation">
-                  <button type="button" class="btn btn--ghost" data-action="prev-step" style="visibility: hidden;">
+                  <button type="button" class="btn btn--return" data-action="prev-step" style="visibility: hidden;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="15,18 9,12 15,6"/>
                     </svg>

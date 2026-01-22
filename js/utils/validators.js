@@ -285,8 +285,8 @@ export function validerProfil(profil) {
     }
   }
 
-  // Validation indice
-  if (profil.indiceBrut !== undefined) {
+  // Validation indice (seulement si renseigné)
+  if (profil.indiceBrut !== undefined && profil.indiceBrut !== null) {
     const resultat = validerIndiceBrut(profil.indiceBrut);
     if (!resultat.valide) {
       erreurs.indiceBrut = resultat.erreur;

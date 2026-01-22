@@ -282,6 +282,15 @@ function showStep(step) {
 
   // Mettre à jour les boutons de navigation
   updateNavigationButtons();
+
+  // Déclencher automatiquement le calcul quand on arrive à l'étape 4 (résultats)
+  if (step === formState.totalSteps) {
+    const form = document.getElementById('simulator-form');
+    if (form) {
+      // Déclencher l'événement submit pour lancer le calcul
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+  }
 }
 
 /**

@@ -57,8 +57,8 @@
   --color-gray-900: #111827;
 
   --color-text: var(--color-gray-800);
-  --color-text-muted: var(--color-gray-500);
-  --color-text-light: var(--color-gray-400);
+  --color-text-muted: var(--color-gray-600);  /* Amélioration contraste WCAG AA */
+  --color-text-light: var(--color-gray-500);  /* Amélioration contraste */
 
   --color-bg: var(--color-white);
   --color-bg-alt: var(--color-gray-50);

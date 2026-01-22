@@ -6,6 +6,40 @@
  * @author Xavier (Adjudant SDIS 06)
  */
 
+// =============================================================================
+// GESTION D'ERREURS GLOBALE
+// =============================================================================
+
+/**
+ * Gestionnaire d'erreurs global pour les erreurs non capturées
+ */
+window.onerror = function(message, source, lineno, colno, error) {
+  console.error('Erreur globale:', { message, source, lineno, colno, error });
+  
+  // Afficher une notification utilisateur si le module form est chargé
+  if (typeof showNotification === 'function') {
+    showNotification('Une erreur inattendue s\'est produite. Veuillez réessayer.', 'error');
+  }
+  
+  // Ne pas bloquer l'exécution
+  return false;
+};
+
+/**
+ * Gestionnaire pour les promesses rejetées non gérées
+ */
+window.addEventListener('unhandledrejection', function(event) {
+  console.error('Promesse rejetée non gérée:', event.reason);
+  
+  // Afficher une notification utilisateur
+  if (typeof showNotification === 'function') {
+    showNotification('Une erreur asynchrone s\'est produite.', 'error');
+  }
+  
+  // Empêcher l'affichage dans la console par défaut (déjà loggé)
+  event.preventDefault();
+});
+
 // Imports des modules
 import { creerProfil, enrichirProfil } from './modules/profil.js';
 import { calculerDurees } from './modules/duree.js';
@@ -16,7 +50,7 @@ import { calculerNBI } from './modules/nbi.js';
 import { calculerSurcote, appliquerSurcote } from './modules/surcote.js';
 import { initForm, getFormData, goToStep, showNotification } from './ui/form.js';
 import { afficherResultats, masquerResultats } from './ui/results.js';
-import { exporterPDF, exporterJSON } from './ui/export.js';
+import { exporterPDF, exporterCSV } from './ui/export.js';
 import { getDureeAssuranceRequise, PFR } from './config/parametres.js';
 import { simulerScenariosSurcote } from './modules/surcote.js';
 
@@ -42,11 +76,83 @@ function init() {
     setupFormListeners(form);
   }
 
+  // Gestion du double statut SPP/SPV
+  setupDoubleStatutToggle();
+
   // Boutons d'export
   document.querySelector('[data-action="export-pdf"]')?.addEventListener('click', handleExportPDF);
-  document.querySelector('[data-action="export-json"]')?.addEventListener('click', handleExportJSON);
+  document.querySelector('[data-action="export-csv"]')?.addEventListener('click', handleExportCSV);
 
   console.log('Application initialisée.');
+}
+
+/**
+ * Configure l'affichage conditionnel des champs SPV (double statut)
+ */
+function setupDoubleStatutToggle() {
+  const checkbox = document.getElementById('doubleStatut');
+  const spvFields = document.getElementById('spv-fields');
+  
+  if (checkbox && spvFields) {
+    checkbox.addEventListener('change', () => {
+      spvFields.style.display = checkbox.checked ? 'block' : 'none';
+    });
+  }
+}
+
+/**
+ * Barème PFR SPV selon les années de service
+ * Réf: Décret n°2005-1150 du 13 septembre 2005
+ */
+const BAREME_PFR_SPV = {
+  15: 512,   // 15 ans : 512€/an (cas incapacité)
+  20: 1025,  // 20 ans : 1025€/an
+  25: 2050,  // 25 ans : 2050€/an
+  30: 2690,  // 30 ans : 2690€/an
+  35: 3075,  // 35 ans et + : 3075€/an
+};
+
+/**
+ * Calcule le montant de la PFR SPV selon les années de service
+ * @param {number} anneesSPV - Années de service SPV
+ * @returns {number} Montant annuel de la PFR SPV
+ */
+function getMontantPFRSPV(anneesSPV) {
+  if (anneesSPV >= 35) return BAREME_PFR_SPV[35];
+  if (anneesSPV >= 30) return BAREME_PFR_SPV[30];
+  if (anneesSPV >= 25) return BAREME_PFR_SPV[25];
+  if (anneesSPV >= 20) return BAREME_PFR_SPV[20];
+  if (anneesSPV >= 15) return BAREME_PFR_SPV[15]; // Cas incapacité opérationnelle
+  return 0;
+}
+
+/**
+ * Calcule la PFR SPV pour les agents en double statut
+ * @param {boolean} doubleStatut - Si l'agent a le double statut
+ * @param {number} anneesSPV - Années de service SPV
+ * @param {number} montantManuel - Montant saisi manuellement (optionnel)
+ * @returns {Object} Résultat du calcul PFR SPV
+ */
+function calculerPFRSPV(doubleStatut, anneesSPV, montantManuel) {
+  if (!doubleStatut || anneesSPV < 15) {
+    return {
+      eligible: false,
+      anneesSPV: anneesSPV || 0,
+      montantAnnuel: 0,
+      montantMensuel: 0,
+    };
+  }
+
+  // Utiliser le montant manuel si renseigné, sinon calcul automatique
+  const montantAnnuel = montantManuel > 0 ? montantManuel : getMontantPFRSPV(anneesSPV);
+
+  return {
+    eligible: anneesSPV >= 20, // Éligibilité standard à 20 ans
+    eligibleIncapacite: anneesSPV >= 15 && anneesSPV < 20, // Éligibilité cas incapacité
+    anneesSPV,
+    montantAnnuel,
+    montantMensuel: Math.round((montantAnnuel / 12) * 100) / 100,
+  };
 }
 
 /**
@@ -74,18 +180,49 @@ function handleSubmit(event) {
   try {
     // Récupérer les données du formulaire
     const formData = collectFormData();
+    console.log('Données du formulaire:', formData);
+
+    // Vérifier les données obligatoires
+    if (!formData.dateNaissance || !formData.dateEntreeSPP || !formData.indiceBrut) {
+      const champsManquants = [];
+      if (!formData.dateNaissance) champsManquants.push('Date de naissance');
+      if (!formData.dateEntreeSPP) champsManquants.push("Date d'entrée SPP");
+      if (!formData.indiceBrut) champsManquants.push('Indice brut');
+      
+      console.warn('Champs obligatoires manquants:', champsManquants);
+      showNotification(`Champs manquants : ${champsManquants.join(', ')}`, 'error');
+      
+      const container = document.getElementById('results-container');
+      if (container) {
+        container.innerHTML = `
+          <div class="alert alert--warning">
+            <div class="alert__content">
+              <strong>Données incomplètes</strong>
+              <p>Veuillez remplir les champs obligatoires : ${champsManquants.join(', ')}</p>
+            </div>
+          </div>
+        `;
+      }
+      return;
+    }
 
     // Créer et enrichir le profil
     const profil = creerProfil(formData);
+    console.log('Profil créé:', profil);
+    
     const profilEnrichi = enrichirProfil(profil);
+    console.log('Profil enrichi:', profilEnrichi);
 
     if (!profilEnrichi.valide) {
+      console.warn('Profil invalide:', profilEnrichi.erreurs);
       showNotification('Veuillez corriger les erreurs dans le formulaire', 'error');
       return;
     }
 
     // Effectuer les calculs
+    console.log('Début des calculs...');
     const resultats = effectuerCalculs(formData, profilEnrichi);
+    console.log('Résultats calculés:', resultats);
 
     // Stocker dans l'état
     appState.profil = profilEnrichi;
@@ -94,6 +231,7 @@ function handleSubmit(event) {
 
     // Afficher les résultats
     const container = document.getElementById('results-container');
+    console.log('Container trouvé:', container);
     afficherResultats(resultats, container);
 
     // Notification de succès
@@ -101,7 +239,24 @@ function handleSubmit(event) {
 
   } catch (error) {
     console.error('Erreur lors du calcul:', error);
+    console.error('Stack trace:', error.stack);
     showNotification('Une erreur est survenue lors du calcul', 'error');
+    
+    // Afficher l'erreur dans le conteneur de résultats
+    const container = document.getElementById('results-container');
+    if (container) {
+      container.innerHTML = `
+        <div class="alert alert--error">
+          <div class="alert__content">
+            <strong>Erreur de calcul</strong>
+            <p>${error.message}</p>
+            <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.5rem;">
+              Vérifiez que tous les champs obligatoires sont remplis correctement.
+            </p>
+          </div>
+        </div>
+      `;
+    }
   }
 }
 
@@ -124,6 +279,10 @@ function collectFormData() {
     pointsNBI: parseInt(formData.get('pointsNBI'), 10) || 0,
     dureeNBI: parseInt(formData.get('dureeNBI'), 10) || 0,
     montantPFR: parseFloat(formData.get('montantPFR')) || null,
+    anneesCotisationRAFP: parseInt(formData.get('anneesCotisationRAFP'), 10) || 0,
+    // Double statut SPP/SPV (utilise anneesSPV du profil)
+    doubleStatut: formData.get('doubleStatut') === 'on',
+    montantPFRSPV: parseFloat(formData.get('montantPFRSPV')) || 0,
   };
 }
 
@@ -223,15 +382,19 @@ function effectuerCalculs(formData, profilEnrichi) {
   });
 
   // 5. Calculer la PFR et le RAFP
-  // Note: Le RAFP a été créé en 2005, on ne compte que les années depuis cette date
-  const dateDebutRAFP = new Date(Math.max(
-    formData.dateEntreeSPP.getTime(),
-    new Date(PFR.ANNEE_CREATION_RAFP, 0, 1).getTime()
-  ));
-  const anneesRAFP = Math.max(0, Math.floor(
-    (dateTauxPlein.getTime() - dateDebutRAFP.getTime()) /
-    (365.25 * 24 * 60 * 60 * 1000)
-  ));
+  // Utiliser les années de cotisation RAFP du formulaire si renseignées,
+  // sinon calculer automatiquement depuis 2005
+  let anneesRAFP = formData.anneesCotisationRAFP;
+  if (!anneesRAFP || anneesRAFP === 0) {
+    const dateDebutRAFP = new Date(Math.max(
+      formData.dateEntreeSPP.getTime(),
+      new Date(PFR.ANNEE_CREATION_RAFP, 0, 1).getTime()
+    ));
+    anneesRAFP = Math.max(0, Math.floor(
+      (dateTauxPlein.getTime() - dateDebutRAFP.getTime()) /
+      (365.25 * 24 * 60 * 60 * 1000)
+    ));
+  }
 
   const pfr = calculerPFR({
     indiceBrut: formData.indiceBrut,
@@ -247,19 +410,23 @@ function effectuerCalculs(formData, profilEnrichi) {
     tauxLiquidation: pensionTauxPlein.tauxLiquidationNet,
   });
 
-  // 7. Calculer le total retraite
+  // 7. Calculer la PFR SPV (double statut) - utilise anneesSPV du profil
+  const pfrSPV = calculerPFRSPV(formData.doubleStatut, formData.anneesSPV, formData.montantPFRSPV);
+
+  // 8. Calculer le total retraite
   const totalRetraite =
     pensionTauxPlein.pensionBruteMensuelle +
     (nbi.eligible ? nbi.supplementMensuel : 0) +
-    pfr.renteRAFPMensuelle;
+    pfr.renteRAFPMensuelle +
+    (pfrSPV.eligible ? pfrSPV.montantMensuel : 0);
 
-  // 8. Calculer l'âge au taux plein
+  // 9. Calculer l'âge au taux plein
   const ageTauxPlein = Math.floor(
     (dateTauxPlein.getTime() - formData.dateNaissance.getTime()) /
     (365.25 * 24 * 60 * 60 * 1000)
   );
 
-  // 9. Générer les scénarios de surcote (si taux plein atteint par durée)
+  // 10. Générer les scénarios de surcote (si taux plein atteint par durée)
   let scenariosSurcote = [];
   if (resultatDateTauxPlein.atteintParDuree) {
     scenariosSurcote = simulerScenariosSurcote(
@@ -284,6 +451,7 @@ function effectuerCalculs(formData, profilEnrichi) {
     scenarios: scenariosAvecPension,
     scenariosSurcote,
     pfr,
+    pfrSPV,
     nbi,
     totalRetraite,
     trimestresRequis,
@@ -382,16 +550,16 @@ function handleExportPDF() {
 }
 
 /**
- * Gère l'export JSON
+ * Gère l'export CSV
  */
-function handleExportJSON() {
+function handleExportCSV() {
   if (!appState.isCalculated || !appState.resultats) {
     showNotification('Veuillez d\'abord effectuer une simulation', 'warning');
     return;
   }
 
-  exporterJSON(appState.resultats, appState.profil.donnees);
-  showNotification('Export JSON téléchargé', 'success');
+  exporterCSV(appState.resultats, appState.profil.donnees);
+  showNotification('Export CSV téléchargé', 'success');
 }
 
 /**
@@ -414,9 +582,34 @@ function debounce(func, wait) {
 
 // Démarrer l'application quand le DOM est prêt
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', safeInit);
 } else {
-  init();
+  safeInit();
+}
+
+/**
+ * Wrapper sécurisé pour l'initialisation
+ */
+function safeInit() {
+  try {
+    init();
+  } catch (error) {
+    console.error('Erreur lors de l\'initialisation:', error);
+    
+    // Afficher un message d'erreur dans le DOM si possible
+    const main = document.querySelector('.main');
+    if (main) {
+      main.innerHTML = `
+        <div class="alert alert--error" style="margin: 2rem;">
+          <div class="alert__content">
+            <strong>Erreur d'initialisation</strong>
+            <p>L'application n'a pas pu démarrer correctement. Veuillez rafraîchir la page.</p>
+            <p style="font-size: 0.875rem; color: var(--color-text-muted);">Détail: ${error.message}</p>
+          </div>
+        </div>
+      `;
+    }
+  }
 }
 
 // Export pour les tests
