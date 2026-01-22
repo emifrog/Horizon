@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contactez-nous pour toute question sur le simulateur de retraite SPP">
+    <title>Contact | Horizon</title>
+
+    <!-- Police Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/reglementaire.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+    <link rel="stylesheet" href="../css/contact.css">
+
+</head>
+
+<body>
+    <div class="app">
+        <!-- En-tête -->
+        <header class="header">
+            <div class="header__container">
+                <div class="header__logo">
+                    <div class="header__logo-icon">
+                        <a href="../index.html">
+                            <img src="../assets/logo.svg" alt="Logo" class="header__logo-img">
+                        </a>
+                    </div>
+                    <div>
+                        <h1 class="header__title">HorizonSP</h1>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenu principal -->
+        <main class="main">
+            <div class="doc-container">
+                <a href="../index.html" class="back-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15,18 9,12 15,6" />
+                    </svg>
+                    Retour au simulateur
+                </a>
+
+                <div class="doc-header">
+                    <h2 class="doc-header__title">Contact</h2>
+                    <p class="doc-header__subtitle">Une question, une suggestion ou un problème ? N'hésitez pas à nous contacter.</p>
+                </div>
+
+                <!-- Formulaire de contact -->
+                <div class="contact-section">
+                    <form class="contact-form" id="contact-form">
+                        <div class="form-group">
+                            <label for="name" class="form-label">Nom</label>
+                            <input type="text" id="name" name="name" class="form-input" placeholder="Votre nom" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="votre.email@exemple.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject" class="form-label">Sujet</label>
+                            <select id="subject" name="subject" class="form-select" required>
+                                <option value="">Sélectionnez un sujet</option>
+                                <option value="question">Question générale</option>
+                                <option value="bug">Signaler un bug</option>
+                                <option value="suggestion">Suggestion d'amélioration</option>
+                                <option value="reglementation">Question réglementaire</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea id="message" name="message" class="form-textarea" rows="6" placeholder="Décrivez votre demande..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn--primary btn--lg">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22,2 15,22 11,13 2,9"/>
+                            </svg>
+                            Envoyer le message
+                        </button>
+                    </form>
+
+                    <!-- Informations de contact -->
+                    <div class="contact-info">
+                        <h3 class="contact-info__title">Autres moyens de contact</h3>
+                        
+                        <div class="contact-info__item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                <path d="M22 6l-10 7L2 6"/>
+                            </svg>
+                            <div>
+                                <strong>Email</strong>
+                                <p>contact@horizonsp.fr</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Pied de page -->
+        <footer class="footer">
+            <div class="footer__container">
+                <p><strong>HorizonSP</strong> - Simulateur de retraite SPP</p>
+                <p>Developpé par XRWeb</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            alert('Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.');
+            this.reset();
+        });
+    </script>
+</body>
+
+</html>
