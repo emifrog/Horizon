@@ -193,6 +193,7 @@
     .doc-footer {
       margin-top: var(--spacing-2xl);
       padding-top: var(--spacing-xl);
+      padding-bottom: var(--spacing-lg);
       border-top: 1px solid var(--color-gray-200);
       text-align: center;
       background-color: var(--color-secondary);
@@ -203,3 +204,117 @@
     .doc-footer__date {
       font-style: italic;
     }
+
+/* ========================================
+   RESPONSIVE - Page réglementaire
+   ======================================== */
+
+@media (max-width: 768px) {
+  .doc-container {
+    padding: 0 var(--spacing-sm);
+  }
+
+  .doc-header__title {
+    font-size: var(--font-size-lg);
+  }
+
+  .doc-header__subtitle {
+    font-size: var(--font-size-base);
+  }
+
+  .doc-nav {
+    padding: var(--spacing-md);
+  }
+
+  .doc-nav__list {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xs);
+  }
+
+  .doc-nav__link {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xs);
+  }
+
+  .doc-section__title {
+    font-size: var(--font-size-lg);
+  }
+
+  .doc-section__content h3 {
+    font-size: var(--font-size-base);
+  }
+
+  .doc-section__content {
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+  }
+
+  .doc-table th,
+  .doc-table td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  .ref-box {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .ref-box__content ul {
+    padding-left: var(--spacing-md);
+  }
+
+  .highlight-box {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .back-link {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .doc-nav__list {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-header {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+  }
+
+  .doc-section {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  /* Tableaux défilants horizontalement */
+  .table-wrapper {
+    margin-left: calc(-1 * var(--spacing-sm));
+    margin-right: calc(-1 * var(--spacing-sm));
+    padding: 0 var(--spacing-sm);
+  }
+
+  /* Highlight box compact */
+  .highlight-box {
+    font-size: var(--font-size-sm);
+  }
+
+  .highlight-box ul {
+    padding-left: var(--spacing-md);
+    margin: var(--spacing-xs) 0;
+  }
+
+  /* Ref box compact */
+  .ref-box__title {
+    font-size: var(--font-size-xs);
+  }
+
+  .ref-box__content {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Section content lists */
+  .doc-section__content ul,
+  .doc-section__content ol {
+    padding-left: var(--spacing-md);
+  }
+}

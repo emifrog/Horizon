@@ -428,8 +428,8 @@ function creerSectionGraphique(scenarios) {
 
   section.innerHTML = `
     <h2 class="results-section__title">Évolution de la pension selon l'âge de départ</h2>
-    <div class="graphique-container" style="background: var(--color-white); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-lg); position: relative;">
-      <canvas id="pension-chart" style="width: 100%; max-width: 600px; height: auto;" aria-label="Graphique d'évolution de la pension selon l'âge de départ" role="img"></canvas>
+    <div class="graphique-container" style="background: var(--color-white); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-lg); position: relative; overflow-x: auto;">
+      <canvas id="pension-chart" style="width: 100%; min-width: 320px; max-width: 600px; height: auto; display: block; margin: 0 auto;" aria-label="Graphique d'évolution de la pension selon l'âge de départ" role="img"></canvas>
       <div id="chart-tooltip" class="chart-tooltip" style="display: none;"></div>
     </div>
   `;
@@ -482,8 +482,12 @@ export function afficherGraphiquePension(scenarios, canvas) {
 
   // Support Retina / HiDPI
   const dpr = window.devicePixelRatio || 1;
-  const displayWidth = 600;
-  const displayHeight = 300;
+
+  // Taille responsive : utiliser la largeur du conteneur parent
+  const container = canvas.parentElement;
+  const containerWidth = container ? container.clientWidth - 32 : 600; // 32px pour le padding
+  const displayWidth = Math.min(Math.max(containerWidth, 320), 600);
+  const displayHeight = Math.min(displayWidth * 0.5, 300);
 
   // Définir la taille CSS
   canvas.style.width = displayWidth + 'px';
@@ -500,7 +504,8 @@ export function afficherGraphiquePension(scenarios, canvas) {
 
   const width = displayWidth;
   const height = displayHeight;
-  const padding = 50;
+  // Padding adaptatif selon la largeur
+  const padding = displayWidth < 400 ? 35 : 50;
 
   // Effacer le canvas
   ctx.clearRect(0, 0, width, height);

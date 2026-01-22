@@ -873,3 +873,169 @@ img.tooltip__icon {
   border: 6px solid transparent;
   border-top-color: var(--color-gray-800);
 }
+
+/* ========================================
+   RESPONSIVE COMPONENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Tableaux responsives */
+  .table-container {
+    margin: 0 calc(-1 * var(--spacing-md));
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  /* Table surcote - affichage compact */
+  .table--surcote th:nth-child(2),
+  .table--surcote td:nth-child(2) {
+    display: none; /* Masquer la colonne date sur mobile */
+  }
+
+  .table--surcote th:nth-child(4),
+  .table--surcote td:nth-child(4) {
+    display: none; /* Masquer la colonne surcote trim. */
+  }
+
+  /* Table scénarios - affichage compact */
+  .table--scenarios th:nth-child(2),
+  .table--scenarios td:nth-child(2) {
+    display: none; /* Masquer la colonne date sur mobile */
+  }
+
+  .table--scenarios th:nth-child(4),
+  .table--scenarios td:nth-child(4) {
+    display: none; /* Masquer la colonne trimestres */
+  }
+
+  /* Détails cards - padding réduit */
+  .details-card {
+    padding: var(--spacing-md);
+  }
+
+  .details-list__item {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .details-list__item dt {
+    font-size: var(--font-size-sm);
+  }
+
+  .details-list__item dd {
+    font-size: var(--font-size-base);
+  }
+
+  /* Notifications */
+  .notifications {
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    left: var(--spacing-md);
+  }
+
+  .notification {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  /* Modale plein écran sur mobile */
+  .modal-overlay {
+    padding: var(--spacing-md);
+  }
+
+  .modal {
+    max-height: 95vh;
+  }
+
+  /* Tooltips */
+  .tooltip__content {
+    width: 220px;
+    font-size: var(--font-size-xs);
+  }
+
+  /* Alertes compactes */
+  .alert {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .alert__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+  /* Boutons export responsives */
+  .export-buttons {
+    flex-direction: column;
+  }
+
+  .export-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Graphique container responsive */
+  .graphique-container {
+    padding: var(--spacing-md) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Très petits écrans */
+  .result-card__value {
+    font-size: var(--font-size-xl);
+  }
+
+  .badge {
+    padding: 2px var(--spacing-xs);
+    font-size: 0.65rem;
+  }
+
+  /* Stepper très compact */
+  .stepper__step-number {
+    width: 2rem;
+    height: 2rem;
+    font-size: var(--font-size-sm);
+  }
+
+  .stepper__step-label {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Boutons pleine largeur */
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn--sm {
+    width: auto;
+  }
+
+  /* Details grid une seule colonne */
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Form row une seule colonne sur très petits écrans */
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sections results */
+  .results-section__title {
+    font-size: var(--font-size-base);
+  }
+
+  /* Surcote summary compact */
+  .surcote-summary {
+    padding: var(--spacing-sm) !important;
+    font-size: var(--font-size-sm) !important;
+  }
+}
