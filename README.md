@@ -16,11 +16,12 @@
 - **Scénarios de départ** : anticipé (57 ans), taux plein, limite d'activité (62 ans)
 - **Calcul de la décote/surcote** selon les trimestres manquants ou supplémentaires
 - **Bonification du 1/5ème** pour services actifs (catégorie active)
+- **Services militaires BSPP/BMPM** pris en compte avec bonification
 - **Majoration SPV** pour les anciens sapeurs-pompiers volontaires
 - **Calcul du RAFP** (Régime Additionnel de la Fonction Publique)
 - **Supplément NBI** (Nouvelle Bonification Indiciaire)
 - **PFR SPV** pour les agents en double statut SPP/SPV
-- **Export PDF et JSON** des résultats
+- **Export PDF et CSV** des résultats
 - **Mode hors ligne** (100% client-side)
 
 ## 🚀 Démarrage rapide
@@ -66,9 +67,9 @@ Horizon/
 │   │   ├── nbi.js         # Nouvelle Bonification Indiciaire
 │   │   └── surcote.js     # Calcul de la surcote
 │   ├── ui/
-│   │   ├── form.js        # Gestion du formulaire multi-étapes
-│   │   ├── results.js     # Affichage des résultats
-│   │   └── export.js      # Export PDF/JSON
+│   │   ├── form.js        # Gestion du formulaire multi-étapes avec animations
+│   │   ├── results.js     # Affichage des résultats et graphiques (Canvas)
+│   │   └── export.js      # Export PDF et CSV
 │   └── utils/
 │       ├── dates.js       # Utilitaires de dates
 │       ├── formatters.js  # Formatage des valeurs

@@ -52,6 +52,11 @@ function setupInputListeners(formElement) {
     input.addEventListener('blur', () => {
       formState.touched[input.name] = true;
       validateField(input);
+
+      // Restaurer 0 si le champ numérique est vide
+      if (input.type === 'number' && input.value === '' && !input.required) {
+        input.value = '0';
+      }
     });
 
     input.addEventListener('input', () => {
@@ -63,6 +68,15 @@ function setupInputListeners(formElement) {
         validateField(input);
       }
     });
+
+    // Effacer le 0 initial au focus sur les champs numériques
+    if (input.type === 'number') {
+      input.addEventListener('focus', () => {
+        if (input.value === '0') {
+          input.value = '';
+        }
+      });
+    }
   });
 }
 

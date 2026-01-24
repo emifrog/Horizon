@@ -428,9 +428,25 @@ function creerSectionGraphique(scenarios) {
 
   section.innerHTML = `
     <h2 class="results-section__title">Évolution de la pension selon l'âge de départ</h2>
-    <div class="graphique-container" style="background: var(--color-white); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-lg); position: relative; overflow-x: auto;">
-      <canvas id="pension-chart" style="width: 100%; min-width: 320px; max-width: 600px; height: auto; display: block; margin: 0 auto;" aria-label="Graphique d'évolution de la pension selon l'âge de départ" role="img"></canvas>
-      <div id="chart-tooltip" class="chart-tooltip" style="display: none;"></div>
+    <div class="graphique-wrapper">
+      <div class="graphique-container">
+        <canvas id="pension-chart" aria-label="Graphique d'évolution de la pension selon l'âge de départ" role="img"></canvas>
+        <div id="chart-tooltip" class="chart-tooltip"></div>
+      </div>
+      <div class="graphique-legende">
+        <div class="graphique-legende__item">
+          <span class="graphique-legende__dot graphique-legende__dot--decote"></span>
+          <span>Avec décote</span>
+        </div>
+        <div class="graphique-legende__item">
+          <span class="graphique-legende__dot graphique-legende__dot--taux-plein"></span>
+          <span>Taux plein (recommandé)</span>
+        </div>
+        <div class="graphique-legende__item">
+          <span class="graphique-legende__dot graphique-legende__dot--surcote"></span>
+          <span>Avec surcote</span>
+        </div>
+      </div>
     </div>
   `;
 
@@ -485,12 +501,15 @@ export function afficherGraphiquePension(scenarios, canvas) {
 
   // Taille responsive : utiliser la largeur du conteneur parent
   const container = canvas.parentElement;
-  const containerWidth = container ? container.clientWidth - 32 : 600; // 32px pour le padding
-  const displayWidth = Math.min(Math.max(containerWidth, 320), 600);
-  const displayHeight = Math.min(displayWidth * 0.5, 300);
+  const containerWidth = container ? container.clientWidth : 600;
+  const isMobile = containerWidth < 500;
+  
+  // Dimensions adaptatives
+  const displayWidth = Math.max(containerWidth, 280);
+  const displayHeight = isMobile ? Math.min(displayWidth * 0.7, 280) : Math.min(displayWidth * 0.55, 350);
 
   // Définir la taille CSS
-  canvas.style.width = displayWidth + 'px';
+  canvas.style.width = '100%';
   canvas.style.height = displayHeight + 'px';
 
   // Définir la taille réelle du canvas (pour Retina)
@@ -504,11 +523,22 @@ export function afficherGraphiquePension(scenarios, canvas) {
 
   const width = displayWidth;
   const height = displayHeight;
+  
   // Padding adaptatif selon la largeur
-  const padding = displayWidth < 400 ? 35 : 50;
+  const paddingLeft = isMobile ? 50 : 70;
+  const paddingRight = isMobile ? 15 : 30;
+  const paddingTop = isMobile ? 20 : 30;
+  const paddingBottom = isMobile ? 45 : 50;
 
   // Effacer le canvas
   ctx.clearRect(0, 0, width, height);
+
+  // Fond avec dégradé subtil
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, '#fafbfc');
+  gradient.addColorStop(1, '#ffffff');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
 
   // Données
   const ages = scenarios.map((s) => Math.floor(s.age));
@@ -516,89 +546,162 @@ export function afficherGraphiquePension(scenarios, canvas) {
 
   const minAge = Math.min(...ages);
   const maxAge = Math.max(...ages);
+  const minPension = Math.min(...pensions);
   const maxPension = Math.max(...pensions);
+  
+  // Ajouter une marge pour l'axe Y (10% en bas)
+  const pensionRange = maxPension - minPension;
+  const yMin = Math.max(0, minPension - pensionRange * 0.1);
+  const yMax = maxPension + pensionRange * 0.05;
+
+  // Zone de dessin
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
 
   // Échelle
-  const xScale = (width - 2 * padding) / (maxAge - minAge || 1);
-  const yScale = (height - 2 * padding) / (maxPension || 1);
+  const xScale = chartWidth / (maxAge - minAge || 1);
+  const yScale = chartHeight / (yMax - yMin || 1);
 
   // Stocker les positions des points pour les tooltips
-  const pointsData = scenarios.map((scenario, i) => ({
-    x: padding + (Math.floor(scenario.age) - minAge) * xScale,
-    y: height - padding - (scenario.pension?.pensionBruteMensuelle || 0) * yScale,
-    scenario: scenario,
-    index: i
-  }));
-
-  // Axes
-  ctx.strokeStyle = '#ccc';
-  ctx.lineWidth = 1;
-
-  // Axe X
-  ctx.beginPath();
-  ctx.moveTo(padding, height - padding);
-  ctx.lineTo(width - padding, height - padding);
-  ctx.stroke();
-
-  // Axe Y
-  ctx.beginPath();
-  ctx.moveTo(padding, padding);
-  ctx.lineTo(padding, height - padding);
-  ctx.stroke();
-
-  // Grille et labels
-  ctx.fillStyle = '#666';
-  ctx.font = '12px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-
-  // Labels X (âges)
-  ages.forEach((age) => {
-    const x = padding + (age - minAge) * xScale;
-    ctx.fillText(`${age} ans`, x, height - padding + 20);
+  const pointsData = scenarios.map((scenario, i) => {
+    const pension = scenario.pension?.pensionBruteMensuelle || 0;
+    return {
+      x: paddingLeft + (Math.floor(scenario.age) - minAge) * xScale,
+      y: paddingTop + chartHeight - (pension - yMin) * yScale,
+      scenario: scenario,
+      index: i
+    };
   });
 
-  // Labels Y (pensions)
-  const ySteps = 5;
+  // Grille horizontale
+  const ySteps = isMobile ? 4 : 5;
+  ctx.strokeStyle = '#e9ecef';
+  ctx.lineWidth = 1;
+  
   for (let i = 0; i <= ySteps; i++) {
-    const value = (maxPension / ySteps) * i;
-    const y = height - padding - value * yScale;
-
-    ctx.textAlign = 'right';
-    ctx.fillText(`${Math.round(value)} €`, padding - 10, y + 4);
+    const value = yMin + ((yMax - yMin) / ySteps) * i;
+    const y = paddingTop + chartHeight - (value - yMin) * yScale;
 
     // Ligne de grille
-    ctx.strokeStyle = '#eee';
     ctx.beginPath();
-    ctx.moveTo(padding, y);
-    ctx.lineTo(width - padding, y);
+    ctx.setLineDash([4, 4]);
+    ctx.moveTo(paddingLeft, y);
+    ctx.lineTo(width - paddingRight, y);
     ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label Y
+    ctx.fillStyle = '#6c757d';
+    ctx.font = `${isMobile ? '10' : '11'}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${Math.round(value).toLocaleString('fr-FR')} €`, paddingLeft - 8, y);
   }
 
-  // Courbe
+  // Axe X (ligne de base)
+  ctx.strokeStyle = '#dee2e6';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(paddingLeft, paddingTop + chartHeight);
+  ctx.lineTo(width - paddingRight, paddingTop + chartHeight);
+  ctx.stroke();
+
+  // Labels X (âges)
+  ctx.fillStyle = '#495057';
+  ctx.font = `${isMobile ? '10' : '12'}px system-ui, -apple-system, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  
+  ages.forEach((age, i) => {
+    const x = paddingLeft + (age - minAge) * xScale;
+    const label = isMobile ? `${age}` : `${age} ans`;
+    ctx.fillText(label, x, paddingTop + chartHeight + 8);
+    
+    // Petite marque sur l'axe
+    ctx.strokeStyle = '#adb5bd';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, paddingTop + chartHeight);
+    ctx.lineTo(x, paddingTop + chartHeight + 4);
+    ctx.stroke();
+  });
+
+  // Zone sous la courbe (dégradé)
+  if (pointsData.length > 1) {
+    const areaGradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + chartHeight);
+    areaGradient.addColorStop(0, 'rgba(200, 16, 46, 0.15)');
+    areaGradient.addColorStop(1, 'rgba(200, 16, 46, 0.02)');
+    
+    ctx.fillStyle = areaGradient;
+    ctx.beginPath();
+    ctx.moveTo(pointsData[0].x, paddingTop + chartHeight);
+    pointsData.forEach((point) => {
+      ctx.lineTo(point.x, point.y);
+    });
+    ctx.lineTo(pointsData[pointsData.length - 1].x, paddingTop + chartHeight);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Courbe avec courbe de Bézier pour un rendu plus lisse
   ctx.strokeStyle = '#C8102E';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = isMobile ? 2.5 : 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   ctx.beginPath();
 
   pointsData.forEach((point, i) => {
     if (i === 0) {
       ctx.moveTo(point.x, point.y);
     } else {
-      ctx.lineTo(point.x, point.y);
+      // Courbe de Bézier pour un rendu plus lisse
+      const prev = pointsData[i - 1];
+      const cpX = (prev.x + point.x) / 2;
+      ctx.quadraticCurveTo(prev.x + (point.x - prev.x) * 0.5, prev.y, cpX, (prev.y + point.y) / 2);
+      ctx.quadraticCurveTo(cpX, point.y, point.x, point.y);
     }
   });
 
   ctx.stroke();
 
-  // Points
+  // Points avec effet de halo
+  const pointRadius = isMobile ? 6 : 8;
+  const innerRadius = isMobile ? 3 : 4;
+  
   pointsData.forEach((point) => {
-    ctx.fillStyle = point.index === 1 ? '#28A745' : '#C8102E';
+    // Couleur selon le type de scénario
+    let pointColor;
+    if (point.scenario.decote) {
+      pointColor = '#dc3545'; // Rouge pour décote
+    } else if (point.scenario.surcote) {
+      pointColor = '#17a2b8'; // Bleu pour surcote
+    } else {
+      pointColor = '#28a745'; // Vert pour taux plein
+    }
+    
+    // Halo
+    ctx.fillStyle = pointColor + '30';
     ctx.beginPath();
-    ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+    ctx.arc(point.x, point.y, pointRadius + 4, 0, Math.PI * 2);
     ctx.fill();
+    
+    // Point principal
+    ctx.fillStyle = pointColor;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, pointRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Bordure blanche
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, pointRadius, 0, Math.PI * 2);
+    ctx.stroke();
 
+    // Point central blanc
     ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+    ctx.arc(point.x, point.y, innerRadius, 0, Math.PI * 2);
     ctx.fill();
   });
 

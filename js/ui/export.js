@@ -453,7 +453,11 @@ export function exporterCSV(resultats, profil) {
   
   // Section Résumé
   csv += `RÉSUMÉ\n`;
+  csv += `Date du taux plein${separator}${resultats.dateTauxPlein ? formaterDateFR(resultats.dateTauxPlein) : ''}\n`;
+  csv += `Âge au taux plein${separator}${resultats.ageTauxPlein || ''} ans\n`;
+  csv += `Taux plein atteint par${separator}${resultats.tauxPleinParDuree ? 'Durée' : 'Âge (annulation décote)'}\n`;
   csv += `Pension estimée (taux plein)${separator}${resultats.pensionTauxPlein?.pensionBruteMensuelle?.toFixed(2) || ''} €/mois\n`;
+  csv += `Pension nette estimée${separator}${resultats.pensionTauxPlein?.pensionNetteMensuelle?.toFixed(2) || ''} €/mois\n`;
   csv += `Taux de liquidation${separator}${resultats.pensionTauxPlein?.tauxLiquidationNet?.toFixed(2) || ''}%\n`;
   csv += `Durée d'assurance${separator}${resultats.duree?.trimestresAssuranceTotale || ''} trimestres\n`;
   csv += `Trimestres requis${separator}${resultats.duree?.trimestresRequis || ''} trimestres\n`;
@@ -491,6 +495,23 @@ export function exporterCSV(resultats, profil) {
   csv += `TOTAL${separator}${resultats.duree?.trimestresAssuranceTotale || 0} trimestres\n`;
   csv += `\n`;
   
+  // Section Détail de la pension
+  csv += `DÉTAIL DE LA PENSION\n`;
+  csv += `Traitement indiciaire brut annuel${separator}${resultats.pensionTauxPlein?.traitementIndiciaireAnnuel?.toFixed(2) || ''} €\n`;
+  if (resultats.pensionTauxPlein?.nbiIntegre) {
+    csv += `dont NBI intégrée${separator}${resultats.pensionTauxPlein.pointsNBIIntegres} points\n`;
+  }
+  csv += `Taux de liquidation brut${separator}${resultats.pensionTauxPlein?.tauxLiquidationBrut?.toFixed(2) || ''}%\n`;
+  csv += `Trimestres de décote${separator}${resultats.pensionTauxPlein?.trimestresDecote || 0}\n`;
+  csv += `Coefficient de décote${separator}${resultats.pensionTauxPlein?.coefficientDecote?.toFixed(4) || ''}\n`;
+  csv += `Taux de liquidation net${separator}${resultats.pensionTauxPlein?.tauxLiquidationNet?.toFixed(2) || ''}%\n`;
+  csv += `Pension brute mensuelle${separator}${resultats.pensionTauxPlein?.pensionBruteMensuelle?.toFixed(2) || ''} €\n`;
+  csv += `Pension brute annuelle${separator}${resultats.pensionTauxPlein?.pensionBruteAnnuelle?.toFixed(2) || ''} €\n`;
+  csv += `Minimum garanti${separator}${resultats.pensionTauxPlein?.minimumGaranti?.toFixed(2) || ''} €/mois\n`;
+  csv += `Minimum garanti appliqué${separator}${resultats.pensionTauxPlein?.minimumGarantiApplique ? 'Oui' : 'Non'}\n`;
+  csv += `Pension nette mensuelle${separator}${resultats.pensionTauxPlein?.pensionNetteMensuelle?.toFixed(2) || ''} €\n`;
+  csv += `\n`;
+  
   // Section Compléments
   csv += `COMPLÉMENTS\n`;
   if (resultats.nbi?.eligible && resultats.nbi?.integreTIB) {
@@ -498,14 +519,34 @@ export function exporterCSV(resultats, profil) {
   } else if (resultats.nbi?.eligible) {
     csv += `Supplément NBI (${resultats.nbi.pointsNBI} pts)${separator}+${resultats.nbi.supplementMensuel?.toFixed(2)} €/mois\n`;
   }
-  if (resultats.pfr?.renteRAFPMensuelle) {
-    csv += `Rente RAFP${separator}+${resultats.pfr.renteRAFPMensuelle?.toFixed(2)} €/mois\n`;
+  if (resultats.pfr) {
+    csv += `Prime de feu annuelle${separator}${resultats.pfr.montantPFRAnnuel?.toFixed(2) || ''} €/an\n`;
+    csv += `Cotisation RAFP annuelle${separator}${resultats.pfr.cotisationAnnuelleRAFP?.toFixed(2) || ''} €/an\n`;
+    csv += `Points RAFP estimés${separator}${resultats.pfr.totalPointsRAFP?.toFixed(0) || ''} points\n`;
+    csv += `Rente RAFP mensuelle${separator}+${resultats.pfr.renteRAFPMensuelle?.toFixed(2) || ''} €/mois\n`;
   }
   if (resultats.pfrSPV?.eligible) {
     csv += `PFR SPV (${resultats.pfrSPV.anneesSPV} ans)${separator}+${resultats.pfrSPV.montantMensuel?.toFixed(2)} €/mois\n`;
   }
   csv += `Total retraite estimé${separator}${resultats.totalRetraite?.toFixed(2)} €/mois\n`;
   csv += `\n`;
+  
+  // Section Scénarios de surcote (si applicable)
+  if (resultats.scenariosSurcote && resultats.scenariosSurcote.length > 0) {
+    csv += `SCÉNARIOS DE SURCOTE\n`;
+    csv += `Durée supplémentaire${separator}Date de départ${separator}Âge${separator}Trimestres surcote${separator}Majoration${separator}Pension brute${separator}Gain mensuel${separator}Gain annuel\n`;
+    resultats.scenariosSurcote.forEach(s => {
+      csv += `+${s.anneesSupplémentaires} an${s.anneesSupplémentaires > 1 ? 's' : ''}${separator}`;
+      csv += `${formaterDateFR(s.dateDepart)}${separator}`;
+      csv += `${Math.floor(s.ageDepart)} ans${separator}`;
+      csv += `${s.trimestresSurcote}${separator}`;
+      csv += `+${s.tauxSurcote?.toFixed(2)}%${separator}`;
+      csv += `${s.pensionMensuelle?.toFixed(2)} €${separator}`;
+      csv += `+${s.gainMensuel?.toFixed(2)} €${separator}`;
+      csv += `+${s.gainAnnuel?.toFixed(2)} €\n`;
+    });
+    csv += `\n`;
+  }
   
   // Avertissement
   csv += `AVERTISSEMENT\n`;

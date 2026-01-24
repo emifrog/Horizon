@@ -36,10 +36,9 @@ simulateur-retraite-spp/
 │   │   ├── formatters.js   # Formatage (montants, pourcentages)
 │   │   └── validators.js   # Validation des saisies
 │   └── ui/
-│       ├── form.js         # Gestion du formulaire
-│       ├── results.js      # Affichage des résultats
-│       ├── charts.js       # Graphiques (Canvas API)
-│       └── export.js       # Export PDF
+│       ├── form.js         # Gestion du formulaire multi-étapes avec animations
+│       ├── results.js      # Affichage des résultats et graphiques (Canvas API)
+│       └── export.js       # Export PDF et CSV
 ├── assets/
 │   └── icons/              # Icônes SVG inline si nécessaire
 ├── docs/
@@ -165,6 +164,8 @@ export const PARAMS = {
 - `dateEntreeSPP` (Date) : date d'entrée en qualité de SPP
 - `tempsPartiel` (number) : quotité si temps partiel (0.5 à 1)
 - `anneesSPV` (number) : années d'engagement SPV reconnues
+- `servicesMilitaires` (string) : 'aucun', 'bspp' ou 'bmpm'
+- `trimestresServicesMilitaires` (number) : trimestres de services militaires pompiers
 
 **Sorties** :
 - `generation` : génération pour la durée d'assurance requise
@@ -179,7 +180,9 @@ export const PARAMS = {
 
 **Calculs** :
 - Durée services effectifs SPP (en trimestres)
-- Bonifications éventuelles
+- Bonification du 1/5ème (SPP et services militaires BSPP/BMPM)
+- Bonification enfants (avant 2004)
+- Majoration SPV
 - Durée d'assurance totale tous régimes
 - Écart avec durée requise pour taux plein
 
@@ -269,9 +272,10 @@ Surcote = 1.25% × nombre de trimestres au-delà du taux plein
 - **Tableau comparatif** : scénarios de départ
 - **Graphique** : évolution pension selon date de départ (Canvas)
 
-### Export PDF
+### Export PDF et CSV
 
-Utiliser l'API native `window.print()` avec une feuille de style `@media print` dédiée. Alternative : générer le PDF côté client avec une lib légère si vraiment nécessaire.
+- **PDF** : Utilise l'API native `window.print()` avec une feuille de style dédiée
+- **CSV** : Export complet des données avec séparateur `;` et BOM UTF-8 pour compatibilité Excel FR
 
 ---
 
@@ -344,7 +348,7 @@ npx eslint js/
 - [ ] Affichage responsive (mobile/desktop)
 - [ ] Avertissement juridique visible
 - [ ] Fonctionnement hors connexion testé
-- [ ] Export PDF fonctionnel
+- [ ] Export PDF et CSV fonctionnels
 - [ ] Commentaires de référence réglementaire présents
 - [ ] Pas de données personnelles stockées
 - [ ] Tests sur Chrome, Firefox, Safari, Edge
