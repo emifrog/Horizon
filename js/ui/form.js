@@ -262,33 +262,94 @@ function goToStep(step) {
   }
 }
 
+/** Étape précédente pour l'animation */
+let previousStep = 1;
+
 /**
- * Affiche une étape
+ * Affiche une étape avec animation de transition
  * @param {number} step - Numéro de l'étape
  */
 function showStep(step) {
-  // Masquer toutes les étapes
-  document.querySelectorAll('[data-step-content]').forEach((el) => {
-    el.classList.remove('step--active');
-    el.hidden = true;
-  });
+  const direction = step > previousStep ? 'next' : 'prev';
+  const currentStepEl = document.querySelector(`[data-step-content="${previousStep}"]`);
+  const nextStepEl = document.querySelector(`[data-step-content="${step}"]`);
 
-  // Afficher l'étape courante
-  const currentStepEl = document.querySelector(`[data-step-content="${step}"]`);
-  if (currentStepEl) {
-    currentStepEl.classList.add('step--active');
-    currentStepEl.hidden = false;
+  // Si c'est la même étape ou pas d'éléments, pas d'animation
+  if (step === previousStep || !nextStepEl) {
+    if (nextStepEl) {
+      nextStepEl.classList.add('step--active');
+      nextStepEl.hidden = false;
+    }
+    updateNavigationButtons();
+    triggerCalculationIfNeeded(step);
+    return;
   }
+
+  // Vérifier si les animations sont réduites
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (prefersReducedMotion) {
+    // Transition instantanée sans animation
+    document.querySelectorAll('[data-step-content]').forEach((el) => {
+      el.classList.remove('step--active');
+      el.hidden = true;
+    });
+    nextStepEl.classList.add('step--active');
+    nextStepEl.hidden = false;
+  } else {
+    // Transition avec animation
+    // Préparer l'étape suivante (invisible mais présente)
+    nextStepEl.hidden = false;
+    nextStepEl.classList.add(`step--entering-${direction}`);
+
+    // Animer la sortie de l'étape actuelle
+    if (currentStepEl) {
+      currentStepEl.classList.add(`step--leaving-${direction}`);
+    }
+
+    // Après l'animation, nettoyer les classes
+    setTimeout(() => {
+      // Masquer toutes les étapes sauf la nouvelle
+      document.querySelectorAll('[data-step-content]').forEach((el) => {
+        el.classList.remove(
+          'step--active',
+          'step--entering-next',
+          'step--entering-prev',
+          'step--leaving-next',
+          'step--leaving-prev'
+        );
+        if (el !== nextStepEl) {
+          el.hidden = true;
+        }
+      });
+
+      // Activer la nouvelle étape
+      nextStepEl.classList.add('step--active');
+    }, 350); // Durée de l'animation
+  }
+
+  // Mettre à jour l'étape précédente
+  previousStep = step;
 
   // Mettre à jour les boutons de navigation
   updateNavigationButtons();
 
-  // Déclencher automatiquement le calcul quand on arrive à l'étape 4 (résultats)
+  // Déclencher le calcul si nécessaire
+  triggerCalculationIfNeeded(step);
+}
+
+/**
+ * Déclenche le calcul automatique à l'étape des résultats
+ * @param {number} step - Numéro de l'étape
+ */
+function triggerCalculationIfNeeded(step) {
   if (step === formState.totalSteps) {
     const form = document.getElementById('simulator-form');
     if (form) {
-      // Déclencher l'événement submit pour lancer le calcul
-      form.dispatchEvent(new Event('submit', { cancelable: true }));
+      // Petit délai pour laisser l'animation se terminer
+      setTimeout(() => {
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+      }, 100);
     }
   }
 }
@@ -427,6 +488,9 @@ export function resetForm() {
     errors: {},
     touched: {},
   };
+
+  // Réinitialiser l'état de l'animation
+  previousStep = 1;
 
   showStep(1);
   updateStepperUI();

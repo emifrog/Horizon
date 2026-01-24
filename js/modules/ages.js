@@ -124,32 +124,64 @@ export function verifierEligibiliteAgeAnticipe(donnees) {
 
 /**
  * Calcule la date à laquelle le taux plein sera atteint
+ * Optimisé : calcul analytique au lieu d'une boucle mensuelle
  * @param {DonneesDepart} donnees - Données de l'agent
  * @returns {ResultatDateTauxPlein} Résultat détaillé du calcul
  */
 export function calculerDateTauxPlein(donnees) {
   const anneeNaissance = donnees.dateNaissance.getFullYear();
   const trimestresRequis = getDureeAssuranceRequise(anneeNaissance);
+  const dateOuverture = calculerDateOuvertureDroits(donnees.dateNaissance);
   const dateAnnulationDecote = calculerDateAnnulationDecote(donnees.dateNaissance);
-  const dateLimite = calculerDateLimite(donnees.dateNaissance);
 
-  // Simuler mois par mois pour trouver la date du taux plein
-  let dateTest = new Date(calculerDateOuvertureDroits(donnees.dateNaissance));
-  const aujourdhui = new Date();
+  // Calculer la durée d'assurance actuelle à la date d'ouverture des droits
+  const resultatOuverture = calculerDurees(
+    {
+      dateEntreeSPP: donnees.dateEntreeSPP,
+      dateDepart: dateOuverture,
+      quotite: donnees.quotite,
+      trimestresAutresRegimes: donnees.trimestresAutresRegimes,
+      anneesSPV: donnees.anneesSPV,
+      enfantsAvant2004: donnees.enfantsAvant2004,
+      servicesMilitaires: donnees.servicesMilitaires,
+      trimestresServicesMilitaires: donnees.trimestresServicesMilitaires,
+    },
+    anneeNaissance
+  );
 
-  // Si la date d'ouverture est dans le passé, partir d'aujourd'hui
-  if (dateTest < aujourdhui) {
-    dateTest = new Date(aujourdhui);
+  // Si le taux plein est déjà atteint à 57 ans
+  if (resultatOuverture.trimestresAssuranceTotale >= trimestresRequis) {
+    return {
+      date: dateOuverture,
+      atteintParDuree: true,
+      atteintParAge: false,
+      trimestresManquants: 0,
+    };
   }
 
-  // Limiter la recherche à la date limite d'activité
-  const dateFin = new Date(dateLimite);
+  // Calcul analytique : combien de trimestres manquent et à quelle date seront-ils acquis ?
+  const trimestresManquantsOuverture = trimestresRequis - resultatOuverture.trimestresAssuranceTotale;
 
-  while (dateTest <= dateFin) {
-    const resultatDuree = calculerDurees(
+  // Taux d'acquisition par trimestre de travail (avec bonification 1/5)
+  // 1 trimestre travaillé = 1 trimestre + 0.2 bonification (si < plafond) = 1.2 trimestres
+  // Simplifié : on compte 1 trimestre par trimestre (la bonification est déjà calculée sur le stock)
+  const quotite = donnees.quotite || 1;
+
+  // Nombre de mois nécessaires pour acquérir les trimestres manquants
+  // 1 trimestre = 3 mois à temps plein
+  const moisNecessaires = Math.ceil((trimestresManquantsOuverture / quotite) * 3);
+
+  // Date estimée du taux plein
+  const dateTauxPleinEstimee = new Date(dateOuverture);
+  dateTauxPleinEstimee.setMonth(dateTauxPleinEstimee.getMonth() + moisNecessaires);
+
+  // Vérifier si cette date est avant l'âge d'annulation de décote (62 ans)
+  if (dateTauxPleinEstimee <= dateAnnulationDecote) {
+    // Affiner le calcul en vérifiant la durée réelle à cette date
+    const resultatEstime = calculerDurees(
       {
         dateEntreeSPP: donnees.dateEntreeSPP,
-        dateDepart: new Date(dateTest),
+        dateDepart: dateTauxPleinEstimee,
         quotite: donnees.quotite,
         trimestresAutresRegimes: donnees.trimestresAutresRegimes,
         anneesSPV: donnees.anneesSPV,
@@ -160,22 +192,33 @@ export function calculerDateTauxPlein(donnees) {
       anneeNaissance
     );
 
-    if (resultatDuree.trimestresAssuranceTotale >= trimestresRequis) {
+    // Ajustement si nécessaire (la bonification 1/5 peut modifier légèrement le résultat)
+    if (resultatEstime.trimestresAssuranceTotale >= trimestresRequis) {
       return {
-        date: new Date(dateTest),
+        date: dateTauxPleinEstimee,
         atteintParDuree: true,
         atteintParAge: false,
         trimestresManquants: 0,
       };
     }
 
-    // Avancer d'un mois (créer une nouvelle date pour éviter la mutation)
-    dateTest = new Date(dateTest);
-    dateTest.setMonth(dateTest.getMonth() + 1);
+    // Ajustement fin : ajouter les mois manquants
+    const trimestresEncoreManquants = trimestresRequis - resultatEstime.trimestresAssuranceTotale;
+    const moisSupplementaires = Math.ceil((trimestresEncoreManquants / quotite) * 3);
+    dateTauxPleinEstimee.setMonth(dateTauxPleinEstimee.getMonth() + moisSupplementaires);
+
+    if (dateTauxPleinEstimee <= dateAnnulationDecote) {
+      return {
+        date: dateTauxPleinEstimee,
+        atteintParDuree: true,
+        atteintParAge: false,
+        trimestresManquants: 0,
+      };
+    }
   }
 
-  // Le taux plein par durée n'est pas atteint avant la limite d'âge
-  // Calculer les trimestres manquants à la date d'annulation de décote
+  // Le taux plein par durée n'est pas atteint avant 62 ans
+  // Le taux plein sera atteint par l'âge d'annulation de décote
   const resultatAnnulation = calculerDurees(
     {
       dateEntreeSPP: donnees.dateEntreeSPP,

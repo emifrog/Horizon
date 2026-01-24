@@ -91,15 +91,17 @@ export const TAUX = {
 // =============================================================================
 // VALEUR DU POINT D'INDICE
 // Réf: Décret portant relèvement du minimum de traitement dans la FP
+// La valeur du point d'indice est de 4.92278€/mois (janvier 2026)
+// soit 59.07336€/an (4.92278 × 12)
 // =============================================================================
 
 export const POINT_INDICE = {
-  /** Valeur annuelle brute du point d'indice (janvier 2026) */
-  VALEUR_ANNUELLE: 4.92278,
+  /** Valeur mensuelle brute du point d'indice (janvier 2026) */
+  VALEUR_MENSUELLE: 4.92278,
 
-  /** Valeur mensuelle brute du point d'indice */
-  get VALEUR_MENSUELLE() {
-    return this.VALEUR_ANNUELLE / 12;
+  /** Valeur annuelle brute du point d'indice */
+  get VALEUR_ANNUELLE() {
+    return this.VALEUR_MENSUELLE * 12;
   },
 };
 

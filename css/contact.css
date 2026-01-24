@@ -5,6 +5,13 @@
             margin-top: var(--spacing-xl);
         }
 
+.doc-header__title {
+    color: var(--color-secondary);
+    font-size: var(--font-size-2xl);
+    text-decoration: underline;
+    text-decoration-color: var(--color-primary);
+}
+
         @media (max-width: 768px) {
             .contact-section {
                 grid-template-columns: 1fr;

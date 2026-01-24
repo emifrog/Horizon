@@ -30,7 +30,9 @@
             </a>
           </div>
           <div>
-            <h1 class="header__title">HorizonSP</h1>
+            <a href="/index.html" class="header__logo-link">
+              <h1 class="header__title">HorizonSP</h1>
+            </a>
             <span class="header__subtitle">Simulateur de retraite SPP</span>
           </div>
         </div>
@@ -171,10 +173,10 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="anneesSPV" class="form-label">Années d'engagement SPV</label>
+                      <label for="anneesSPV" class="form-label">Nombre d'années d'engagement SPV</label>
                       <input type="number" id="anneesSPV" name="anneesSPV" class="form-input"
                              min="0" max="50" value="0" aria-describedby="anneesSPV-hint">
-                      <span class="form-hint" id="anneesSPV-hint">Années reconnues comme sapeur-pompier volontaire.</span>
+                      <span class="form-hint" id="anneesSPV-hint">Nombre d'années reconnues comme sapeur-pompier volontaire.</span>
                     </div>
                   </div>
                 </div>
@@ -271,7 +273,7 @@
 
                     <div class="form-group">
                       <label for="dureeNBI" class="form-label">
-                        Années de perception NBI
+                        Nombre d'années de perception NBI
                         <span class="tooltip" tabindex="0" aria-label="Information sur la NBI">
                           <img src="assets/icons/info.svg" alt="" class="tooltip__icon" aria-hidden="true">
                           <span class="tooltip__content">Si vous avez perçu la NBI pendant au moins 15 ans, elle est intégrée dans le calcul de la pension sur la base des 6 derniers mois. Si la durée est inférieure à 15 ans, le supplément est proratisé.</span>
@@ -293,7 +295,12 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="anneesCotisationRAFP" class="form-label">Années de cotisation RAFP</label>
+                      <label for="anneesCotisationRAFP" class="form-label">Années de cotisation RAFP
+                        <span class="tooltip" tabindex="0" aria-label="Information sur la RAFP">
+                          <img src="assets/icons/info.svg" alt="" class="tooltip__icon" aria-hidden="true">
+                          <span class="tooltip__content">Le Régime de Retraite additionnelle de la Fonction publique (RAFP) est un régime obligatoire, par points, institué au bénéfice des fonctionnaires (titulaires et stagiaires) de l'État (civils et militaires), territoriaux et hospitaliers, ainsi que des magistrats.</span>
+                        </span>
+                      </label>
                       <input type="number" id="anneesCotisationRAFP" name="anneesCotisationRAFP" class="form-input"
                              min="0" max="45" value="0" aria-describedby="anneesCotisationRAFP-hint">
                       <span class="form-hint" id="anneesCotisationRAFP-hint">Depuis 2005 (création du RAFP).</span>

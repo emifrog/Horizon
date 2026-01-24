@@ -686,6 +686,145 @@
 }
 
 /* ========================================
+   TRANSITIONS ÉTAPES FORMULAIRE
+   ======================================== */
+
+/* Container des étapes */
+.steps-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* État de base des étapes */
+[data-step-content] {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Étape masquée */
+[data-step-content][hidden] {
+  display: block !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Animation entrée depuis la droite (avancer) */
+[data-step-content].step--entering-next {
+  animation: slideInFromRight 0.35s ease-out forwards;
+}
+
+/* Animation entrée depuis la gauche (reculer) */
+[data-step-content].step--entering-prev {
+  animation: slideInFromLeft 0.35s ease-out forwards;
+}
+
+/* Animation sortie vers la gauche (avancer) */
+[data-step-content].step--leaving-next {
+  animation: slideOutToLeft 0.35s ease-out forwards;
+}
+
+/* Animation sortie vers la droite (reculer) */
+[data-step-content].step--leaving-prev {
+  animation: slideOutToRight 0.35s ease-out forwards;
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+/* Animation du stepper */
+.stepper__step-number {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stepper__step--active .stepper__step-number {
+  animation: stepPulse 0.5s ease-out;
+}
+
+@keyframes stepPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Animation de la barre de progression */
+.stepper__progress-fill {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Désactiver les animations si l'utilisateur préfère */
+@media (prefers-reduced-motion: reduce) {
+  [data-step-content],
+  .stepper__step-number,
+  .stepper__progress-fill {
+    transition: none;
+    animation: none;
+  }
+
+  [data-step-content].step--entering-next,
+  [data-step-content].step--entering-prev,
+  [data-step-content].step--leaving-next,
+  [data-step-content].step--leaving-prev {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ========================================
    UTILITAIRES TEXTE
    ======================================== */
 
