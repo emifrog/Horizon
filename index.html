@@ -39,7 +39,7 @@
 
         <!-- Navigation desktop -->
         <nav class="nav-desktop" aria-label="Navigation principale">
-          <a href="pages/réglementaire.html" class="nav-desktop__link">Documentations</a>
+          <a href="pages/reglementaire.html" class="nav-desktop__link">Documentations</a>
           <a href="pages/apropos.html" class="nav-desktop__link">À propos</a>
           <a href="pages/contact.html" class="nav-desktop__link">Contact</a>
         </nav>
@@ -55,7 +55,7 @@
         <nav class="nav-menu" id="nav-menu" aria-label="Menu principal">
           <ul class="nav-menu__list">
             <li class="nav-menu__item">
-              <a href="pages/réglementaire.html" class="nav-menu__link" data-action="documentation">
+              <a href="pages/reglementaire.html" class="nav-menu__link" data-action="documentation">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                   <polyline points="14,2 14,8 20,8"/>
@@ -301,9 +301,9 @@
                           <span class="tooltip__content">Le Régime de Retraite additionnelle de la Fonction publique (RAFP) est un régime obligatoire, par points, institué au bénéfice des fonctionnaires (titulaires et stagiaires) de l'État (civils et militaires), territoriaux et hospitaliers, ainsi que des magistrats.</span>
                         </span>
                       </label>
-                      <input type="number" id="anneesCotisationRAFP" name="anneesCotisationRAFP" class="form-input"
-                             min="0" max="45" value="0" aria-describedby="anneesCotisationRAFP-hint">
-                      <span class="form-hint" id="anneesCotisationRAFP-hint">Depuis 2005 (création du RAFP).</span>
+                      <input type="number" id="anneesCotisationRAFP" name="anneesCotisationRAFP" class="form-input form-input--readonly"
+                             min="0" max="45" value="0" readonly aria-describedby="anneesCotisationRAFP-hint">
+                      <span class="form-hint" id="anneesCotisationRAFP-hint">Calculé automatiquement depuis 2005 (création du RAFP) jusqu'à la date de départ.</span>
                     </div>
                   </div>
 

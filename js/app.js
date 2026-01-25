@@ -82,6 +82,9 @@ function init() {
   // Gestion des services militaires (BSPP/BMPM)
   setupServicesMilitairesToggle();
 
+  // Calcul automatique des années RAFP
+  setupAnneesRAFPAutoCalcul();
+
   // Boutons d'export
   document.querySelector('[data-action="export-pdf"]')?.addEventListener('click', handleExportPDF);
   document.querySelector('[data-action="export-csv"]')?.addEventListener('click', handleExportCSV);
@@ -287,6 +290,48 @@ function handleAbout() {
       document.removeEventListener('keydown', escHandler);
     }
   });
+}
+
+/**
+ * Configure le calcul automatique des années de cotisation RAFP
+ * Formule : max(date entrée SPP, 2005) → date de départ prévue
+ */
+function setupAnneesRAFPAutoCalcul() {
+  const dateEntreeSPPInput = document.getElementById('dateEntreeSPP');
+  const anneesCotisationRAFPInput = document.getElementById('anneesCotisationRAFP');
+  
+  if (!dateEntreeSPPInput || !anneesCotisationRAFPInput) return;
+
+  function updateAnneesRAFP() {
+    const dateEntreeSPP = dateEntreeSPPInput.value ? new Date(dateEntreeSPPInput.value) : null;
+    
+    if (!dateEntreeSPP || isNaN(dateEntreeSPP.getTime())) {
+      anneesCotisationRAFPInput.value = 0;
+      return;
+    }
+
+    // Date de début RAFP = max(date entrée SPP, 01/01/2005)
+    const dateCreationRAFP = new Date(PFR.ANNEE_CREATION_RAFP, 0, 1);
+    const dateDebutRAFP = new Date(Math.max(dateEntreeSPP.getTime(), dateCreationRAFP.getTime()));
+    
+    // Date de fin = aujourd'hui (pour l'instant, sera la date de départ au calcul final)
+    const dateFin = new Date();
+    
+    // Calcul des années
+    const anneesRAFP = Math.max(0, Math.floor(
+      (dateFin.getTime() - dateDebutRAFP.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+    ));
+    
+    anneesCotisationRAFPInput.value = anneesRAFP;
+  }
+
+  // Mettre à jour quand la date d'entrée SPP change
+  dateEntreeSPPInput.addEventListener('change', updateAnneesRAFP);
+  
+  // Calcul initial si une valeur existe déjà
+  if (dateEntreeSPPInput.value) {
+    updateAnneesRAFP();
+  }
 }
 
 /**

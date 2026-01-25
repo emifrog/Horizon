@@ -222,8 +222,8 @@ console.log('');
 console.log('📋 TEST 7 : RAFP');
 console.log('─────────────────────────────────────────────────────────────────');
 
-// Estimation RAFP basée sur 21 ans de cotisation (2005-2026)
-const anneesRAFP = 21;
+// Années de cotisation RAFP : depuis 2005 (création RAFP) jusqu'au départ (2042)
+const anneesRAFP = 2042 - 2005; // = 37 ans
 const montantPFRAnnuel = traitement.annuel * 0.25;  // Prime de feu = 25% TIB
 
 const pfr = calculerPFR({
