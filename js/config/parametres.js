@@ -144,14 +144,17 @@ export const BONIFICATIONS = {
 // =============================================================================
 
 export const PFR = {
-  /** Taux de cotisation RAFP sur la PFR */
+  /** Taux de cotisation RAFP (agent et employeur, chacun 5%) */
   TAUX_COTISATION_RAFP: 5,
 
   /** Plafond de l'assiette RAFP (% du traitement indiciaire brut) */
   PLAFOND_ASSIETTE_RAFP: 20,
 
-  /** Taux de rendement RAFP (estimation) */
-  TAUX_RENDEMENT_RAFP: 0.0456,  // 4.56% pour 2026
+  /** Valeur d'acquisition du point RAFP 2026 (source: rafp.fr) */
+  VALEUR_ACQUISITION_POINT_RAFP: 1.4596,
+
+  /** Valeur de service du point RAFP 2026 (€ par an et par point) */
+  VALEUR_SERVICE_POINT_RAFP: 0.05390,
 
   /** Taux de la prime de feu (% du traitement indiciaire brut) */
   TAUX_PRIME_FEU: 25,

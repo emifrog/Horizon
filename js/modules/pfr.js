@@ -76,32 +76,29 @@ export function calculerCotisationRAFP(assietteRAFP) {
 
 /**
  * Estime les points RAFP acquis annuellement
- * Note: Calcul simplifié, la valeur d'achat du point varie chaque année
+ * Réf: https://www.rafp.fr/actif/activite/calculer-vos-cotisations-et-vos-points-rafp
  * @param {number} cotisationAgent - Cotisation agent annuelle
  * @param {number} cotisationEmployeur - Cotisation employeur annuelle (égale à celle de l'agent)
- * @returns {number} Points RAFP acquis (estimation)
+ * @returns {number} Points RAFP acquis (arrondi au point supérieur)
  */
 export function estimerPointsRAFPAnnuels(cotisationAgent, cotisationEmployeur) {
   // Total des cotisations (agent + employeur)
   const totalCotisations = cotisationAgent + cotisationEmployeur;
 
-  // Valeur d'achat du point RAFP (estimation moyenne)
-  const valeurAchatPoint = 1.2871; // Valeur indicative 2026
-
-  return Math.round((totalCotisations / valeurAchatPoint) * 100) / 100;
+  // Arrondi au point supérieur (règle officielle RAFP)
+  return Math.ceil(totalCotisations / PFR.VALEUR_ACQUISITION_POINT_RAFP);
 }
 
 /**
  * Calcule la rente RAFP estimée
  * Réf: Décret n°2004-569, Art. 17
+ * Réf: https://www.rafp.fr/actif/activite/calculer-vos-cotisations-et-vos-points-rafp
  * @param {number} totalPoints - Nombre total de points RAFP
  * @returns {number} Rente mensuelle estimée
  */
 export function calculerRenteRAFP(totalPoints) {
-  // Valeur de service du point (2026)
-  const valeurServicePoint = 0.05098; // € par an et par point
-
-  const renteAnnuelle = totalPoints * valeurServicePoint;
+  // La valeur de service est utilisée pour calculer la rente annuelle
+  const renteAnnuelle = totalPoints * PFR.VALEUR_SERVICE_POINT_RAFP;
   const renteMensuelle = renteAnnuelle / 12;
 
   return Math.round(renteMensuelle * 100) / 100;
