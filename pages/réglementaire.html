@@ -492,37 +492,57 @@
 
                 <!-- Section Prime de feu -->
                 <section id="prime-feu" class="doc-section">
-                    <h2 class="doc-section__title">Prime de feu (Indemnité de feu)</h2>
+                    <h2 class="doc-section__title">Prime de feu et Majoration de pension</h2>
                     <div class="doc-section__content">
                         <p>La <strong>prime de feu</strong> (ou indemnité de feu) est une indemnité spécifique aux
-                            sapeurs-pompiers professionnels.</p>
+                            sapeurs-pompiers professionnels. Elle ouvre droit à une <strong>majoration de pension</strong>.</p>
 
-                        <h3>Montant</h3>
+                        <h3>Montant de la prime</h3>
                         <ul>
-                            <li><strong>Taux</strong> : 25% du traitement indiciaire brut</li>
+                            <li><strong>Taux actuel</strong> : 25% du traitement indiciaire brut (depuis le 26/07/2020)</li>
+                            <li><strong>Taux ancien</strong> : 19% (avant le 26/07/2020)</li>
                             <li>Versée mensuellement</li>
                             <li>Soumise à cotisations retraite (CNRACL et RAFP)</li>
                         </ul>
 
-                        <h3>Intégration dans la retraite</h3>
-                        <p>Depuis le <strong>1er janvier 2005</strong>, la prime de feu est intégrée dans le calcul de
-                            la retraite via le <strong>RAFP</strong> (Régime Additionnel de la Fonction Publique).</p>
+                        <h3>Majoration de pension CNRACL</h3>
+                        <p>La prime de feu génère une <strong>majoration de pension</strong> calculée selon la formule officielle CNRACL :</p>
+
+                        <div class="highlight-box highlight-box--success">
+                            <strong>Formule :</strong><br>
+                            Majoration = TIB × Taux indemnité feu × Taux proratisation<br>
+                            <small>Puis : Pension = (TIB + Majoration) × Taux liquidation</small>
+                        </div>
+
+                        <h3>Proratisation</h3>
+                        <p>La majoration est proratisée si l'agent n'a pas effectué toute sa carrière en qualité de SPP :</p>
+                        <ul>
+                            <li><strong>Taux proratisation</strong> = Services SPP (jours) / Total services liquidation (jours)</li>
+                        </ul>
 
                         <div class="highlight-box highlight-box--info">
-                            <strong>Attention :</strong> La prime de feu n'est pas intégrée directement dans le calcul
-                            de la pension CNRACL. Elle génère des points RAFP qui donnent droit à une rente
-                            complémentaire.
+                            <strong>Exception :</strong> Pas de proratisation si les services SPP + bonifications SPP 
+                            atteignent le nombre de trimestres requis pour le taux plein (75%).
                         </div>
+
+                        <h3>Conditions</h3>
+                        <ul>
+                            <li>Être ou avoir été SPP à la radiation des cadres (ou reclassement opérationnel)</li>
+                            <li>Le taux applicable est celui en vigueur à la date de perte de la qualité SPP</li>
+                        </ul>
+
+                        <h3>RAFP complémentaire</h3>
+                        <p>En plus de la majoration CNRACL, la prime de feu génère des <strong>points RAFP</strong> 
+                            qui donnent droit à une rente complémentaire.</p>
 
                         <div class="ref-box">
                             <div class="ref-box__title">Références réglementaires</div>
                             <div class="ref-box__content">
                                 <ul>
-                                    <li><strong>Décret n°98-442</strong> du 5 juin 1998 relatif à l'indemnité de feu
-                                    </li>
-                                    <li><strong>Décret n°2003-1164</strong> du 8 décembre 2003 (revalorisation à 25%)
-                                    </li>
-                                    <li><strong>Arrêté du 6 décembre 2001</strong> fixant les modalités de calcul</li>
+                                    <li><strong>Loi n°90-1067</strong> du 28 novembre 1990, article 17</li>
+                                    <li><strong>Décret n°2003-1306</strong> du 26 décembre 2003, article 18</li>
+                                    <li><strong>Décret n°2020-256</strong> revalorisation à 25%</li>
+                                    <li><a href="https://www.juris-cnracl.retraites.fr/motifs-conditions-de-depart/depart-au-titre-de-la-categorie-active/sapeurs-pompiers-professionnels/majoration-de-pension-prime-de-feu" target="_blank" rel="noopener">Documentation CNRACL officielle</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -549,13 +569,36 @@
 
                         <h3>Calcul de la rente</h3>
                         <div class="highlight-box highlight-box--info">
-                            <strong>Rente annuelle = Nombre de points × Valeur de service du point</strong><br>
-                            <small>Valeur de service 2026 : 0,05390 € | Valeur d'acquisition 2026 : 1,4596 €</small>
+                            <strong>Rente annuelle = Nombre de points × Valeur de service × Coefficient âge</strong><br>
+                            <small>Valeur de service 2026 : 0,05671 €/point/an | Valeur d'acquisition 2026 : 1,4596 €</small>
+                        </div>
+
+                        <h3>Coefficient de majoration selon l'âge</h3>
+                        <p>La rente RAFP est majorée ou minorée selon l'âge de départ :</p>
+                        <div class="table-wrapper">
+                            <table class="doc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Âge de départ</th>
+                                        <th>Coefficient</th>
+                                        <th>Âge de départ</th>
+                                        <th>Coefficient</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>57 ans</td><td>0,84</td><td>62 ans</td><td>1,00</td></tr>
+                                    <tr><td>58 ans</td><td>0,88</td><td>63 ans</td><td>1,04</td></tr>
+                                    <tr><td>59 ans</td><td>0,92</td><td>64 ans</td><td>1,08</td></tr>
+                                    <tr><td>60 ans</td><td>0,96</td><td>65 ans</td><td>1,12</td></tr>
+                                    <tr><td>61 ans</td><td>0,98</td><td>66-67 ans</td><td>1,18-1,24</td></tr>
+                                </tbody>
+                            </table>
                         </div>
 
                         <h3>Modalités de versement</h3>
                         <ul>
-                            <li><strong>Moins de 5 125 points</strong> : versement en capital unique</li>
+                            <li><strong>Moins de 4 900 points</strong> : versement en capital unique</li>
+                            <li><strong>4 900 à 5 125 points</strong> : capital fractionné (2 ou 3 versements)</li>
                             <li><strong>5 125 points et plus</strong> : rente viagère mensuelle</li>
                         </ul>
 

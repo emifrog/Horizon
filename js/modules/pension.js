@@ -132,17 +132,25 @@ export function calculerPensionBrute(traitementIndiciaire, tauxLiquidation) {
 
 /**
  * Calcule la majoration de pension liée à la prime de feu
- * Réf: Loi n°90-1067, Décret n°2020-256
- * La prime de feu génère une majoration de pension calculée sur le TIB
+ * Réf: Loi n°90-1067, Décret n°2020-256, Art. 17
+ * Réf: https://www.juris-cnracl.retraites.fr/.../majoration-de-pension-prime-de-feu
+ * 
+ * Formule CNRACL officielle :
+ * Majoration = TIB × Taux indemnité feu × Taux proratisation
+ * Puis : Pension = (TIB + Majoration) × Taux liquidation
+ * 
+ * Exception : Pas de proratisation si services SPP + bonifications SPP ≥ trimestres requis
  * 
  * @param {number} traitementIndiciaireAnnuel - TIB annuel
  * @param {number} tauxLiquidation - Taux de liquidation (en %)
  * @param {boolean} droitMajoration - Droit à la majoration (SPP à la RDC)
- * @param {number} [trimestresSPP] - Trimestres en qualité SPP
- * @param {number} [trimestresTotal] - Trimestres totaux CNRACL
+ * @param {number} [trimestresSPP] - Trimestres services effectifs en qualité SPP
+ * @param {number} [trimestresBonificationSPP] - Trimestres bonification 1/5ème SPP
+ * @param {number} [trimestresTotal] - Trimestres totaux liquidables CNRACL
+ * @param {number} [trimestresRequis] - Trimestres requis pour le taux plein
  * @returns {{annuelle: number, mensuelle: number, proratisee: boolean, tauxProratisation: number}}
  */
-export function calculerMajorationPrimeFeu(traitementIndiciaireAnnuel, tauxLiquidation, droitMajoration, trimestresSPP, trimestresTotal) {
+export function calculerMajorationPrimeFeu(traitementIndiciaireAnnuel, tauxLiquidation, droitMajoration, trimestresSPP, trimestresBonificationSPP = 0, trimestresTotal, trimestresRequis = 172) {
   if (!droitMajoration) {
     return {
       annuelle: 0,
@@ -152,17 +160,27 @@ export function calculerMajorationPrimeFeu(traitementIndiciaireAnnuel, tauxLiqui
     };
   }
 
-  // Majoration = TIB × Taux prime feu × Taux liquidation
-  let majorationAnnuelle = traitementIndiciaireAnnuel * (PFR.TAUX_PRIME_FEU / 100) * (tauxLiquidation / 100);
+  // Base de calcul : TIB × Taux prime feu (25%)
+  const majorationBase = traitementIndiciaireAnnuel * (PFR.TAUX_PRIME_FEU / 100);
+  
+  let majorationAnnuelle = majorationBase;
   let proratisee = false;
   let tauxProratisation = 100;
 
-  // Proratisation si carrière mixte (SPP + autre FP)
-  if (trimestresSPP && trimestresTotal && trimestresSPP < trimestresTotal) {
+  // Vérifier si proratisation nécessaire
+  // Exception CNRACL : pas de proratisation si services SPP + bonifications SPP ≥ trimestres requis
+  const trimestresCarriereSPP = (trimestresSPP || 0) + (trimestresBonificationSPP || 0);
+  const exempteProratisation = trimestresCarriereSPP >= trimestresRequis;
+
+  if (!exempteProratisation && trimestresSPP && trimestresTotal && trimestresSPP < trimestresTotal) {
+    // Proratisation : services SPP / total services liquidation
     tauxProratisation = (trimestresSPP / trimestresTotal) * 100;
-    majorationAnnuelle = majorationAnnuelle * (tauxProratisation / 100);
+    majorationAnnuelle = majorationBase * (tauxProratisation / 100);
     proratisee = true;
   }
+
+  // Appliquer le taux de liquidation à la majoration
+  majorationAnnuelle = majorationAnnuelle * (tauxLiquidation / 100);
 
   return {
     annuelle: Math.round(majorationAnnuelle * 100) / 100,
