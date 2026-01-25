@@ -646,11 +646,17 @@ function effectuerCalculs(formData, profilEnrichi) {
     ));
   }
 
+  // Calculer l'âge au taux plein pour le coefficient RAFP
+  const ageTauxPleinRAFP = Math.floor(
+    (dateTauxPlein.getTime() - formData.dateNaissance.getTime()) /
+    (365.25 * 24 * 60 * 60 * 1000)
+  );
+
   const pfr = calculerPFR({
     indiceBrut: formData.indiceBrut,
     montantAnnuelPFR: formData.montantPFR,
     anneesCotisation: anneesRAFP,
-  });
+  }, ageTauxPleinRAFP);
 
   // 7. Calculer le supplément NBI
   // Note : Si la NBI est intégrée au TIB (≥ 15 ans), le supplément séparé est nul

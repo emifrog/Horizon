@@ -7,7 +7,7 @@
  * @module modules/pension
  */
 
-import { TAUX, POINT_INDICE, MINIMUM_GARANTI, COTISATIONS, getDureeAssuranceRequise } from '../config/parametres.js';
+import { TAUX, POINT_INDICE, MINIMUM_GARANTI, COTISATIONS, PFR, getDureeAssuranceRequise } from '../config/parametres.js';
 import { calculerTrimestresDecote } from './ages.js';
 
 /**
@@ -20,6 +20,9 @@ import { calculerTrimestresDecote } from './ages.js';
  * @property {Date} dateNaissance - Date de naissance
  * @property {Date} dateDepart - Date de départ
  * @property {number} [pointsNBIIntegres] - Points NBI à intégrer au TIB (si perception ≥ 15 ans)
+ * @property {boolean} [droitMajorationPrimeFeu] - Droit à la majoration prime de feu (SPP à la RDC)
+ * @property {number} [trimestresSPP] - Trimestres en qualité SPP (pour proratisation)
+ * @property {number} [trimestresTotal] - Trimestres totaux CNRACL (pour proratisation carrière mixte)
  */
 
 /**
@@ -128,6 +131,48 @@ export function calculerPensionBrute(traitementIndiciaire, tauxLiquidation) {
 }
 
 /**
+ * Calcule la majoration de pension liée à la prime de feu
+ * Réf: Loi n°90-1067, Décret n°2020-256
+ * La prime de feu génère une majoration de pension calculée sur le TIB
+ * 
+ * @param {number} traitementIndiciaireAnnuel - TIB annuel
+ * @param {number} tauxLiquidation - Taux de liquidation (en %)
+ * @param {boolean} droitMajoration - Droit à la majoration (SPP à la RDC)
+ * @param {number} [trimestresSPP] - Trimestres en qualité SPP
+ * @param {number} [trimestresTotal] - Trimestres totaux CNRACL
+ * @returns {{annuelle: number, mensuelle: number, proratisee: boolean, tauxProratisation: number}}
+ */
+export function calculerMajorationPrimeFeu(traitementIndiciaireAnnuel, tauxLiquidation, droitMajoration, trimestresSPP, trimestresTotal) {
+  if (!droitMajoration) {
+    return {
+      annuelle: 0,
+      mensuelle: 0,
+      proratisee: false,
+      tauxProratisation: 0,
+    };
+  }
+
+  // Majoration = TIB × Taux prime feu × Taux liquidation
+  let majorationAnnuelle = traitementIndiciaireAnnuel * (PFR.TAUX_PRIME_FEU / 100) * (tauxLiquidation / 100);
+  let proratisee = false;
+  let tauxProratisation = 100;
+
+  // Proratisation si carrière mixte (SPP + autre FP)
+  if (trimestresSPP && trimestresTotal && trimestresSPP < trimestresTotal) {
+    tauxProratisation = (trimestresSPP / trimestresTotal) * 100;
+    majorationAnnuelle = majorationAnnuelle * (tauxProratisation / 100);
+    proratisee = true;
+  }
+
+  return {
+    annuelle: Math.round(majorationAnnuelle * 100) / 100,
+    mensuelle: Math.round((majorationAnnuelle / 12) * 100) / 100,
+    proratisee,
+    tauxProratisation: Math.round(tauxProratisation * 100) / 100,
+  };
+}
+
+/**
  * Calcule le minimum garanti applicable
  * Réf: Code des pensions, Art. L17
  * @param {number} trimestresLiquidables - Trimestres liquidables
@@ -187,6 +232,9 @@ export function calculerPension(donnees) {
     dateNaissance,
     dateDepart,
     pointsNBIIntegres = 0,
+    droitMajorationPrimeFeu = true,  // Par défaut, SPP a droit à la majoration
+    trimestresSPP,
+    trimestresTotal,
   } = donnees;
 
   // Calcul du traitement indiciaire (avec NBI intégrée si ≥ 15 ans de perception)
@@ -207,17 +255,30 @@ export function calculerPension(donnees) {
   // Calcul du taux net
   const tauxLiquidationNet = calculerTauxLiquidationNet(tauxLiquidationBrut, coefficientDecote);
 
-  // Calcul de la pension brute
+  // Calcul de la pension brute (base CNRACL)
   const pensionBrute = calculerPensionBrute(traitement.annuel, tauxLiquidationNet);
 
-  // Vérification du minimum garanti
+  // Calcul de la majoration prime de feu
+  const majorationPrimeFeu = calculerMajorationPrimeFeu(
+    traitement.annuel,
+    tauxLiquidationNet,
+    droitMajorationPrimeFeu,
+    trimestresSPP || trimestresLiquidables,
+    trimestresTotal || trimestresLiquidables
+  );
+
+  // Pension brute totale (base + majoration prime de feu)
+  const pensionBruteTotaleMensuelle = pensionBrute.mensuel + majorationPrimeFeu.mensuelle;
+  const pensionBruteTotaleAnnuelle = pensionBruteTotaleMensuelle * 12;
+
+  // Vérification du minimum garanti (sur la pension totale)
   const minimumGaranti = calculerMinimumGaranti(trimestresLiquidables, trimestresRequis);
-  const minimumGarantiApplique = pensionBrute.mensuel < minimumGaranti;
+  const minimumGarantiApplique = pensionBruteTotaleMensuelle < minimumGaranti;
 
   // Pension finale (avec minimum garanti si applicable)
   const pensionBruteMensuelleFinale = minimumGarantiApplique
     ? minimumGaranti
-    : pensionBrute.mensuel;
+    : pensionBruteTotaleMensuelle;
   const pensionBruteAnnuelleFinale = pensionBruteMensuelleFinale * 12;
 
   // Calcul de la pension nette
@@ -230,6 +291,17 @@ export function calculerPension(donnees) {
     coefficientDecote: Math.round(coefficientDecote * 10000) / 10000,
     trimestresDecote,
     tauxLiquidationNet: Math.round(tauxLiquidationNet * 100) / 100,
+    // Pension base CNRACL (sans majoration prime de feu)
+    pensionBaseMensuelle: Math.round(pensionBrute.mensuel * 100) / 100,
+    pensionBaseAnnuelle: Math.round(pensionBrute.annuel * 100) / 100,
+    // Majoration prime de feu
+    majorationPrimeFeu: {
+      mensuelle: majorationPrimeFeu.mensuelle,
+      annuelle: majorationPrimeFeu.annuelle,
+      proratisee: majorationPrimeFeu.proratisee,
+      tauxProratisation: majorationPrimeFeu.tauxProratisation,
+    },
+    // Pension totale (base + majoration)
     pensionBruteAnnuelle: Math.round(pensionBruteAnnuelleFinale * 100) / 100,
     pensionBruteMensuelle: Math.round(pensionBruteMensuelleFinale * 100) / 100,
     pensionNetteMensuelle,

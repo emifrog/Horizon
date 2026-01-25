@@ -7,7 +7,7 @@
  * @module modules/pfr
  */
 
-import { PFR, POINT_INDICE } from '../config/parametres.js';
+import { PFR, POINT_INDICE, getCoefficientRAFPAge } from '../config/parametres.js';
 
 /**
  * Données pour le calcul PFR/RAFP
@@ -90,26 +90,56 @@ export function estimerPointsRAFPAnnuels(cotisationAgent, cotisationEmployeur) {
 }
 
 /**
- * Calcule la rente RAFP estimée
+ * Calcule la rente RAFP estimée avec coefficient de majoration selon l'âge
  * Réf: Décret n°2004-569, Art. 17
  * Réf: https://www.rafp.fr/actif/activite/calculer-vos-cotisations-et-vos-points-rafp
  * @param {number} totalPoints - Nombre total de points RAFP
+ * @param {number} [ageDepart=62] - Âge de départ (pour le coefficient de majoration)
  * @returns {number} Rente mensuelle estimée
  */
-export function calculerRenteRAFP(totalPoints) {
+export function calculerRenteRAFP(totalPoints, ageDepart = 62) {
+  // Coefficient de majoration selon l'âge de départ
+  const coeffAge = getCoefficientRAFPAge(ageDepart);
+  
   // La valeur de service est utilisée pour calculer la rente annuelle
-  const renteAnnuelle = totalPoints * PFR.VALEUR_SERVICE_POINT_RAFP;
+  const renteAnnuelle = totalPoints * PFR.VALEUR_SERVICE_POINT_RAFP * coeffAge;
   const renteMensuelle = renteAnnuelle / 12;
 
   return Math.round(renteMensuelle * 100) / 100;
 }
 
 /**
+ * Détermine le type de prestation RAFP selon le nombre de points
+ * Réf: Décret n°2004-569
+ * @param {number} totalPoints - Nombre total de points RAFP
+ * @returns {{type: string, description: string}} Type de prestation
+ */
+export function determinerTypePrestationRAFP(totalPoints) {
+  if (totalPoints >= PFR.SEUIL_RENTE_RAFP) {
+    return {
+      type: 'rente',
+      description: 'Rente viagère mensuelle',
+    };
+  } else if (totalPoints >= PFR.SEUIL_CAPITAL_FRACTIONNE_RAFP) {
+    return {
+      type: 'capital_fractionne',
+      description: 'Capital fractionné (2 versements)',
+    };
+  } else {
+    return {
+      type: 'capital_unique',
+      description: 'Capital unique',
+    };
+  }
+}
+
+/**
  * Effectue le calcul complet PFR/RAFP
  * @param {DonneesPFR} donnees - Données pour le calcul
+ * @param {number} [ageDepart=62] - Âge de départ prévu (pour le coefficient RAFP)
  * @returns {ResultatPFR} Résultat complet
  */
-export function calculerPFR(donnees) {
+export function calculerPFR(donnees, ageDepart = 62) {
   const { indiceBrut, montantAnnuelPFR, partFixe, partVariable, anneesCotisation } = donnees;
 
   // Protection contre indice brut invalide
@@ -123,7 +153,10 @@ export function calculerPFR(donnees) {
       cotisationAnnuelleRAFP: 0,
       pointsRAFPAnnuels: 0,
       totalPointsRAFP: 0,
+      coefficientAge: 1,
+      typePrestation: { type: 'capital_unique', description: 'Capital unique' },
       renteRAFPMensuelle: 0,
+      capitalRAFP: 0,
     };
   }
 
@@ -155,10 +188,23 @@ export function calculerPFR(donnees) {
 
   // Estimation des points RAFP
   const pointsRAFPAnnuels = estimerPointsRAFPAnnuels(cotisationAnnuelleRAFP, cotisationAnnuelleRAFP);
-  const totalPointsRAFP = Math.round(pointsRAFPAnnuels * (anneesCotisation || 0) * 100) / 100;
+  const totalPointsRAFP = Math.round(pointsRAFPAnnuels * (anneesCotisation || 0));
 
-  // Calcul de la rente RAFP
-  const renteRAFPMensuelle = calculerRenteRAFP(totalPointsRAFP);
+  // Coefficient de majoration selon l'âge
+  const coefficientAge = getCoefficientRAFPAge(ageDepart);
+
+  // Type de prestation (rente ou capital)
+  const typePrestation = determinerTypePrestationRAFP(totalPointsRAFP);
+
+  // Calcul de la rente ou du capital RAFP
+  const renteRAFPMensuelle = typePrestation.type === 'rente' 
+    ? calculerRenteRAFP(totalPointsRAFP, ageDepart) 
+    : 0;
+  
+  // Calcul du capital si applicable
+  const capitalRAFP = typePrestation.type !== 'rente'
+    ? Math.round(totalPointsRAFP * PFR.VALEUR_SERVICE_POINT_RAFP * coefficientAge * 100) / 100
+    : 0;
 
   return {
     traitementIndiciaireAnnuel: Math.round(traitementIndiciaireAnnuel * 100) / 100,
@@ -169,7 +215,10 @@ export function calculerPFR(donnees) {
     cotisationAnnuelleRAFP,
     pointsRAFPAnnuels,
     totalPointsRAFP,
+    coefficientAge,
+    typePrestation,
     renteRAFPMensuelle,
+    capitalRAFP,
   };
 }
 

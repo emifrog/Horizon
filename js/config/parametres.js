@@ -14,10 +14,10 @@
 // =============================================================================
 
 export const AGES = {
-  /** Âge d'ouverture des droits pour les SPP (catégorie active) */
+  /** Âge d'ouverture des droits pour les SPP (catégorie active) - valeur par défaut */
   OUVERTURE_DROITS: 57,
 
-  /** Âge d'annulation automatique de la décote */
+  /** Âge d'annulation automatique de la décote - valeur par défaut */
   ANNULATION_DECOTE: 62,
 
   /** Âge limite d'activité (catégorie active) */
@@ -26,6 +26,40 @@ export const AGES = {
   /** Âge limite pour la catégorie sédentaire (référence) */
   LIMITE_SEDENTAIRE: 67,
 };
+
+// =============================================================================
+// ÂGES LÉGAUX PROGRESSIFS - Catégorie active (Réforme 2023)
+// Réf: Loi n°2023-270 du 14 avril 2023, Décret n°2023-435
+// =============================================================================
+
+export const AGE_LEGAL_ACTIF = [
+  { debut: null,         fin: '1966-08-31', age: 57, mois: 0 },
+  { debut: '1966-09-01', fin: '1966-12-31', age: 57, mois: 3 },
+  { debut: '1967-01-01', fin: '1967-12-31', age: 57, mois: 6 },
+  { debut: '1968-01-01', fin: '1968-12-31', age: 57, mois: 9 },
+  { debut: '1969-01-01', fin: '1969-12-31', age: 58, mois: 0 },
+  { debut: '1970-01-01', fin: '1970-12-31', age: 58, mois: 3 },
+  { debut: '1971-01-01', fin: '1971-12-31', age: 58, mois: 6 },
+  { debut: '1972-01-01', fin: '1972-12-31', age: 58, mois: 9 },
+  { debut: '1973-01-01', fin: null,         age: 59, mois: 0 },
+];
+
+// =============================================================================
+// ÂGES LÉGAUX PROGRESSIFS - Catégorie sédentaire (pour surcote)
+// Réf: Loi n°2023-270 du 14 avril 2023
+// =============================================================================
+
+export const AGE_LEGAL_SEDENTAIRE = [
+  { debut: null,         fin: '1961-08-31', age: 62, mois: 0 },
+  { debut: '1961-09-01', fin: '1961-12-31', age: 62, mois: 3 },
+  { debut: '1962-01-01', fin: '1962-12-31', age: 62, mois: 6 },
+  { debut: '1963-01-01', fin: '1963-12-31', age: 62, mois: 9 },
+  { debut: '1964-01-01', fin: '1964-12-31', age: 63, mois: 0 },
+  { debut: '1965-01-01', fin: '1965-12-31', age: 63, mois: 3 },
+  { debut: '1966-01-01', fin: '1966-12-31', age: 63, mois: 6 },
+  { debut: '1967-01-01', fin: '1967-12-31', age: 63, mois: 9 },
+  { debut: '1968-01-01', fin: null,         age: 64, mois: 0 },
+];
 
 // =============================================================================
 // DURÉES D'ASSURANCE REQUISES PAR GÉNÉRATION
@@ -134,6 +168,29 @@ export const BONIFICATIONS = {
   CINQUIEME_ACTIF: {
     enabled: true,
     ratio: 1 / 5,  // 1 trimestre pour 5 trimestres de services actifs
+    /** Plafond maximum de la bonification (5 ans = 20 trimestres) */
+    plafond: 20,
+    /** Durée minimale de services effectifs pour bénéficier de la bonification (27 ans) */
+    dureeMinServicesEffectifs: 108,  // 27 ans = 108 trimestres
+    /** Durée minimale en qualité SPP pour bénéficier de la bonification (17 ans) */
+    dureeMinSPP: 68,  // 17 ans = 68 trimestres
+  },
+};
+
+// =============================================================================
+// DÉCRET 2026-18 - MAJORATION SPV
+// Réf: Décret n°2026-18 du 20 janvier 2026
+// =============================================================================
+
+export const DECRET_2026_18 = {
+  /** Date d'effet du décret (pensions prenant effet à partir de cette date) */
+  DATE_EFFET: '2026-07-01',
+
+  /** Barème des trimestres supplémentaires selon années SPV */
+  BAREME: {
+    10: 1,  // 10 ans SPV = +1 trimestre
+    20: 2,  // 20 ans SPV = +2 trimestres
+    25: 3,  // 25 ans SPV = +3 trimestres
   },
 };
 
@@ -154,13 +211,46 @@ export const PFR = {
   VALEUR_ACQUISITION_POINT_RAFP: 1.4596,
 
   /** Valeur de service du point RAFP 2026 (€ par an et par point) */
-  VALEUR_SERVICE_POINT_RAFP: 0.05390,
+  VALEUR_SERVICE_POINT_RAFP: 0.05671,
 
   /** Taux de la prime de feu (% du traitement indiciaire brut) */
   TAUX_PRIME_FEU: 25,
 
+  /** Taux de la prime de feu avant le 26/07/2020 */
+  TAUX_PRIME_FEU_ANCIEN: 19,
+
+  /** Date de changement du taux de prime de feu */
+  DATE_CHANGEMENT_TAUX_PFR: '2020-07-26',
+
   /** Année de création du RAFP (pour calcul des années de cotisation) */
   ANNEE_CREATION_RAFP: 2005,
+
+  /** Seuil minimum de points pour rente viagere RAFP */
+  SEUIL_RENTE_RAFP: 5125,
+
+  /** Seuil pour capital fractionné RAFP */
+  SEUIL_CAPITAL_FRACTIONNE_RAFP: 4900,
+};
+
+// =============================================================================
+// COEFFICIENTS DE MAJORATION RAFP SELON L'ÂGE
+// Réf: Décret n°2004-569 relatif au RAFP
+// =============================================================================
+
+export const COEFFICIENTS_RAFP_AGE = {
+  55: 0.76,
+  56: 0.80,
+  57: 0.84,
+  58: 0.88,
+  59: 0.92,
+  60: 0.96,
+  61: 0.98,
+  62: 1.00,
+  63: 1.04,
+  64: 1.08,
+  65: 1.12,
+  66: 1.18,
+  67: 1.24,
 };
 
 // =============================================================================
@@ -264,12 +354,88 @@ export function getMajorationSPV(anneesSPV) {
   return majoration;
 }
 
+/**
+ * Retourne l'âge légal d'ouverture des droits pour la catégorie active selon la date de naissance
+ * @param {Date|string} dateNaissance - Date de naissance de l'agent
+ * @returns {{ans: number, mois: number, totalMois: number}} Âge légal en années et mois
+ */
+export function getAgeLegalActif(dateNaissance) {
+  const dn = new Date(dateNaissance);
+  for (const tranche of AGE_LEGAL_ACTIF) {
+    const debut = tranche.debut ? new Date(tranche.debut) : new Date('1900-01-01');
+    const fin = tranche.fin ? new Date(tranche.fin) : new Date('2100-12-31');
+    if (dn >= debut && dn <= fin) {
+      return { ans: tranche.age, mois: tranche.mois, totalMois: tranche.age * 12 + tranche.mois };
+    }
+  }
+  return { ans: 59, mois: 0, totalMois: 708 }; // Par défaut (génération >= 1973)
+}
+
+/**
+ * Retourne l'âge légal pour la catégorie sédentaire selon la date de naissance
+ * Utilisé pour le calcul de la surcote (qui ne s'applique qu'à partir de cet âge)
+ * @param {Date|string} dateNaissance - Date de naissance de l'agent
+ * @returns {{ans: number, mois: number, totalMois: number}} Âge légal en années et mois
+ */
+export function getAgeLegalSedentaire(dateNaissance) {
+  const dn = new Date(dateNaissance);
+  for (const tranche of AGE_LEGAL_SEDENTAIRE) {
+    const debut = tranche.debut ? new Date(tranche.debut) : new Date('1900-01-01');
+    const fin = tranche.fin ? new Date(tranche.fin) : new Date('2100-12-31');
+    if (dn >= debut && dn <= fin) {
+      return { ans: tranche.age, mois: tranche.mois, totalMois: tranche.age * 12 + tranche.mois };
+    }
+  }
+  return { ans: 64, mois: 0, totalMois: 768 }; // Par défaut (génération >= 1968)
+}
+
+/**
+ * Retourne le coefficient de majoration RAFP selon l'âge de départ
+ * @param {number} ageDepart - Âge de départ en années
+ * @returns {number} Coefficient de majoration (< 1 si avant 62 ans, > 1 si après)
+ */
+export function getCoefficientRAFPAge(ageDepart) {
+  const age = Math.floor(ageDepart);
+  if (age in COEFFICIENTS_RAFP_AGE) {
+    return COEFFICIENTS_RAFP_AGE[age];
+  }
+  // Hors bornes
+  if (age < 55) return 0.72;
+  if (age > 67) return 1.30;
+  return 1.00;
+}
+
+/**
+ * Retourne les trimestres de majoration SPV selon le décret 2026-18
+ * @param {number} anneesSPV - Nombre d'années d'engagement SPV
+ * @param {Date|string} dateEffetPension - Date d'effet de la pension
+ * @returns {number} Nombre de trimestres de majoration (0, 1, 2 ou 3)
+ */
+export function getMajorationSPVDecret2026(anneesSPV, dateEffetPension) {
+  const dateEffet = new Date(dateEffetPension);
+  const dateDecret = new Date(DECRET_2026_18.DATE_EFFET);
+  
+  // Le décret ne s'applique qu'aux pensions prenant effet à partir du 01/07/2026
+  if (dateEffet < dateDecret) {
+    return 0;
+  }
+  
+  // Barème selon les années SPV
+  if (anneesSPV >= 25) return DECRET_2026_18.BAREME[25];
+  if (anneesSPV >= 20) return DECRET_2026_18.BAREME[20];
+  if (anneesSPV >= 10) return DECRET_2026_18.BAREME[10];
+  
+  return 0;
+}
+
 // =============================================================================
 // EXPORT GLOBAL DES PARAMÈTRES
 // =============================================================================
 
 export const PARAMS = {
   AGES,
+  AGE_LEGAL_ACTIF,
+  AGE_LEGAL_SEDENTAIRE,
   DUREE_ASSURANCE_PAR_GENERATION,
   DUREE_ASSURANCE_DEFAUT,
   SERVICES,
@@ -277,7 +443,9 @@ export const PARAMS = {
   POINT_INDICE,
   MAJORATION_SPV,
   BONIFICATIONS,
+  DECRET_2026_18,
   PFR,
+  COEFFICIENTS_RAFP_AGE,
   NBI,
   MINIMUM_GARANTI,
   COTISATIONS,
@@ -285,6 +453,10 @@ export const PARAMS = {
   // Fonctions utilitaires
   getDureeAssuranceRequise,
   getMajorationSPV,
+  getAgeLegalActif,
+  getAgeLegalSedentaire,
+  getCoefficientRAFPAge,
+  getMajorationSPVDecret2026,
 };
 
 export default PARAMS;

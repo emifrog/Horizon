@@ -9,7 +9,13 @@
  * @module modules/ages
  */
 
-import { AGES, SERVICES, getDureeAssuranceRequise } from '../config/parametres.js';
+import { 
+  AGES, 
+  SERVICES, 
+  getDureeAssuranceRequise,
+  getAgeLegalActif,
+  getAgeLegalSedentaire,
+} from '../config/parametres.js';
 import { dateAtteindreAge, calculerAge, calculerTrimestresEntreDates, formaterDateLongueFR } from '../utils/dates.js';
 import { calculerDurees, verifierConditionServicesActifs } from './duree.js';
 
@@ -41,24 +47,54 @@ import { calculerDurees, verifierConditionServicesActifs } from './duree.js';
  */
 
 /**
- * Calcule la date d'ouverture des droits (57 ans pour catégorie active)
+ * Calcule la date d'ouverture des droits (catégorie active)
+ * L'âge varie selon la génération : 57 ans à 59 ans (réforme 2023)
  * Condition : 17 ans de services actifs minimum
- * Réf: Décret n°2003-1306, Art. 24
+ * Réf: Décret n°2003-1306, Art. 24 - Loi n°2023-270
  * @param {Date} dateNaissance - Date de naissance
  * @returns {Date} Date d'ouverture des droits
  */
 export function calculerDateOuvertureDroits(dateNaissance) {
-  return dateAtteindreAge(dateNaissance, AGES.OUVERTURE_DROITS);
+  const ageLegal = getAgeLegalActif(dateNaissance);
+  return dateAtteindreAgeAvecMois(dateNaissance, ageLegal.ans, ageLegal.mois);
+}
+
+/**
+ * Calcule une date en ajoutant un âge en années et mois
+ * @param {Date} dateNaissance - Date de naissance
+ * @param {number} annees - Nombre d'années
+ * @param {number} mois - Nombre de mois supplémentaires
+ * @returns {Date} Date résultante
+ */
+function dateAtteindreAgeAvecMois(dateNaissance, annees, mois = 0) {
+  const date = new Date(dateNaissance);
+  date.setFullYear(date.getFullYear() + annees);
+  date.setMonth(date.getMonth() + mois);
+  return date;
 }
 
 /**
  * Calcule la date d'annulation automatique de la décote
- * Réf: Code des pensions, Art. L14
+ * L'âge varie selon la génération : 62 ans à 64 ans (réforme 2023)
+ * Réf: Code des pensions, Art. L14 - Loi n°2023-270
  * @param {Date} dateNaissance - Date de naissance
  * @returns {Date} Date d'annulation de la décote
  */
 export function calculerDateAnnulationDecote(dateNaissance) {
-  return dateAtteindreAge(dateNaissance, AGES.ANNULATION_DECOTE);
+  const ageLegal = getAgeLegalSedentaire(dateNaissance);
+  return dateAtteindreAgeAvecMois(dateNaissance, ageLegal.ans, ageLegal.mois);
+}
+
+/**
+ * Calcule la date à laquelle l'âge légal sédentaire est atteint
+ * Utilisé pour le calcul de la surcote (qui ne s'applique qu'à partir de cet âge)
+ * Réf: Loi n°2023-270 du 14 avril 2023
+ * @param {Date} dateNaissance - Date de naissance
+ * @returns {Date} Date d'atteinte de l'âge légal sédentaire
+ */
+export function calculerDateAgeLegalSedentaire(dateNaissance) {
+  const ageLegal = getAgeLegalSedentaire(dateNaissance);
+  return dateAtteindreAgeAvecMois(dateNaissance, ageLegal.ans, ageLegal.mois);
 }
 
 /**

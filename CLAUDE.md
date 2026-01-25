@@ -114,21 +114,23 @@ Fichier `js/config/parametres.js` — À mettre à jour lors des évolutions ré
 ```javascript
 // Paramètres 2026 - Catégorie active SPP
 export const PARAMS = {
-  // Âges
-  AGE_LEGAL_OUVERTURE: 57,           // Âge d'ouverture des droits (cat. active)
-  AGE_TAUX_PLEIN_AUTO: 62,           // Âge du taux plein automatique
-  AGE_LIMITE: 67,                     // Âge limite d'activité
+  // Âges progressifs selon génération (réforme 2023)
+  AGE_LEGAL_ACTIF: [
+    { debut: null, fin: '1966-08-31', age: 57, mois: 0 },
+    { debut: '1966-09-01', fin: '1966-12-31', age: 57, mois: 3 },
+    { debut: '1967-01-01', fin: '1967-12-31', age: 57, mois: 6 },
+    // ... jusqu'à 59 ans pour 1973+
+  ],
+  AGE_LEGAL_SEDENTAIRE: [
+    { debut: null, fin: '1961-08-31', age: 62, mois: 0 },
+    // ... jusqu'à 64 ans pour 1968+
+  ],
+  AGE_LIMITE: 62,                     // Âge limite d'activité (cat. active)
   
   // Durées (trimestres)
   DUREE_SERVICES_MIN: 68,            // 17 ans min en catégorie active
   DUREE_ASSURANCE_TAUX_PLEIN: {
-    1962: 168,  // Génération 1962
-    1963: 169,
-    1964: 170,
-    1965: 171,
-    1966: 172,
-    1967: 172,
-    // ... à compléter selon les générations
+    1962: 169, 1963: 170, 1964: 171, 1965: 172, // ... selon génération
   },
   
   // Taux
@@ -140,16 +142,33 @@ export const PARAMS = {
   // Valeur du point d'indice (janvier 2026)
   VALEUR_POINT_INDICE: 4.92278,      // € brut annuel
   
-  // Majoration SPV (décret 2026-18)
-  MAJORATION_SPV: {
-    10: 1,  // ≥10 ans : +1 trimestre
-    20: 2,  // ≥20 ans : +2 trimestres
-    25: 3,  // ≥25 ans : +3 trimestres
+  // Majoration SPV (décret 2026-18) - applicable à partir du 01/07/2026
+  DECRET_2026_18: {
+    DATE_EFFET: '2026-07-01',
+    BAREME: { 10: 1, 20: 2, 25: 3 },  // années SPV -> trimestres
   },
   
-  // PFR - Taux de cotisation RAFP
+  // RAFP
   TAUX_RAFP: 5,                      // 5% prélevé sur la PFR
   PLAFOND_RAFP: 20,                  // 20% du traitement indiciaire brut
+  VALEUR_SERVICE_POINT_RAFP: 0.05671, // €/an/point (2026)
+  VALEUR_ACQUISITION_POINT_RAFP: 1.4596, // € (2026)
+  SEUIL_RENTE_RAFP: 5125,            // Points min pour rente viagère
+  COEFFICIENTS_RAFP_AGE: {           // Coefficient selon âge de départ
+    57: 0.84, 58: 0.88, 59: 0.92, 60: 0.96, 61: 0.98,
+    62: 1.00, 63: 1.04, 64: 1.08, 65: 1.12, 66: 1.18, 67: 1.24,
+  },
+  
+  // Prime de feu
+  TAUX_PRIME_FEU: 25,                // 25% du TIB
+  
+  // Bonification 1/5ème - Conditions strictes
+  BONIFICATION_CINQUIEME: {
+    ratio: 1/5,
+    plafond: 20,                     // 5 ans max = 20 trimestres
+    dureeMinServicesEffectifs: 108,  // 27 ans
+    dureeMinSPP: 68,                 // 17 ans
+  },
 };
 ```
 
@@ -189,9 +208,10 @@ export const PARAMS = {
 ### Module 3 : Âges et dates (`ages.js`)
 
 **Calculs** :
-- Date d'ouverture des droits (57 ans si 17 ans de services actifs)
+- Date d'ouverture des droits (**progressive selon génération** : 57 à 59 ans)
+- Date d'annulation de la décote (**progressive** : 62 à 64 ans)
 - Date du taux plein
-- Date limite
+- Date limite (62 ans catégorie active)
 
 **Scénarios générés** :
 - Départ au plus tôt (avec décote éventuelle)
@@ -202,30 +222,34 @@ export const PARAMS = {
 
 **Formule de base** :
 ```
-Pension = Traitement indiciaire brut × (Trimestres liquidables / Trimestres requis) × 75%
+Pension = TIB × (Trim. liquidables / Trim. requis) × 75% + Majoration Prime de Feu
 ```
 
 **Entrées** :
 - `indiceBrut` (number) : indice majoré détenu
 - `trimestresLiquidables` (number)
 - `trimestresRequis` (number)
+- `droitMajorationPrimeFeu` (boolean) : SPP à la RDC
 
 **Calculs** :
 - Traitement indiciaire brut = indice × valeur du point
 - Taux de liquidation (plafonné à 75%)
 - Application décote si applicable
-- Pension brute mensuelle
+- **Majoration prime de feu** = TIB × 25% × Taux liquidation (proratisable)
+- Pension brute mensuelle (base + majoration)
 
-### Module 5 : PFR (`pfr.js`)
+### Module 5 : PFR et RAFP (`pfr.js`)
 
 **Entrées** :
 - `montantAnnuelPFR` (number) : montant brut annuel
-- OU `partFixe` + `partVariable`
+- `ageDepart` (number) : âge de départ pour coefficient RAFP
 
 **Calculs** :
 - Cotisation RAFP (5% plafonné à 20% du TIB)
-- Estimation rente RAFP (très approximative)
-- Affichage comparatif avec/sans PFR
+- Points RAFP = cotisations / valeur acquisition (1.4596 €)
+- **Coefficient RAFP selon âge** (0.84 à 57 ans → 1.24 à 67 ans)
+- Type prestation : rente (≥5125 pts), capital fractionné, capital unique
+- Rente RAFP = points × valeur service (0.05671 €) × coefficient âge
 
 ### Module 6 : NBI (`nbi.js`)
 

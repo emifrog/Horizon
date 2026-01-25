@@ -9,7 +9,13 @@
  * @module modules/duree
  */
 
-import { SERVICES, BONIFICATIONS, getDureeAssuranceRequise, getMajorationSPV } from '../config/parametres.js';
+import { 
+  SERVICES, 
+  BONIFICATIONS, 
+  getDureeAssuranceRequise, 
+  getMajorationSPV,
+  getMajorationSPVDecret2026,
+} from '../config/parametres.js';
 import { calculerTrimestresEntreDates, calculerAnneesEntreDates } from '../utils/dates.js';
 
 /**
@@ -68,18 +74,49 @@ export function calculerTrimestresServicesEffectifs(dateEntree, dateFin, quotite
 /**
  * Calcule la bonification du cinquième pour services actifs
  * Réf: Code des pensions, Art. L12 b)
+ * 
+ * Conditions (sauf exceptions) :
+ * - 27 ans de services effectifs minimum
+ * - 17 ans en qualité SPP minimum
+ * 
  * @param {number} trimestresServicesActifs - Trimestres de services en catégorie active
+ * @param {Object} [options] - Options de calcul
+ * @param {number} [options.trimestresServicesEffectifs] - Total trimestres services effectifs (pour condition 27 ans)
+ * @param {number} [options.trimestresSPP] - Trimestres en qualité SPP (pour condition 17 ans)
+ * @param {boolean} [options.exceptionSansCondition=false] - Invalidité, reclassement, CRO
  * @returns {number} Trimestres de bonification
  */
-export function calculerBonificationCinquieme(trimestresServicesActifs) {
+export function calculerBonificationCinquieme(trimestresServicesActifs, options = {}) {
   if (!BONIFICATIONS.CINQUIEME_ACTIF.enabled) {
     return 0;
   }
 
+  const {
+    trimestresServicesEffectifs,
+    trimestresSPP,
+    exceptionSansCondition = false,
+  } = options;
+
+  // Vérification des conditions (sauf exceptions : invalidité, reclassement, CRO)
+  if (!exceptionSansCondition && BONIFICATIONS.CINQUIEME_ACTIF.dureeMinServicesEffectifs) {
+    // Condition 27 ans de services effectifs
+    if (trimestresServicesEffectifs !== undefined && 
+        trimestresServicesEffectifs < BONIFICATIONS.CINQUIEME_ACTIF.dureeMinServicesEffectifs) {
+      return 0;
+    }
+    // Condition 17 ans en qualité SPP
+    if (trimestresSPP !== undefined && 
+        trimestresSPP < BONIFICATIONS.CINQUIEME_ACTIF.dureeMinSPP) {
+      return 0;
+    }
+  }
+
   // 1 trimestre de bonification pour 5 trimestres de services actifs
-  // Plafonnée à 5 ans (20 trimestres) de bonification
   const bonification = Math.floor(trimestresServicesActifs * BONIFICATIONS.CINQUIEME_ACTIF.ratio);
-  return Math.min(bonification, 20);
+  
+  // Plafonnée à 5 ans (20 trimestres) de bonification
+  const plafond = BONIFICATIONS.CINQUIEME_ACTIF.plafond || 20;
+  return Math.min(bonification, plafond);
 }
 
 /**
@@ -181,6 +218,7 @@ export function calculerDurees(donnees, anneeNaissance) {
     enfantsAvant2004 = 0,
     servicesMilitaires = 'aucun',
     trimestresServicesMilitaires = 0,
+    exceptionBonification = false,  // Invalidité, reclassement, CRO
   } = donnees;
 
   // Calcul des services effectifs SPP
@@ -190,22 +228,31 @@ export function calculerDurees(donnees, anneeNaissance) {
     quotite
   );
 
-  // Calcul des bonifications SPP
-  const trimestresBonificationCinquieme = calculerBonificationCinquieme(trimestresServicesEffectifs);
-  const trimestresBonificationEnfants = calculerBonificationEnfants(enfantsAvant2004);
-  const trimestresMajorationSPV = getMajorationSPV(anneesSPV);
-
   // Services militaires (BSPP/BMPM) - comptent comme services actifs
-  // Réf: Code des pensions civiles et militaires de retraite
-  // Les services militaires sont repris en catégorie active
   const trimServicesMilitaires = servicesMilitaires !== 'aucun' ? trimestresServicesMilitaires : 0;
-
-  // Bonification du 1/5e sur les services militaires (catégorie active)
-  // La bonification s'applique également aux services BSPP/BMPM
-  const trimestresBonificationMilitaire = calculerBonificationCinquieme(trimServicesMilitaires);
 
   // Total des services actifs (SPP + militaires) pour la condition des 17 ans
   const totalServicesActifs = trimestresServicesEffectifs + trimServicesMilitaires;
+
+  // Calcul des bonifications SPP avec conditions strictes
+  // Conditions : 27 ans services effectifs + 17 ans SPP (sauf exceptions)
+  const trimestresBonificationCinquieme = calculerBonificationCinquieme(trimestresServicesEffectifs, {
+    trimestresServicesEffectifs: totalServicesActifs,
+    trimestresSPP: trimestresServicesEffectifs,
+    exceptionSansCondition: exceptionBonification,
+  });
+
+  // Bonification du 1/5e sur les services militaires (catégorie active)
+  const trimestresBonificationMilitaire = calculerBonificationCinquieme(trimServicesMilitaires, {
+    trimestresServicesEffectifs: totalServicesActifs,
+    trimestresSPP: trimestresServicesEffectifs,
+    exceptionSansCondition: exceptionBonification,
+  });
+
+  const trimestresBonificationEnfants = calculerBonificationEnfants(enfantsAvant2004);
+
+  // Majoration SPV selon le décret 2026-18 (applicable aux pensions après 01/07/2026)
+  const trimestresMajorationSPV = getMajorationSPVDecret2026(anneesSPV, dateDepart);
 
   // Calcul des totaux
   const trimestresLiquidables = calculerTrimestresLiquidables({
