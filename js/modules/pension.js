@@ -180,6 +180,9 @@ export function calculerMajorationPrimeFeu(traitementIndiciaireAnnuel, tauxLiqui
   }
 
   // Appliquer le taux de liquidation à la majoration
+  // Formule CNRACL : Pension = (TIB + Majoration_PF) × Taux_liquidation
+  // Ici on calcule : Majoration_finale = Majoration_PF × Taux_liquidation
+  // pour pouvoir l'additionner à la pension brute (TIB × Taux_liquidation)
   majorationAnnuelle = majorationAnnuelle * (tauxLiquidation / 100);
 
   return {

@@ -290,9 +290,10 @@ console.log('');
 console.log('📋 TEST 8 : Calcul Surcote');
 console.log('─────────────────────────────────────────────────────────────────');
 
+// La surcote s'applique à partir de l'âge légal SÉDENTAIRE (64 ans pour génération 1965)
 const donneesSurcote = {
   dateNaissance: new Date(1965, 0, 1),
-  dateDepart: new Date(2027, 0, 1), // 62 ans
+  dateDepart: new Date(2030, 0, 1), // 65 ans (> 64 ans âge sédentaire)
   trimestresAssurance: 180, // > 172 requis
   trimestresRequis: 172,
   dateTauxPlein: new Date(2024, 0, 1), // Taux plein atteint avant

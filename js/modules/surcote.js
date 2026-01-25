@@ -9,7 +9,7 @@
  * @module modules/surcote
  */
 
-import { TAUX, AGES, getDureeAssuranceRequise } from '../config/parametres.js';
+import { TAUX, AGES, getDureeAssuranceRequise, getAgeLegalSedentaire } from '../config/parametres.js';
 import { calculerAge, calculerTrimestresEntreDates } from '../utils/dates.js';
 
 /**
@@ -43,12 +43,16 @@ import { calculerAge, calculerTrimestresEntreDates } from '../utils/dates.js';
  */
 export function verifierEligibiliteSurcote(dateNaissance, dateDepart, trimestresAssurance, trimestresRequis) {
   const ageDepart = calculerAge(dateNaissance, dateDepart);
+  
+  // La surcote s'applique à partir de l'âge légal SÉDENTAIRE (62-64 ans selon génération)
+  // et non l'âge d'ouverture des droits actif (57-59 ans)
+  const ageSedentaire = getAgeLegalSedentaire(dateNaissance);
 
-  // Condition 1 : Avoir atteint l'âge légal d'ouverture des droits
-  if (ageDepart < AGES.OUVERTURE_DROITS) {
+  // Condition 1 : Avoir atteint l'âge légal sédentaire
+  if (ageDepart < ageSedentaire.ans) {
     return {
       eligible: false,
-      motif: `Âge insuffisant (${ageDepart} ans, minimum requis : ${AGES.OUVERTURE_DROITS} ans)`,
+      motif: `Âge insuffisant pour la surcote (${ageDepart} ans, minimum requis : ${ageSedentaire.ans} ans - âge légal sédentaire)`,
     };
   }
 
@@ -69,19 +73,23 @@ export function verifierEligibiliteSurcote(dateNaissance, dateDepart, trimestres
 /**
  * Calcule la date à partir de laquelle la surcote commence
  * C'est la date la plus tardive entre :
- * - La date d'atteinte de l'âge légal (57 ans)
+ * - La date d'atteinte de l'âge légal SÉDENTAIRE (62-64 ans selon génération)
  * - La date d'atteinte de la durée d'assurance requise
  * @param {Date} dateNaissance - Date de naissance
  * @param {Date} dateTauxPlein - Date d'atteinte du taux plein
  * @returns {Date} Date de début de la surcote
  */
 export function calculerDateDebutSurcote(dateNaissance, dateTauxPlein) {
-  // Date des 57 ans
-  const date57Ans = new Date(dateNaissance);
-  date57Ans.setFullYear(date57Ans.getFullYear() + AGES.OUVERTURE_DROITS);
+  // Date de l'âge légal sédentaire (62-64 ans selon génération)
+  const ageSedentaire = getAgeLegalSedentaire(dateNaissance);
+  const dateAgeSedentaire = new Date(dateNaissance);
+  dateAgeSedentaire.setFullYear(dateAgeSedentaire.getFullYear() + ageSedentaire.ans);
+  if (ageSedentaire.mois) {
+    dateAgeSedentaire.setMonth(dateAgeSedentaire.getMonth() + ageSedentaire.mois);
+  }
 
   // La surcote commence à la date la plus tardive
-  return dateTauxPlein > date57Ans ? dateTauxPlein : date57Ans;
+  return dateTauxPlein > dateAgeSedentaire ? dateTauxPlein : dateAgeSedentaire;
 }
 
 /**
