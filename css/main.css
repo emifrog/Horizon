@@ -115,6 +115,10 @@ a:hover {
   border-radius: var(--radius);
 }
 
+.header__logo-link{
+  text-decoration: none;
+}
+
 .header__title {
   margin: 0;
   color: var(--color-white);
