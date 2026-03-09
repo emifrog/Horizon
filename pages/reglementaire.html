@@ -868,6 +868,13 @@
 
             </div>
         </main>
+        <!-- Bouton retour vers le haut -->
+        <button class="back-to-top" id="backToTop" aria-label="Retour vers le haut">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6,15 12,9 18,15" />
+            </svg>
+        </button>
+
         <!-- Footer -->
         <footer class="doc-footer">
             <p><strong>Horizon</strong> - Simulateur de retraite SPP</p>
@@ -875,6 +882,16 @@
             <p class="doc-footer__date">Dernière mise à jour : Janvier 2026</p>
         </footer>
     </div>
+
+    <script>
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            backToTop.classList.toggle('back-to-top--visible', window.scrollY > 400);
+        });
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
 </body>
 
 </html>

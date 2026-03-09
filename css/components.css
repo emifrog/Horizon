@@ -1153,10 +1153,20 @@ img.tooltip__icon {
     max-height: 95vh;
   }
 
-  /* Tooltips */
+  /* Tooltips - désactiver le hover sur tactile, utiliser le toggle JS */
   .tooltip__content {
     width: 220px;
     font-size: var(--font-size-xs);
+  }
+
+  .tooltip:hover .tooltip__content {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .tooltip--active .tooltip__content {
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
   /* Alertes compactes */

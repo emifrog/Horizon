@@ -92,6 +92,12 @@ function init() {
   // Menu hamburger
   setupHamburgerMenu();
 
+  // Tooltips tactiles (mobile)
+  setupTouchTooltips();
+
+  // Header auto-hide au scroll (mobile)
+  setupHeaderAutoHide();
+
   // Lien À propos dans la navbar desktop
   document.querySelector('.nav-desktop [data-action="about"]')?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -182,6 +188,66 @@ function setupHamburgerMenu() {
           handleAbout();
           break;
       }
+    });
+  });
+}
+
+/**
+ * Configure les tooltips pour les appareils tactiles
+ * Sur mobile, le hover ne fonctionne pas, on bascule en toggle au click/touch
+ */
+function setupTouchTooltips() {
+  const tooltips = document.querySelectorAll('.tooltip');
+  if (!tooltips.length) return;
+
+  tooltips.forEach(tooltip => {
+    tooltip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Fermer les autres tooltips ouverts
+      tooltips.forEach(t => {
+        if (t !== tooltip) t.classList.remove('tooltip--active');
+      });
+      tooltip.classList.toggle('tooltip--active');
+    });
+  });
+
+  // Fermer au clic en dehors
+  document.addEventListener('click', () => {
+    tooltips.forEach(t => t.classList.remove('tooltip--active'));
+  });
+}
+
+/**
+ * Cache le header au scroll vers le bas, le montre au scroll vers le haut (mobile uniquement)
+ */
+function setupHeaderAutoHide() {
+  const header = document.querySelector('.header');
+  if (!header) return;
+
+  let lastScrollY = 0;
+  let ticking = false;
+
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+
+    requestAnimationFrame(() => {
+      // Ne s'applique qu'en dessous de 768px
+      if (window.innerWidth <= 768) {
+        const currentScrollY = window.scrollY;
+
+        if (currentScrollY > lastScrollY && currentScrollY > 80) {
+          header.classList.add('header--hidden');
+        } else {
+          header.classList.remove('header--hidden');
+        }
+
+        lastScrollY = currentScrollY;
+      } else {
+        header.classList.remove('header--hidden');
+      }
+
+      ticking = false;
     });
   });
 }

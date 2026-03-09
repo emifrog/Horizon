@@ -10,7 +10,7 @@
     }
 
     .doc-header__title {
-      font-size: var(--font-size-xl);
+      font-size: var(--font-size-2xl);
       text-align: center;
       color: var(--color-secondary);
       text-decoration: underline;
@@ -206,6 +206,46 @@
     }
 
 /* ========================================
+   BOUTON RETOUR VERS LE HAUT
+   ======================================== */
+
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: var(--color-secondary);
+  color: var(--color-white);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.back-to-top svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.back-to-top--visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.back-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
    RESPONSIVE - Page réglementaire
    ======================================== */
 
@@ -270,6 +310,18 @@
   .back-link {
     font-size: var(--font-size-sm);
   }
+
+  .back-to-top {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .back-to-top svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -316,5 +368,17 @@
   .doc-section__content ul,
   .doc-section__content ol {
     padding-left: var(--spacing-md);
+  }
+
+  .back-to-top {
+    bottom: 1rem;
+    right: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .back-to-top svg {
+    width: 1.125rem;
+    height: 1.125rem;
   }
 }
