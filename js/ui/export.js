@@ -53,6 +53,16 @@ function genererContenuImpression(resultats, profil) {
   <meta charset="UTF-8">
   <title>Simulation Retraite SPP - ${dateGeneration}</title>
   <style>
+    @page {
+      size: A4;
+      margin: 16mm 14mm 20mm 14mm;
+      @bottom-center {
+        content: "HorizonSP · Simulation indicative et non contractuelle · Page " counter(page) " / " counter(pages);
+        font-size: 8pt;
+        color: #888;
+      }
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -64,26 +74,41 @@ function genererContenuImpression(resultats, profil) {
       font-size: 11pt;
       line-height: 1.5;
       color: #333;
-      padding: 20mm;
     }
 
     .header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-end;
       border-bottom: 2px solid #C8102E;
-      padding-bottom: 15px;
-      margin-bottom: 20px;
+      padding-bottom: 10px;
+      margin-bottom: 18px;
     }
 
-    .header h1 {
+    .header__title h1 {
       font-size: 18pt;
       color: #C8102E;
+      line-height: 1.1;
+    }
+
+    .header__title .subtitle {
+      font-size: 10pt;
+      color: #1E3A5F;
+      margin-top: 2px;
     }
 
     .header .date {
-      font-size: 10pt;
+      font-size: 9.5pt;
       color: #666;
+      text-align: right;
+    }
+
+    section, .info-grid, table {
+      page-break-inside: avoid;
+    }
+
+    h2, h3 {
+      page-break-after: avoid;
     }
 
     h2 {
@@ -218,8 +243,11 @@ function genererContenuImpression(resultats, profil) {
 </head>
 <body>
   <div class="header">
-    <h1>Simulation Retraite SPP</h1>
-    <span class="date">Généré le ${dateGeneration}</span>
+    <div class="header__title">
+      <h1>Simulation Retraite SPP</h1>
+      <div class="subtitle">HorizonSP · Outil pour les sapeurs-pompiers professionnels</div>
+    </div>
+    <span class="date">Édité le ${dateGeneration}</span>
   </div>
 
   <h2>Votre profil</h2>

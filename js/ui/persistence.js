@@ -10,10 +10,11 @@
  * @module ui/persistence
  */
 
-import { setFormData, showNotification } from './form.js';
+import { setFormData, showNotification, goToStep } from './form.js';
 
 const STORAGE_KEY = 'horizon:last-simulation';
 const CONSENT_KEY = 'horizon:storage-consent';
+const SESSION_KEY = 'horizon:session-draft';
 const URL_PARAM = 'profile';
 const CURRENT_VERSION = 1;
 
@@ -310,19 +311,64 @@ function showConsentBanner() {
 }
 
 // =============================================================================
+// SESSION DRAFT (sessionStorage, non opt-in, purgé à la fermeture de l'onglet)
+// =============================================================================
+
+/**
+ * Sauvegarde l'état courant du formulaire + étape active dans sessionStorage.
+ * @param {number} [currentStep] - Étape courante (optionnelle)
+ */
+function saveSessionDraft(currentStep) {
+  try {
+    const snapshot = collectSnapshot();
+    if (currentStep) snapshot.__step = currentStep;
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(snapshot));
+  } catch {
+    // sessionStorage peut être désactivé — on ignore silencieusement
+  }
+}
+
+/**
+ * Récupère la dernière session sauvegardée dans cet onglet.
+ * @returns {Object|null}
+ */
+function readSessionDraft() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Efface le brouillon de session.
+ */
+function clearSessionDraft() {
+  try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+}
+
+// =============================================================================
 // INITIALISATION PUBLIQUE
 // =============================================================================
 
 /**
  * À appeler au démarrage de l'application.
- * 1. Si l'URL contient ?profile=..., applique la simulation partagée (prioritaire).
- * 2. Sinon, si l'utilisateur a consenti et qu'une sauvegarde existe, la restaure.
- * 3. Propose la bannière de consentement lors de la première saisie significative.
+ * Ordre de priorité pour restaurer un état :
+ *   1. URL ?profile=...        → simulation partagée (prioritaire absolu)
+ *   2. sessionStorage          → brouillon en cours (rechargement de l'onglet)
+ *   3. localStorage + consent  → sauvegarde opt-in entre sessions
+ *
+ * La sauvegarde sessionStorage est ensuite alimentée à chaque saisie et à
+ * chaque changement d'étape, sans consentement explicite : elle ne survit
+ * pas à la fermeture de l'onglet.
  *
  * @param {HTMLFormElement} form - Formulaire à observer
  */
 export function initPersistence(form) {
   if (!form) return;
+
+  let restored = false;
 
   // 1. Priorité à l'URL de partage
   const shared = readSimulationFromUrl();
@@ -330,11 +376,25 @@ export function initPersistence(form) {
     applySnapshot(shared);
     stripShareParamFromUrl();
     showNotification('Simulation chargée depuis le lien partagé', 'info');
-    return;
+    restored = true;
   }
 
-  // 2. Sauvegarde locale existante
-  if (hasStorageConsent()) {
+  // 2. Brouillon de session (rechargement de l'onglet courant)
+  if (!restored) {
+    const draft = readSessionDraft();
+    if (draft) {
+      applySnapshot(draft);
+      if (typeof draft.__step === 'number' && draft.__step > 1) {
+        // Après rendu (setFormData a déclenché des listeners), on saute à l'étape
+        requestAnimationFrame(() => goToStep(draft.__step));
+      }
+      showNotification('Progression restaurée', 'info');
+      restored = true;
+    }
+  }
+
+  // 3. Sauvegarde locale existante (opt-in de longue durée)
+  if (!restored && hasStorageConsent()) {
     const saved = loadLocalSimulation();
     if (saved) {
       applySnapshot(saved);
@@ -342,33 +402,70 @@ export function initPersistence(form) {
     }
   }
 
-  // 3. Sauvegarde automatique à chaque saisie (si consentement)
-  //    + proposition de la bannière dès qu'une donnée significative est saisie
-  let bannerShown = false;
-  const significantFields = ['dateNaissance', 'dateEntreeSPP', 'indiceBrut'];
-  form.addEventListener('input', () => {
-    if (hasStorageConsent()) {
-      // debouncé via rAF pour éviter l'écriture à chaque frappe
-      cancelAnimationFrame(form._persistenceRAF);
-      form._persistenceRAF = requestAnimationFrame(() => saveSimulationLocally());
-      return;
-    }
-    if (bannerShown) return;
-    const consentChoice = (() => {
-      try { return localStorage.getItem(CONSENT_KEY); } catch { return null; }
-    })();
-    if (consentChoice !== null) return;
+  // --- Alimentation automatique ---
 
-    // On ne propose la bannière que si un champ significatif est renseigné
-    const filled = significantFields.some((name) => {
-      const el = document.querySelector(`[name="${name}"]`);
-      return el && el.value !== '' && el.value !== null;
+  // A chaque saisie : sauvegarde sessionStorage (debouncé via rAF) + éventuellement localStorage
+  form.addEventListener('input', () => {
+    cancelAnimationFrame(form._persistenceRAF);
+    form._persistenceRAF = requestAnimationFrame(() => {
+      saveSessionDraft(getCurrentStepFromDom());
+      if (hasStorageConsent()) saveSimulationLocally();
     });
-    if (filled) {
-      bannerShown = true;
-      showConsentBanner();
-    }
+    proposerConsentementSiSignificatif(form);
   });
+
+  // A chaque changement d'étape : synchroniser immédiatement
+  document.addEventListener('horizon:step-changed', (e) => {
+    saveSessionDraft(e.detail?.step);
+  });
+
+  // Purger le brouillon de session après un submit réussi
+  form.addEventListener('submit', () => {
+    // Un petit délai laisse le calcul se faire ; le brouillon sera écrasé par
+    // la prochaine saisie de toute façon — on le vide uniquement en cas de
+    // reset explicite (pour ne pas perdre la progression en cas d'erreur).
+  });
+}
+
+/**
+ * Récupère l'étape courante depuis le DOM (classe active sur le stepper).
+ * @returns {number}
+ */
+function getCurrentStepFromDom() {
+  const active = document.querySelector('.stepper__step--active');
+  const n = active ? parseInt(active.dataset.step, 10) : 1;
+  return Number.isFinite(n) ? n : 1;
+}
+
+/**
+ * Affiche la bannière de consentement localStorage si une saisie significative
+ * a été faite et qu'aucun choix n'a encore été enregistré.
+ * @param {HTMLFormElement} form
+ */
+function proposerConsentementSiSignificatif(form) {
+  if (form._consentBannerShown) return;
+  if (hasStorageConsent()) return;
+  const consentChoice = (() => {
+    try { return localStorage.getItem(CONSENT_KEY); } catch { return null; }
+  })();
+  if (consentChoice !== null) return;
+
+  const significantFields = ['dateNaissance', 'dateEntreeSPP', 'indiceBrut'];
+  const filled = significantFields.some((name) => {
+    const el = document.querySelector(`[name="${name}"]`);
+    return el && el.value !== '' && el.value !== null;
+  });
+  if (filled) {
+    form._consentBannerShown = true;
+    showConsentBanner();
+  }
+}
+
+/**
+ * Efface le brouillon de session (utilisé lors d'un reset complet).
+ */
+export function clearSessionProgress() {
+  clearSessionDraft();
 }
 
 /**

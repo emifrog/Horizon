@@ -6,6 +6,7 @@
 
 @import url('variables.css');
 @import url('components.css');
+@import url('print.css');
 
 /* ========================================
    RESET ET BASE
@@ -218,7 +219,7 @@ a:hover {
   width: 2.2rem;
   height: 2.2rem;
   padding: 0.5rem;
-  background: white;
+  background: var(--color-bg-elevated);
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
@@ -680,42 +681,7 @@ a:hover {
    MODE IMPRESSION
    ======================================== */
 
-@media print {
-  .header,
-  .form-navigation,
-  .stepper,
-  .btn {
-    display: none !important;
-  }
-
-  body {
-    background-color: white;
-    font-size: 11pt;
-  }
-
-  .simulator {
-    display: block;
-  }
-
-  .simulator__form-section {
-    display: none;
-  }
-
-  .simulator__results-section {
-    box-shadow: none;
-    padding: 0;
-  }
-
-  .result-card,
-  .details-card {
-    break-inside: avoid;
-    border: 1px solid #ddd;
-  }
-
-  .alert--warning {
-    border: 1px solid #ffc107;
-  }
-}
+/* Styles d'impression dédiés dans print.css (importé ci-dessous) */
 
 /* ========================================
    ÉTATS ET INTERACTIONS

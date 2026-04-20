@@ -145,7 +145,7 @@
   font-size: var(--font-size-base);
   line-height: 1.5;
   color: var(--color-text);
-  background-color: var(--color-white);
+  background-color: var(--color-bg-elevated);
   border: var(--border-width) solid var(--input-border-color);
   border-radius: var(--radius);
   transition: border-color var(--transition), box-shadow var(--transition);
@@ -559,7 +559,7 @@
 }
 
 .table--scenarios .scenario--recommended:hover {
-  background-color: #c3e6cb;
+  background-color: var(--color-success-border);
 }
 
 /* ========================================
@@ -913,6 +913,42 @@ img.tooltip__icon {
   bottom: 100%;
   border-top-color: transparent;
   border-bottom-color: var(--color-gray-800);
+}
+
+/* Tooltip inline généré par le glossaire */
+.tooltip--inline {
+  vertical-align: middle;
+  margin-left: var(--spacing-xs);
+  border-radius: var(--radius-full);
+  outline: none;
+}
+
+.tooltip--inline:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.tooltip__icon--inline {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-info);
+}
+
+.tooltip__icon--inline svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tooltip--inline:hover .tooltip__icon--inline,
+.tooltip--inline:focus .tooltip__icon--inline {
+  color: var(--color-primary);
+}
+
+/* Activation touch (via JS setupTouchTooltips) */
+.tooltip--active .tooltip__content {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* ========================================
@@ -1298,6 +1334,51 @@ img.tooltip__icon {
   .consent-banner__actions {
     justify-content: flex-end;
   }
+}
+
+/* ========================================
+   BOUTON DE BASCULE DU THÈME
+   ======================================== */
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  border: var(--border-width) solid transparent;
+  background: transparent;
+  color: var(--color-white);
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  margin-right: var(--spacing-xs);
+}
+
+.theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle__icon {
+  width: 20px;
+  height: 20px;
+  display: none;
+}
+
+/* Visibilité des icônes selon le mode */
+:root.theme-auto .theme-toggle__icon--auto,
+:root.theme-light .theme-toggle__icon--light,
+:root.theme-dark .theme-toggle__icon--dark {
+  display: block;
 }
 
 /* ========================================

@@ -17,6 +17,20 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Anti-FOUC : applique le thème avant le premier paint -->
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem('horizon:theme');
+        if (!['auto', 'light', 'dark'].includes(mode)) mode = 'auto';
+        document.documentElement.classList.add('theme-' + mode);
+        document.documentElement.setAttribute('data-theme', mode);
+      } catch (e) {
+        document.documentElement.classList.add('theme-auto');
+      }
+    })();
+  </script>
 </head>
 <body>
   <a href="#main-content" class="skip-link">Aller au contenu principal</a>
@@ -44,6 +58,31 @@
           <a href="pages/apropos.html" class="nav-desktop__link">À propos</a>
           <a href="pages/contact.html" class="nav-desktop__link">Contact</a>
         </nav>
+
+        <!-- Bouton de thème -->
+        <button type="button" class="theme-toggle" id="theme-toggle"
+                aria-label="Changer le thème d'affichage"
+                aria-haspopup="true"
+                title="Thème d'affichage">
+          <svg class="theme-toggle__icon theme-toggle__icon--light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="theme-toggle__icon theme-toggle__icon--dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="theme-toggle__icon theme-toggle__icon--auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 3 a9 9 0 0 1 0 18 z" fill="currentColor"/>
+          </svg>
+        </button>
 
         <!-- Menu hamburger (mobile) -->
         <button class="hamburger" id="hamburger-btn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="nav-menu">
@@ -163,7 +202,7 @@
 
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="quotite" class="form-label">Quotité de travail</label>
+                      <label for="quotite" class="form-label">Quotité de travail<span data-glossaire="quotite"></span></label>
                       <select id="quotite" name="quotite" class="form-select" aria-describedby="quotite-hint">
                         <option value="1">Temps plein (100%)</option>
                         <option value="0.9">90%</option>
@@ -176,7 +215,7 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="anneesSPV" class="form-label">Nombre d'années d'engagement SPV</label>
+                      <label for="anneesSPV" class="form-label">Nombre d'années d'engagement SPV<span data-glossaire="spv"></span></label>
                       <input type="number" id="anneesSPV" name="anneesSPV" class="form-input"
                              min="0" max="50" value="0" aria-describedby="anneesSPV-hint">
                       <span class="form-hint" id="anneesSPV-hint">Nombre d'années reconnues comme sapeur-pompier volontaire.</span>
@@ -197,7 +236,7 @@
 
                   <!-- Section services militaires pompiers -->
                   <div class="form-group">
-                    <label for="servicesMilitaires" class="form-label">Services militaires pompiers</label>
+                    <label for="servicesMilitaires" class="form-label">Services militaires pompiers<span data-glossaire="bspp-bmpm"></span></label>
                     <select id="servicesMilitaires" name="servicesMilitaires" class="form-select" aria-describedby="servicesMilitaires-hint">
                       <option value="aucun">Aucun</option>
                       <option value="bspp">BSPP - Brigade de Sapeurs-Pompiers de Paris</option>
@@ -221,7 +260,7 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="trimestresAutresRegimes" class="form-label">Trimestres acquis hors CNRACL</label>
+                    <label for="trimestresAutresRegimes" class="form-label">Trimestres acquis hors CNRACL<span data-glossaire="trimestres-acquis"></span></label>
                     <input type="number" id="trimestresAutresRegimes" name="trimestresAutresRegimes" class="form-input"
                            min="0" max="200" value="0" aria-describedby="trimestresAutresRegimes-hint">
                     <span class="form-hint" id="trimestresAutresRegimes-hint">Trimestres validés dans d'autres régimes (privé, MSA, etc.).</span>
@@ -259,7 +298,7 @@
                   <p class="step__description">Indiquez votre indice et les éléments de rémunération complémentaires.</p>
 
                   <div class="form-group">
-                    <label for="indiceBrut" class="form-label form-label--required">Indice brut actuel</label>
+                    <label for="indiceBrut" class="form-label form-label--required">Indice brut actuel<span data-glossaire="indice-brut"></span></label>
                     <input type="number" id="indiceBrut" name="indiceBrut" class="form-input" required
                            min="367" max="1027" placeholder="ex: 562"
                            aria-required="true" aria-describedby="indiceBrut-hint">
@@ -268,7 +307,7 @@
 
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="pointsNBI" class="form-label">Points NBI</label>
+                      <label for="pointsNBI" class="form-label">Points NBI<span data-glossaire="nbi"></span></label>
                       <input type="number" id="pointsNBI" name="pointsNBI" class="form-input"
                              min="0" max="100" value="0" aria-describedby="pointsNBI-hint">
                       <span class="form-hint" id="pointsNBI-hint">Nouvelle Bonification Indiciaire (si applicable).</span>
@@ -290,7 +329,7 @@
 
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="montantPFR" class="form-label">Prime de feu annuelle brute (optionnel)</label>
+                      <label for="montantPFR" class="form-label">Prime de feu annuelle brute (optionnel)<span data-glossaire="pfr"></span></label>
                       <input type="number" id="montantPFR" name="montantPFR" class="form-input"
                              min="0" step="0.01" placeholder="Calcul auto si vide"
                              aria-describedby="montantPFR-hint">

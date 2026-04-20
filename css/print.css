@@ -1,0 +1,255 @@
+/**
+ * Feuille de style dédiée à l'impression / export PDF.
+ *
+ * Objectifs :
+ *   - Faire tenir les résultats de la simulation sur le papier, pas le formulaire.
+ *   - En-tête propre (titre du simulateur + date d'édition).
+ *   - Pied de page avec mention légale.
+ *   - Pas de coupure au milieu des cartes / tableaux.
+ *   - Déplier automatiquement les <details>.
+ *   - Noir et blanc lisible (pas de fond coloré dense).
+ */
+
+@media print {
+  /* -------------------------------------------------------------
+     RÉGLAGES DE PAGE
+     ------------------------------------------------------------- */
+  @page {
+    size: A4;
+    margin: 14mm 12mm 18mm 12mm;
+  }
+
+  /* -------------------------------------------------------------
+     BASE : force mode clair, supprime les ombres, couleurs saturées
+     ------------------------------------------------------------- */
+  :root,
+  :root.theme-dark,
+  :root.theme-auto {
+    --color-bg: #ffffff;
+    --color-bg-alt: #ffffff;
+    --color-bg-elevated: #ffffff;
+    --color-text: #111111;
+    --color-text-muted: #444444;
+    --color-text-light: #666666;
+    --color-border: #cccccc;
+    --color-border-light: #dddddd;
+    --shadow-sm: none;
+    --shadow: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: none;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .app {
+    min-height: auto;
+    display: block;
+  }
+
+  /* -------------------------------------------------------------
+     MASQUAGES
+     ------------------------------------------------------------- */
+  .skip-link,
+  .header,
+  .hamburger,
+  .nav-menu,
+  .nav-desktop,
+  .nav-overlay,
+  .theme-toggle,
+  .stepper,
+  .form-navigation,
+  .simulator__form-body > form > .step:not(.step--print-keep),
+  .export-buttons,
+  .consent-banner,
+  .notifications,
+  .mobile-subtitle,
+  .results-placeholder,
+  .footer,
+  .chart-tooltip,
+  .tooltip {
+    display: none !important;
+  }
+
+  /* Le <canvas> du graphique n'est pas reproductible proprement en PDF :
+     on affiche à la place le tableau alternatif (<details>) déplié. */
+  .graphique-container {
+    display: none !important;
+  }
+
+  .graphique-table {
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  .graphique-table > summary {
+    display: none;
+  }
+
+  .graphique-table[open] > *,
+  .graphique-table > *:not(summary) {
+    display: block !important;
+  }
+
+  details {
+    page-break-inside: avoid;
+  }
+
+  details > summary {
+    display: none;
+  }
+
+  details > :not(summary) {
+    display: block !important;
+  }
+
+  /* -------------------------------------------------------------
+     EN-TÊTE D'IMPRESSION
+     ------------------------------------------------------------- */
+  main.main::before {
+    content: 'Simulation retraite SPP — HorizonSP';
+    display: block;
+    font-size: 14pt;
+    font-weight: 700;
+    color: #111111;
+    border-bottom: 2px solid #111111;
+    padding-bottom: 4mm;
+    margin-bottom: 6mm;
+  }
+
+  main.main::after {
+    content: 'Document indicatif et non contractuel · Seule la CNRACL est habilitée à calculer les droits définitifs · horizonsp.fr';
+    display: block;
+    margin-top: 10mm;
+    padding-top: 4mm;
+    border-top: 1px solid #999999;
+    font-size: 9pt;
+    color: #444444;
+    font-style: italic;
+    text-align: center;
+  }
+
+  /* -------------------------------------------------------------
+     LAYOUT DES RÉSULTATS
+     ------------------------------------------------------------- */
+  .simulator {
+    display: block !important;
+    grid-template-columns: none !important;
+  }
+
+  .simulator__form-section {
+    display: block !important; /* nécessaire pour afficher step-4 */
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .simulator__form-header {
+    display: none;
+  }
+
+  .simulator__form-body {
+    padding: 0 !important;
+  }
+
+  /* Afficher UNIQUEMENT l'étape 4 (résultats) */
+  .step {
+    display: none !important;
+  }
+  .step[data-step-content="4"],
+  .step#step-4 {
+    display: block !important;
+  }
+
+  .step__title-icon {
+    display: none;
+  }
+
+  /* Aperçu latéral : on le conserve en fin de document */
+  .simulator__results-section {
+    box-shadow: none !important;
+    border: 1px solid #cccccc;
+    padding: 4mm !important;
+    margin-top: 8mm;
+    break-before: auto;
+    page-break-inside: avoid;
+  }
+
+  /* -------------------------------------------------------------
+     CONTENUS
+     ------------------------------------------------------------- */
+  h1, h2, h3, h4 {
+    color: #111111 !important;
+    page-break-after: avoid;
+  }
+
+  h2 { font-size: 13pt; }
+  h3 { font-size: 11.5pt; }
+
+  .result-card,
+  .details-card,
+  .results-section,
+  .alert {
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    background: #ffffff !important;
+    margin-bottom: 4mm;
+  }
+
+  .alert--warning {
+    border-left: 4px solid #b7791f !important;
+  }
+
+  .alert--info {
+    border-left: 4px solid #2a5080 !important;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: avoid;
+    font-size: 9.5pt;
+  }
+
+  .table th,
+  .table td {
+    border: 1px solid #cccccc;
+    padding: 1.5mm 2mm;
+    text-align: left;
+  }
+
+  .table thead th {
+    background: #f0f0f0 !important;
+    font-weight: 700;
+  }
+
+  .badge {
+    border: 1px solid #555555;
+    padding: 0 4px;
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+
+  /* Liens : montre l'URL entre parenthèses sauf pour les liens internes */
+  a[href]:not([href^="#"]):not([href^="javascript"])::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666666;
+    font-style: italic;
+    word-break: break-all;
+  }
+
+  /* Éviter les coupures indésirables */
+  tr, li, p {
+    page-break-inside: avoid;
+  }
+}

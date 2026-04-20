@@ -247,9 +247,7 @@ function goToNextStep() {
   }
 
   if (formState.currentStep < formState.totalSteps) {
-    formState.currentStep++;
-    showStep(formState.currentStep);
-    updateStepperUI();
+    goToStep(formState.currentStep + 1);
   }
 }
 
@@ -258,9 +256,7 @@ function goToNextStep() {
  */
 function goToPreviousStep() {
   if (formState.currentStep > 1) {
-    formState.currentStep--;
-    showStep(formState.currentStep);
-    updateStepperUI();
+    goToStep(formState.currentStep - 1);
   }
 }
 
@@ -273,6 +269,7 @@ function goToStep(step) {
     formState.currentStep = step;
     showStep(step);
     updateStepperUI();
+    document.dispatchEvent(new CustomEvent('horizon:step-changed', { detail: { step } }));
   }
 }
 
