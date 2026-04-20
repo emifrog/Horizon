@@ -1,1 +1,157 @@
-coming soon...
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="À propos du simulateur de retraite HorizonSP pour sapeurs-pompiers professionnels">
+    <title>À propos | Horizon</title>
+
+    <!-- Police Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/reglementaire.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+
+<body>
+    <div class="app">
+        <!-- En-tête -->
+        <header class="header">
+            <div class="header__container">
+                <div class="header__logo">
+                    <div class="header__logo-icon">
+                        <a href="../index.html">
+                            <img src="../assets/logo.svg" alt="Logo HorizonSP" class="header__logo-img">
+                        </a>
+                    </div>
+                    <div>
+                        <h1 class="header__title">HorizonSP</h1>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenu principal -->
+        <main class="main">
+            <div class="doc-container">
+                <a href="../index.html" class="back-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <polyline points="15,18 9,12 15,6" />
+                    </svg>
+                    Retour au simulateur
+                </a>
+
+                <div class="doc-header">
+                    <h2 class="doc-header__title">À propos d'HorizonSP</h2>
+                    <p class="doc-header__subtitle">Un outil pensé par un sapeur-pompier, pour les sapeurs-pompiers.</p>
+                </div>
+
+                <!-- Mission -->
+                <section class="doc-section">
+                    <h2 class="doc-section__title">Notre mission</h2>
+                    <div class="doc-section__content">
+                        <p>
+                            HorizonSP est un simulateur de retraite indépendant et gratuit, dédié aux
+                            <strong>sapeurs-pompiers professionnels (SPP)</strong> relevant de la CNRACL.
+                            Il permet à chaque agent d'obtenir une <strong>projection indicative</strong> de ses droits
+                            à la retraite (âges de départ, durée d'assurance, pension, prime de feu, RAFP, NBI, surcote)
+                            en tenant compte des spécificités de la catégorie active.
+                        </p>
+                        <p>
+                            L'objectif est simple : donner aux agents et aux services RH des SDIS un outil clair,
+                            transparent et à jour des évolutions réglementaires, pour anticiper sereinement leur fin de carrière.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Auteur -->
+                <section class="doc-section">
+                    <h2 class="doc-section__title">L'auteur</h2>
+                    <div class="doc-section__content">
+                        <p>
+                            Cet outil a été imaginé et développé par <strong>Xavier</strong>,
+                            adjudant au SDIS 06, passionné par les questions statutaires et de fin de carrière des SPP.
+                            Face à la complexité croissante des règles (réforme 2023, décret 2026-18 sur les SPV, RAFP…),
+                            le besoin d'un simulateur simple, fiable et transparent s'est imposé.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Fonctionnement -->
+                <section class="doc-section">
+                    <h2 class="doc-section__title">Comment ça marche&nbsp;?</h2>
+                    <div class="doc-section__content">
+                        <ul>
+                            <li><strong>100&nbsp;% dans le navigateur</strong> — aucune donnée personnelle n'est envoyée ni stockée sur un serveur.</li>
+                            <li><strong>Fonctionne hors ligne</strong> une fois la page chargée.</li>
+                            <li><strong>Code ouvert et traçable</strong> — chaque formule est associée à sa référence réglementaire.</li>
+                            <li><strong>Export PDF et CSV</strong> pour conserver ou partager une simulation.</li>
+                            <li><strong>Sans dépendance externe</strong> — HTML, CSS et JavaScript natifs uniquement.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Avertissement -->
+                <section class="doc-section">
+                    <h2 class="doc-section__title">Avertissement</h2>
+                    <div class="doc-section__content">
+                        <div class="alert alert--warning" role="alert">
+                            <strong>Outil indicatif et non contractuel</strong>
+                            <p>
+                                Les résultats sont fournis à titre informatif et ne sauraient engager la
+                                responsabilité de son auteur, du SDIS ou de la CNRACL.
+                                Seule la <strong>CNRACL</strong> est habilitée à calculer vos droits définitifs
+                                lors de la liquidation de votre pension.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Références -->
+                <section class="doc-section">
+                    <h2 class="doc-section__title">Sources et références</h2>
+                    <div class="doc-section__content">
+                        <p>
+                            Les calculs s'appuient sur le Code des pensions civiles et militaires de retraite,
+                            les décrets CNRACL, le décret NBI n°2006-779, la loi 2023-270 (réforme des retraites)
+                            et le décret 2026-18 relatif à la majoration SPV.
+                        </p>
+                        <p>
+                            Le détail complet des références est disponible sur la page
+                            <a href="reglementaire.html">Documentation réglementaire</a>.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Contact -->
+                <section class="doc-section">
+                    <h2 class="doc-section__title">Un retour à partager&nbsp;?</h2>
+                    <div class="doc-section__content">
+                        <p>
+                            Un bug, une suggestion, une évolution réglementaire à intégrer&nbsp;?
+                            <a href="contact.html">Contactez-nous</a> — les retours du terrain sont précieux
+                            pour améliorer l'outil.
+                        </p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Pied de page -->
+        <footer class="footer">
+            <div class="footer__container">
+                <p><strong>HorizonSP</strong> - Simulateur de retraite SPP</p>
+                <p>Developpé par XRWeb</p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>
