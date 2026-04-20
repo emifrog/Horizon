@@ -58,7 +58,6 @@ import {
   hasStorageConsent,
   clearSessionProgress,
 } from './ui/persistence.js';
-import { initTheme } from './ui/theme.js';
 import { initGlossaireTooltips } from './ui/glossaire.js';
 import { getDureeAssuranceRequise, PFR } from './config/parametres.js';
 import { simulerScenariosSurcote } from './modules/surcote.js';
@@ -77,9 +76,6 @@ let appState = {
  */
 function init() {
   console.log('Initialisation du Simulateur Retraite SPP...');
-
-  // Thème (clair / sombre / auto)
-  initTheme();
 
   // Tooltips du glossaire (data-glossaire="...")
   initGlossaireTooltips();

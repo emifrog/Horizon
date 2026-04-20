@@ -22,9 +22,7 @@
   /* -------------------------------------------------------------
      BASE : force mode clair, supprime les ombres, couleurs saturées
      ------------------------------------------------------------- */
-  :root,
-  :root.theme-dark,
-  :root.theme-auto {
+  :root {
     --color-bg: #ffffff;
     --color-bg-alt: #ffffff;
     --color-bg-elevated: #ffffff;
@@ -63,7 +61,6 @@
   .nav-menu,
   .nav-desktop,
   .nav-overlay,
-  .theme-toggle,
   .stepper,
   .form-navigation,
   .simulator__form-body > form > .step:not(.step--print-keep),

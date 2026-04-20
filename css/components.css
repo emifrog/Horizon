@@ -1337,51 +1337,6 @@ img.tooltip__icon {
 }
 
 /* ========================================
-   BOUTON DE BASCULE DU THÈME
-   ======================================== */
-
-.theme-toggle {
-  width: 40px;
-  height: 40px;
-  border: var(--border-width) solid transparent;
-  background: transparent;
-  color: var(--color-white);
-  border-radius: var(--radius-full);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), transform var(--transition-fast);
-  margin-right: var(--spacing-xs);
-}
-
-.theme-toggle:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-}
-
-.theme-toggle:focus-visible {
-  outline: 2px solid var(--color-white);
-  outline-offset: 2px;
-}
-
-.theme-toggle:active {
-  transform: scale(0.95);
-}
-
-.theme-toggle__icon {
-  width: 20px;
-  height: 20px;
-  display: none;
-}
-
-/* Visibilité des icônes selon le mode */
-:root.theme-auto .theme-toggle__icon--auto,
-:root.theme-light .theme-toggle__icon--light,
-:root.theme-dark .theme-toggle__icon--dark {
-  display: block;
-}
-
-/* ========================================
    BANNIÈRE DE CONSENTEMENT (sauvegarde locale)
    ======================================== */
 
