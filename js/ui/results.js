@@ -418,6 +418,66 @@ function creerSectionSurcote(resultats) {
 }
 
 /**
+ * Construit une description textuelle du graphique pour les lecteurs d'écran.
+ * @param {Array} scenarios - Scénarios de départ
+ * @returns {string} Description lisible
+ */
+function construireDescriptionGraphique(scenarios) {
+  if (!scenarios?.length) return 'Aucune donnée à afficher.';
+
+  const phrases = scenarios.map((s) => {
+    const age = Math.floor(s.age);
+    const pension = s.pension?.pensionBruteMensuelle || 0;
+    let nature = 'au taux plein';
+    if (s.decote) nature = 'avec décote';
+    else if (s.surcote) nature = 'avec surcote';
+    return `à ${age} ans (${nature}) : ${formaterMontant(pension)} par mois`;
+  }).join(' ; ');
+
+  return `Courbe comparative de la pension brute mensuelle selon l'âge de départ. ${phrases}.`;
+}
+
+/**
+ * Construit un tableau HTML accessible listant les données du graphique.
+ * @param {Array} scenarios - Scénarios de départ
+ * @returns {string} HTML du tableau
+ */
+function construireTableauGraphique(scenarios) {
+  if (!scenarios?.length) return '';
+
+  const lignes = scenarios.map((s) => {
+    const age = Math.floor(s.age);
+    const pension = s.pension?.pensionBruteMensuelle || 0;
+    let nature = 'Taux plein';
+    if (s.decote) nature = 'Décote';
+    else if (s.surcote) nature = 'Surcote';
+    return `
+      <tr>
+        <td>${escapeHtml(s.description || '')}</td>
+        <td>${age} ans</td>
+        <td>${escapeHtml(nature)}</td>
+        <td>${escapeHtml(formaterMontant(pension))} / mois</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <table class="table graphique-table__table">
+      <caption class="visually-hidden">Données du graphique d'évolution de la pension</caption>
+      <thead>
+        <tr>
+          <th scope="col">Scénario</th>
+          <th scope="col">Âge</th>
+          <th scope="col">Nature</th>
+          <th scope="col">Pension brute mensuelle</th>
+        </tr>
+      </thead>
+      <tbody>${lignes}</tbody>
+    </table>
+  `;
+}
+
+/**
  * Crée la section graphique
  * @param {Array} scenarios - Scénarios de départ
  * @returns {HTMLElement} Section graphique
@@ -426,11 +486,18 @@ function creerSectionGraphique(scenarios) {
   const section = document.createElement('section');
   section.className = 'results-section results-section--graphique';
 
+  const descriptionId = 'pension-chart-desc';
+  const descriptionTexte = construireDescriptionGraphique(scenarios);
+
   section.innerHTML = `
     <h2 class="results-section__title">Évolution de la pension selon l'âge de départ</h2>
     <div class="graphique-wrapper">
       <div class="graphique-container">
-        <canvas id="pension-chart" aria-label="Graphique d'évolution de la pension selon l'âge de départ" role="img"></canvas>
+        <canvas id="pension-chart"
+                role="img"
+                aria-label="Graphique d'évolution de la pension selon l'âge de départ"
+                aria-describedby="${descriptionId}"></canvas>
+        <p id="${descriptionId}" class="visually-hidden">${descriptionTexte}</p>
         <div id="chart-tooltip" class="chart-tooltip"></div>
       </div>
       <div class="graphique-legende">
@@ -447,6 +514,10 @@ function creerSectionGraphique(scenarios) {
           <span>Avec surcote</span>
         </div>
       </div>
+      <details class="graphique-table">
+        <summary>Afficher les données du graphique sous forme de tableau</summary>
+        ${construireTableauGraphique(scenarios)}
+      </details>
     </div>
   `;
 

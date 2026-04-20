@@ -1,0 +1,13 @@
+2	Skip-to-content link	Accessibilité clavier : <a class="skip-link" href="#main">Aller au contenu</a>
+3	aria-label sur le Canvas du graphique	Lecteurs d'écran ignorent le graphique. Ajouter role="img" + description textuelle.
+4	Sauvegarde locale optionnelle	Permettre à l'agent de sauver sa simulation en localStorage (avec consentement explicite). Évite de ressaisir.
+5	Partage de simulation par URL (?profile=base64...)	Utile pour l'agent RH qui accompagne un collègue.
+
+6	Comparateur de scénarios côte à côte	L'agent veut comparer "partir à 57" vs "partir à 62" avec tous les détails alignés.
+7	Graphique pension nette estimée	Ajouter une estimation CSG/CRDS pour donner un ordre de grandeur net.
+10	Timeline visuelle carrière	Frise chronologique entrée SPP → âge légal → taux plein → limite d'âge. Très parlant
+
+15	Dark mode opérationnel	L'infra CSS est déjà là (prefers-color-scheme) — il suffit d'un toggle + auto-dark sur <html>.
+16	Tooltips explicatifs sur les termes techniques	"TIB", "décote", "RAFP" — un ? qui explique au survol. Très apprécié des néophytes.
+17	Impression/PDF améliorée	Créer une vraie feuille @media print dédiée avec logo, en-tête, pagination propre.
+18	Progression sauvegardée entre étapes	Si on recharge la page, ne pas tout perdre.

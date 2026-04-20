@@ -1024,6 +1024,29 @@ img.tooltip__icon {
   color: var(--color-text-muted);
 }
 
+/* Tableau alternatif des données du graphique (accessibilité) */
+.graphique-table {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: var(--border-width) solid var(--color-border-light);
+}
+
+.graphique-table > summary {
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding: var(--spacing-xs) 0;
+}
+
+.graphique-table > summary:hover,
+.graphique-table > summary:focus-visible {
+  color: var(--color-primary);
+}
+
+.graphique-table__table {
+  width: 100%;
+  margin-top: var(--spacing-md);
+}
+
 .graphique-legende__dot {
   width: 12px;
   height: 12px;
@@ -1262,4 +1285,65 @@ img.tooltip__icon {
     padding: var(--spacing-sm) !important;
     font-size: var(--font-size-sm) !important;
   }
+
+  .consent-banner {
+    flex-direction: column;
+    align-items: stretch;
+    left: var(--spacing-md);
+    right: var(--spacing-md);
+    bottom: var(--spacing-md);
+    max-width: none;
+  }
+
+  .consent-banner__actions {
+    justify-content: flex-end;
+  }
+}
+
+/* ========================================
+   BANNIÈRE DE CONSENTEMENT (sauvegarde locale)
+   ======================================== */
+
+.consent-banner {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 560px;
+  width: calc(100% - 2 * var(--spacing-lg));
+  background: var(--color-bg-elevated);
+  border: var(--border-width) solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+  z-index: var(--z-notification);
+}
+
+.consent-banner__content {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.consent-banner__content strong {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-base);
+}
+
+.consent-banner__content p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: var(--line-height-normal);
+}
+
+.consent-banner__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+  align-self: center;
 }

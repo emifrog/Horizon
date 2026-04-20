@@ -51,6 +51,12 @@ import { calculerSurcote, appliquerSurcote } from './modules/surcote.js';
 import { initForm, getFormData, goToStep, showNotification } from './ui/form.js';
 import { afficherResultats, masquerResultats } from './ui/results.js';
 import { exporterPDF, exporterCSV } from './ui/export.js';
+import {
+  initPersistence,
+  shareSimulation,
+  forgetLocalSimulation,
+  hasStorageConsent,
+} from './ui/persistence.js';
 import { getDureeAssuranceRequise, PFR } from './config/parametres.js';
 import { simulerScenariosSurcote } from './modules/surcote.js';
 
@@ -74,6 +80,8 @@ function init() {
   if (form) {
     initForm(form);
     setupFormListeners(form);
+    // Persistance : URL partagée prioritaire, sinon sauvegarde locale (opt-in)
+    initPersistence(form);
   }
 
   // Gestion du double statut SPP/SPV
@@ -88,6 +96,23 @@ function init() {
   // Boutons d'export
   document.querySelector('[data-action="export-pdf"]')?.addEventListener('click', handleExportPDF);
   document.querySelector('[data-action="export-csv"]')?.addEventListener('click', handleExportCSV);
+
+  // Partage par URL et effacement des données locales
+  document.querySelector('[data-action="share-simulation"]')?.addEventListener('click', handleShare);
+
+  const forgetBtn = document.querySelector('[data-action="forget-local"]');
+  if (forgetBtn) {
+    // Ne montrer le bouton "Effacer" que si des données locales existent
+    if (hasStorageConsent()) forgetBtn.hidden = false;
+    forgetBtn.addEventListener('click', () => {
+      forgetLocalSimulation();
+      forgetBtn.hidden = true;
+    });
+    // Révéler le bouton si l'utilisateur accepte la sauvegarde via la bannière
+    document.addEventListener('horizon:consent-changed', (e) => {
+      if (e.detail?.granted) forgetBtn.hidden = false;
+    });
+  }
 
   // Menu hamburger
   setupHamburgerMenu();
@@ -932,6 +957,19 @@ function updatePreview() {
     // Ignorer les erreurs de calcul partiel
     console.debug('Aperçu non disponible:', error.message);
   }
+}
+
+/**
+ * Gère le partage de la simulation par URL (copie presse-papiers).
+ */
+function handleShare() {
+  const dateNaissance = document.querySelector('[name="dateNaissance"]')?.value;
+  const dateEntreeSPP = document.querySelector('[name="dateEntreeSPP"]')?.value;
+  if (!dateNaissance || !dateEntreeSPP) {
+    showNotification('Renseignez au moins votre date de naissance et d\'entrée SPP', 'warning');
+    return;
+  }
+  shareSimulation();
 }
 
 /**

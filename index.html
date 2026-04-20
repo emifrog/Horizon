@@ -19,6 +19,7 @@
   <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Aller au contenu principal</a>
   <div class="app">
     <!-- En-tête -->
     <header class="header">
@@ -95,7 +96,7 @@
     </header>
 
     <!-- Contenu principal -->
-    <main class="main">
+    <main class="main" id="main-content" tabindex="-1">
       <div class="container">
         <p class="mobile-subtitle">Simulateur de retraite SPP</p>
 
@@ -380,6 +381,25 @@
                         <path d="M14 17h2"/>
                       </svg>
                       Exporter en CSV
+                    </button>
+                    <button type="button" class="btn btn--ghost" data-action="share-simulation" aria-label="Copier un lien de partage de cette simulation">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="18" cy="5" r="3"/>
+                        <circle cx="6" cy="12" r="3"/>
+                        <circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                      </svg>
+                      Partager un lien
+                    </button>
+                    <button type="button" class="btn btn--ghost" data-action="forget-local" aria-label="Effacer les données sauvegardées localement" hidden>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                      </svg>
+                      Effacer mes données
                     </button>
                   </div>
                 </div>
