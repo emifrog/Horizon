@@ -128,12 +128,6 @@ function init() {
   // Header auto-hide au scroll (mobile)
   setupHeaderAutoHide();
 
-  // Lien À propos dans la navbar desktop
-  document.querySelector('.nav-desktop [data-action="about"]')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    handleAbout();
-  });
-
   console.log('Application initialisée.');
 }
 
@@ -194,16 +188,16 @@ function setupHamburgerMenu() {
   navMenu.querySelectorAll('[data-action]').forEach(link => {
     link.addEventListener('click', (e) => {
       const action = link.dataset.action;
-      
-      // Pour les liens avec href réel (documentation), laisser la navigation se faire
-      if (action === 'documentation') {
+
+      // Les liens qui pointent vers une vraie page : laisser naviguer
+      if (action === 'documentation' || action === 'about') {
         closeMenu();
-        return; // Laisser le navigateur suivre le lien href
+        return; // Le navigateur suit le href
       }
-      
+
       e.preventDefault();
       closeMenu();
-      
+
       switch (action) {
         case 'new-simulation':
           handleNewSimulation();
@@ -213,9 +207,6 @@ function setupHamburgerMenu() {
           break;
         case 'export-csv':
           handleExportCSV();
-          break;
-        case 'about':
-          handleAbout();
           break;
       }
     });
@@ -227,23 +218,35 @@ function setupHamburgerMenu() {
  * Sur mobile, le hover ne fonctionne pas, on bascule en toggle au click/touch
  */
 function setupTouchTooltips() {
-  const tooltips = document.querySelectorAll('.tooltip');
-  if (!tooltips.length) return;
+  // Les tooltips inline générés par le glossaire gèrent eux-mêmes leur toggle
+  // et la fermeture globale (voir ui/glossaire.js). On cible ici les tooltips
+  // statiques écrits directement dans le HTML (NBI, RAFP) et on ajoute le
+  // preventDefault nécessaire quand ils sont imbriqués dans un <label>.
+  const staticTooltips = document.querySelectorAll('.tooltip:not(.tooltip--inline)');
+  if (!staticTooltips.length) return;
 
-  tooltips.forEach(tooltip => {
+  staticTooltips.forEach((tooltip) => {
+    if (tooltip.dataset.tooltipBound === 'true') return;
+    tooltip.dataset.tooltipBound = 'true';
+
     tooltip.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
-      // Fermer les autres tooltips ouverts
-      tooltips.forEach(t => {
-        if (t !== tooltip) t.classList.remove('tooltip--active');
+      const wasActive = tooltip.classList.contains('tooltip--active');
+      document.querySelectorAll('.tooltip.tooltip--active').forEach((t) => {
+        t.classList.remove('tooltip--active');
       });
-      tooltip.classList.toggle('tooltip--active');
+      if (!wasActive) tooltip.classList.add('tooltip--active');
     });
-  });
 
-  // Fermer au clic en dehors
-  document.addEventListener('click', () => {
-    tooltips.forEach(t => t.classList.remove('tooltip--active'));
+    tooltip.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        tooltip.classList.toggle('tooltip--active');
+      } else if (e.key === 'Escape') {
+        tooltip.classList.remove('tooltip--active');
+      }
+    });
   });
 }
 
@@ -334,59 +337,6 @@ function handleNewSimulation() {
     
     showNotification('Formulaire réinitialisé', 'info');
   }
-}
-
-/**
- * Affiche la modale À propos
- */
-function handleAbout() {
-  // Créer une modale simple
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal__header">
-        <h3 class="modal__title">À propos d'Horizon</h3>
-        <button class="modal__close" aria-label="Fermer">&times;</button>
-      </div>
-      <div class="modal__body">
-        <p><strong>Horizon</strong> est un simulateur de retraite pour les sapeurs-pompiers professionnels (SPP).</p>
-        <p>Cet outil fournit une estimation indicative de votre future pension selon différents scénarios de départ.</p>
-        <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--color-gray-200);">
-        <p style="font-size: 0.875rem; color: var(--color-text-muted);">
-          <strong>Version :</strong> 1.0.0<br>
-          <strong>Développé par :</strong> XRWeb<br>
-          <strong>Dernière mise à jour :</strong> Janvier 2026
-        </p>
-        <div class="alert alert--warning" style="margin-top: 1rem;">
-          <div class="alert__content">
-            <strong>Avertissement</strong>
-            <p style="margin: 0;">Cette simulation est fournie à titre indicatif. Seule la CNRACL est habilitée à calculer vos droits définitifs.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
-  document.body.style.overflow = 'hidden';
-  
-  // Fermer la modale
-  const closeModal = () => {
-    modal.remove();
-    document.body.style.overflow = '';
-  };
-  
-  modal.querySelector('.modal__close').addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-  });
-  document.addEventListener('keydown', function escHandler(e) {
-    if (e.key === 'Escape') {
-      closeModal();
-      document.removeEventListener('keydown', escHandler);
-    }
-  });
 }
 
 /**

@@ -58,6 +58,44 @@ function renderTooltip(entree) {
 }
 
 /**
+ * Ferme tous les tooltips actifs dans le document.
+ */
+function closeAllTooltips() {
+  document.querySelectorAll('.tooltip.tooltip--active').forEach((t) => {
+    t.classList.remove('tooltip--active');
+  });
+}
+
+/**
+ * Attache les listeners click/keyboard sur un tooltip pour qu'il se toggle
+ * au tap (mobile) sans activer le <label> parent.
+ * @param {HTMLElement} tooltip
+ */
+function attachTooltipHandlers(tooltip) {
+  if (tooltip.dataset.tooltipBound === 'true') return;
+  tooltip.dataset.tooltipBound = 'true';
+
+  const toggle = (e) => {
+    // Évite que le click sur l'icône ne déclenche le <label> parent (focus input)
+    e.preventDefault();
+    e.stopPropagation();
+    const wasActive = tooltip.classList.contains('tooltip--active');
+    closeAllTooltips();
+    if (!wasActive) tooltip.classList.add('tooltip--active');
+  };
+
+  tooltip.addEventListener('click', toggle);
+
+  tooltip.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      toggle(e);
+    } else if (e.key === 'Escape') {
+      tooltip.classList.remove('tooltip--active');
+    }
+  });
+}
+
+/**
  * Initialise les tooltips du glossaire sur tous les éléments marqués
  * data-glossaire dans le document.
  * @param {Element} [root] - Racine de recherche (document par défaut)
@@ -77,5 +115,16 @@ export function initGlossaireTooltips(root) {
     if (el.dataset.glossaireRendu === 'true') return;
     el.innerHTML = renderTooltip(entree);
     el.dataset.glossaireRendu = 'true';
+
+    const tooltip = el.querySelector('.tooltip');
+    if (tooltip) attachTooltipHandlers(tooltip);
   });
+
+  // Fermer en cliquant ailleurs (une seule fois pour le document)
+  if (!document._glossaireOutsideBound) {
+    document._glossaireOutsideBound = true;
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.tooltip')) closeAllTooltips();
+    });
+  }
 }

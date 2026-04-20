@@ -269,8 +269,26 @@ function goToStep(step) {
     formState.currentStep = step;
     showStep(step);
     updateStepperUI();
+    scrollToFormTop();
     document.dispatchEvent(new CustomEvent('horizon:step-changed', { detail: { step } }));
   }
+}
+
+/**
+ * Remonte le scroll en haut du formulaire lors d'un changement d'étape.
+ * Utile surtout sur mobile, où la nouvelle étape apparaîtrait sinon hors-écran.
+ */
+function scrollToFormTop() {
+  const formSection = document.querySelector('.simulator__form-section');
+  if (!formSection) return;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const headerEl = document.querySelector('.header');
+  const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
+  const target = formSection.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
+  window.scrollTo({
+    top: Math.max(0, target),
+    behavior: prefersReduced ? 'auto' : 'smooth',
+  });
 }
 
 /** Étape précédente pour l'animation */
@@ -423,23 +441,30 @@ function showNotification(message, type = 'info') {
 
   const notification = document.createElement('div');
   notification.className = `notification notification--${type}`;
-  notification.innerHTML = `
-    <span class="notification__message">${message}</span>
-    <button class="notification__close" aria-label="Fermer">&times;</button>
-  `;
+  notification.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
+  const text = document.createElement('span');
+  text.className = 'notification__message';
+  text.textContent = message; // échappement automatique
+
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'notification__close';
+  close.setAttribute('aria-label', 'Fermer');
+  close.innerHTML = '&times;';
+
+  notification.append(text, close);
   container.appendChild(notification);
 
-  // Fermeture au clic
-  notification.querySelector('.notification__close').addEventListener('click', () => {
-    notification.remove();
-  });
-
-  // Auto-fermeture après 5 secondes
-  setTimeout(() => {
+  let timeoutId;
+  const dismiss = () => {
+    clearTimeout(timeoutId);
     notification.classList.add('notification--fade-out');
     setTimeout(() => notification.remove(), 300);
-  }, 5000);
+  };
+
+  close.addEventListener('click', dismiss);
+  timeoutId = setTimeout(dismiss, 5000);
 }
 
 /**
