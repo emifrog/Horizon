@@ -11,6 +11,16 @@
 
 import { TAUX, AGES, getDureeAssuranceRequise, getAgeLegalSedentaire } from '../config/parametres.js';
 import { calculerAge, calculerTrimestresEntreDates } from '../utils/dates.js';
+import { arrondir } from '../utils/nombres.js';
+
+/**
+ * Taux de liquidation total maximum (incluant la surcote).
+ * 100 % est la borne mathématique : la pension ne peut pas dépasser le TIB.
+ * En pratique, la limite d'âge de la catégorie active (62 ans) rend un
+ * dépassement quasi-impossible, mais ce plafond évite tout résultat aberrant
+ * en cas de données incohérentes (réf: CNRACL, art. L14).
+ */
+const TAUX_LIQUIDATION_MAX = 100;
 
 /**
  * Données pour le calcul de la surcote
@@ -175,20 +185,30 @@ export function calculerSurcote(donnees) {
   return {
     eligible: true,
     trimestresSurcote,
-    tauxSurcote: Math.round(tauxSurcote * 100) / 100,
-    coefficientMajoration: Math.round(coefficientMajoration * 10000) / 10000,
+    tauxSurcote: arrondir(tauxSurcote, 2),
+    coefficientMajoration: arrondir(coefficientMajoration, 4),
     motifIneligibilite: '',
   };
 }
 
 /**
- * Applique la surcote à une pension
- * @param {number} pensionBrute - Pension brute avant surcote
- * @param {number} coefficientSurcote - Coefficient de surcote
- * @returns {number} Pension après surcote
+ * Applique la surcote à une pension, en plafonnant le taux de liquidation final
+ * à 100 % (garde-fou contre un coefficient aberrant).
+ *
+ * @param {number} pensionBrute - Pension brute avant surcote (à un taux ≤ 75 %)
+ * @param {number} coefficientSurcote - Coefficient de surcote (≥ 1)
+ * @param {number} [tauxLiquidationNet=TAUX.PLEIN] - Taux net de liquidation (%)
+ *        auquel est déjà appliquée la pensionBrute. Sert au plafonnement.
+ * @returns {number} Pension après surcote, arrondie à 2 décimales
  */
-export function appliquerSurcote(pensionBrute, coefficientSurcote) {
-  return Math.round(pensionBrute * coefficientSurcote * 100) / 100;
+export function appliquerSurcote(pensionBrute, coefficientSurcote, tauxLiquidationNet = TAUX.PLEIN) {
+  // Borne le coefficient pour que (tauxLiquidation × coef) ≤ 100 %
+  const coefficientMax = tauxLiquidationNet > 0
+    ? TAUX_LIQUIDATION_MAX / tauxLiquidationNet
+    : 1;
+  const coefficientEffectif = Math.min(Math.max(coefficientSurcote, 1), coefficientMax);
+
+  return arrondir(pensionBrute * coefficientEffectif, 2);
 }
 
 /**
@@ -198,7 +218,7 @@ export function appliquerSurcote(pensionBrute, coefficientSurcote) {
  * @returns {number} Gain mensuel
  */
 export function calculerGainSurcote(pensionSansSurcote, pensionAvecSurcote) {
-  return Math.round((pensionAvecSurcote - pensionSansSurcote) * 100) / 100;
+  return arrondir(pensionAvecSurcote - pensionSansSurcote, 2);
 }
 
 /**
@@ -232,7 +252,8 @@ export function simulerScenariosSurcote(donneesBase, dateTauxPlein, pensionTauxP
       dateTauxPlein,
     });
 
-    const pensionAvecSurcote = appliquerSurcote(pensionTauxPlein, resultatSurcote.coefficientMajoration);
+    // La pension de référence est celle au taux plein (TAUX.PLEIN = 75 %)
+    const pensionAvecSurcote = appliquerSurcote(pensionTauxPlein, resultatSurcote.coefficientMajoration, TAUX.PLEIN);
     const gainMensuel = calculerGainSurcote(pensionTauxPlein, pensionAvecSurcote);
 
     scenarios.push({
@@ -273,8 +294,8 @@ export function calculerPointMortSurcote(salaireMensuelNet, pensionSansSurcote, 
 
   return {
     anneesTravailSupp,
-    coutPensionsNonPercues: Math.round(coutPensionsNonPercues * 100) / 100,
-    gainAnnuelSurcote: Math.round(gainAnnuelSurcote * 100) / 100,
+    coutPensionsNonPercues: arrondir(coutPensionsNonPercues, 2),
+    gainAnnuelSurcote: arrondir(gainAnnuelSurcote, 2),
     pointMortAnnees,
     rentable: pointMortAnnees < 20, // Considéré rentable si récupéré en moins de 20 ans
   };

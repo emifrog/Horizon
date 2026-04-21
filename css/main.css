@@ -62,6 +62,32 @@ a:hover {
 }
 
 /* ========================================
+   ACCESSIBILITÉ — Focus visible global
+   Ref: WCAG 2.4.7 (AA) — indicateur de focus visible pour navigation clavier.
+   On utilise :focus-visible afin de ne pas afficher l'anneau au clic souris.
+   ======================================== */
+
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Sur fond foncé (header), l'outline primaire doit rester visible : on laisse
+   les composants spécifiques (skip-link, boutons header) surcharger au besoin. */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
    ACCESSIBILITÉ — Skip link
    ======================================== */
 

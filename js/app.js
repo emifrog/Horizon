@@ -59,8 +59,10 @@ import {
   clearSessionProgress,
 } from './ui/persistence.js';
 import { initGlossaireTooltips } from './ui/glossaire.js';
-import { getDureeAssuranceRequise, PFR } from './config/parametres.js';
+import { getDureeAssuranceRequise, PFR, PFR_SPV, getMontantPFRSPV } from './config/parametres.js';
 import { simulerScenariosSurcote } from './modules/surcote.js';
+import { arrondir } from './utils/nombres.js';
+import { validerCoherenceProfil } from './utils/validators.js';
 
 /**
  * État global de l'application
@@ -419,40 +421,17 @@ function setupServicesMilitairesToggle() {
 }
 
 /**
- * Barème PFR SPV selon les années de service
- * Réf: Décret n°2005-1150 du 13 septembre 2005
- */
-const BAREME_PFR_SPV = {
-  15: 512,   // 15 ans : 512€/an (cas incapacité)
-  20: 1025,  // 20 ans : 1025€/an
-  25: 2050,  // 25 ans : 2050€/an
-  30: 2690,  // 30 ans : 2690€/an
-  35: 3075,  // 35 ans et + : 3075€/an
-};
-
-/**
- * Calcule le montant de la PFR SPV selon les années de service
- * @param {number} anneesSPV - Années de service SPV
- * @returns {number} Montant annuel de la PFR SPV
- */
-function getMontantPFRSPV(anneesSPV) {
-  if (anneesSPV >= 35) return BAREME_PFR_SPV[35];
-  if (anneesSPV >= 30) return BAREME_PFR_SPV[30];
-  if (anneesSPV >= 25) return BAREME_PFR_SPV[25];
-  if (anneesSPV >= 20) return BAREME_PFR_SPV[20];
-  if (anneesSPV >= 15) return BAREME_PFR_SPV[15]; // Cas incapacité opérationnelle
-  return 0;
-}
-
-/**
- * Calcule la PFR SPV pour les agents en double statut
+ * Calcule la PFR SPV pour les agents en double statut.
+ * Le barème et la fonction de barème sont centralisés dans config/parametres.js
+ * (PFR_SPV.BAREME / getMontantPFRSPV) — cette fonction en est le consommateur UI.
+ *
  * @param {boolean} doubleStatut - Si l'agent a le double statut
  * @param {number} anneesSPV - Années de service SPV
  * @param {number} montantManuel - Montant saisi manuellement (optionnel)
  * @returns {Object} Résultat du calcul PFR SPV
  */
 function calculerPFRSPV(doubleStatut, anneesSPV, montantManuel) {
-  if (!doubleStatut || anneesSPV < 15) {
+  if (!doubleStatut || anneesSPV < PFR_SPV.ANCIENNETE_MIN_INCAPACITE) {
     return {
       eligible: false,
       anneesSPV: anneesSPV || 0,
@@ -461,15 +440,15 @@ function calculerPFRSPV(doubleStatut, anneesSPV, montantManuel) {
     };
   }
 
-  // Utiliser le montant manuel si renseigné, sinon calcul automatique
+  // Utiliser le montant manuel si renseigné, sinon calcul automatique via le barème
   const montantAnnuel = montantManuel > 0 ? montantManuel : getMontantPFRSPV(anneesSPV);
 
   return {
-    eligible: anneesSPV >= 20, // Éligibilité standard à 20 ans
-    eligibleIncapacite: anneesSPV >= 15 && anneesSPV < 20, // Éligibilité cas incapacité
+    eligible: anneesSPV >= PFR_SPV.ANCIENNETE_MIN,
+    eligibleIncapacite: anneesSPV >= PFR_SPV.ANCIENNETE_MIN_INCAPACITE && anneesSPV < PFR_SPV.ANCIENNETE_MIN,
     anneesSPV,
     montantAnnuel,
-    montantMensuel: Math.round((montantAnnuel / 12) * 100) / 100,
+    montantMensuel: arrondir(montantAnnuel / 12, 2),
   };
 }
 
@@ -527,14 +506,33 @@ function handleSubmit(event) {
     // Créer et enrichir le profil
     const profil = creerProfil(formData);
     console.log('Profil créé:', profil);
-    
+
     const profilEnrichi = enrichirProfil(profil);
     console.log('Profil enrichi:', profilEnrichi);
 
     if (!profilEnrichi.valide) {
       console.warn('Profil invalide:', profilEnrichi.erreurs);
-      showNotification('Veuillez corriger les erreurs dans le formulaire', 'error');
+      const messages = Object.values(profilEnrichi.erreurs).filter(Boolean);
+      showNotification(
+        messages.length ? messages[0] : 'Veuillez corriger les erreurs dans le formulaire',
+        'error'
+      );
       return;
+    }
+
+    // Validations cross-field (cohérence entre champs)
+    const coherence = validerCoherenceProfil(formData);
+    if (!coherence.valide) {
+      console.warn('Incohérences cross-field:', coherence.erreurs);
+      const messages = Object.values(coherence.erreurs);
+      showNotification(messages[0] || 'Incohérence détectée dans le formulaire', 'error');
+      return;
+    }
+    // Les avertissements (non bloquants) sont simplement remontés en notification info
+    if (coherence.warnings && Object.keys(coherence.warnings).length > 0) {
+      const warning = Object.values(coherence.warnings)[0];
+      console.info('Avertissement cross-field:', coherence.warnings);
+      showNotification(warning, 'warning');
     }
 
     // Effectuer les calculs
@@ -693,7 +691,8 @@ function effectuerCalculs(formData, profilEnrichi) {
       if (surcote.eligible) {
         const pensionAvecSurcote = appliquerSurcote(
           pension.pensionBruteMensuelle,
-          surcote.coefficientMajoration
+          surcote.coefficientMajoration,
+          pension.tauxLiquidationNet
         );
         pensionFinale = {
           ...pension,

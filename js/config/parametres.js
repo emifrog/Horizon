@@ -9,6 +9,17 @@
  */
 
 // =============================================================================
+// MÉTADONNÉES DE PARAMÉTRAGE
+// =============================================================================
+
+/**
+ * Date de dernière mise à jour des paramètres réglementaires.
+ * Format ISO (YYYY-MM-DD). Mettre à jour lors de chaque révision des valeurs.
+ * Utilisé pour afficher un badge de fraîcheur et alerter si > 12 mois.
+ */
+export const DATE_MAJ_PARAMETRES = '2026-01-25';
+
+// =============================================================================
 // ÂGES RÉGLEMENTAIRES - Catégorie active SPP
 // Réf: Décret n°2003-1306 du 26 décembre 2003, Art. 24
 // =============================================================================
@@ -238,6 +249,11 @@ export const PFR = {
 // =============================================================================
 
 export const COEFFICIENTS_RAFP_AGE = {
+  50: 0.60,
+  51: 0.64,
+  52: 0.68,
+  53: 0.72,
+  54: 0.72,
   55: 0.76,
   56: 0.80,
   57: 0.84,
@@ -251,7 +267,49 @@ export const COEFFICIENTS_RAFP_AGE = {
   65: 1.12,
   66: 1.18,
   67: 1.24,
+  68: 1.28,
+  69: 1.32,
+  70: 1.36,
 };
+
+// =============================================================================
+// PRESTATION DE FIDÉLISATION ET DE RECONNAISSANCE SPV (double statut)
+// Réf: Décret n°2005-1150 du 13 septembre 2005
+// =============================================================================
+
+export const PFR_SPV = {
+  /** Ancienneté minimale pour la prestation standard (20 ans) */
+  ANCIENNETE_MIN: 20,
+
+  /** Ancienneté minimale cas incapacité opérationnelle (15 ans) */
+  ANCIENNETE_MIN_INCAPACITE: 15,
+
+  /**
+   * Barème annuel brut en euros, par palier d'ancienneté SPV.
+   * Les seuils sont inclusifs : ≥ 15 ans = 512 €/an (cas incapacité), etc.
+   */
+  BAREME: {
+    15: 512,   // Cas incapacité opérationnelle
+    20: 1025,
+    25: 2050,
+    30: 2690,
+    35: 3075,  // 35 ans et plus
+  },
+};
+
+/**
+ * Retourne le montant annuel PFR SPV applicable pour une ancienneté donnée.
+ * @param {number} anneesSPV - Années de service SPV
+ * @returns {number} Montant annuel (0 si < 15 ans)
+ */
+export function getMontantPFRSPV(anneesSPV) {
+  if (anneesSPV >= 35) return PFR_SPV.BAREME[35];
+  if (anneesSPV >= 30) return PFR_SPV.BAREME[30];
+  if (anneesSPV >= 25) return PFR_SPV.BAREME[25];
+  if (anneesSPV >= 20) return PFR_SPV.BAREME[20];
+  if (anneesSPV >= PFR_SPV.ANCIENNETE_MIN_INCAPACITE) return PFR_SPV.BAREME[15];
+  return 0;
+}
 
 // =============================================================================
 // NBI - NOUVELLE BONIFICATION INDICIAIRE
@@ -399,9 +457,12 @@ export function getCoefficientRAFPAge(ageDepart) {
   if (age in COEFFICIENTS_RAFP_AGE) {
     return COEFFICIENTS_RAFP_AGE[age];
   }
-  // Hors bornes
-  if (age < 55) return 0.72;
-  if (age > 67) return 1.30;
+  // Hors bornes : on clamp aux valeurs extrêmes de la table (50 → 70)
+  const ages = Object.keys(COEFFICIENTS_RAFP_AGE).map(Number);
+  const ageMin = Math.min(...ages);
+  const ageMax = Math.max(...ages);
+  if (age < ageMin) return COEFFICIENTS_RAFP_AGE[ageMin];
+  if (age > ageMax) return COEFFICIENTS_RAFP_AGE[ageMax];
   return 1.00;
 }
 
@@ -433,6 +494,7 @@ export function getMajorationSPVDecret2026(anneesSPV, dateEffetPension) {
 // =============================================================================
 
 export const PARAMS = {
+  DATE_MAJ: DATE_MAJ_PARAMETRES,
   AGES,
   AGE_LEGAL_ACTIF,
   AGE_LEGAL_SEDENTAIRE,
@@ -445,6 +507,7 @@ export const PARAMS = {
   BONIFICATIONS,
   DECRET_2026_18,
   PFR,
+  PFR_SPV,
   COEFFICIENTS_RAFP_AGE,
   NBI,
   MINIMUM_GARANTI,
@@ -453,6 +516,7 @@ export const PARAMS = {
   // Fonctions utilitaires
   getDureeAssuranceRequise,
   getMajorationSPV,
+  getMontantPFRSPV,
   getAgeLegalActif,
   getAgeLegalSedentaire,
   getCoefficientRAFPAge,

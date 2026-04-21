@@ -14,6 +14,8 @@
   --color-primary-dark: #a00d24;
   --color-primary-light: #e8132f;
   --color-primary-bg: #fef2f4;
+  /* RGB pour halo focus/hover : permet rgba(var(--color-primary-rgb), α) */
+  --color-primary-rgb: 200, 16, 46;
 
   /* Bleu marine - Couleur secondaire */
   --color-secondary: #1E3A5F;
@@ -164,6 +166,6 @@
   --input-padding-x: 0.875rem;
   --input-padding-y: 0.625rem;
   --input-border-color: var(--color-gray-300);
-  --input-focus-ring: 0 0 0 3px rgba(200, 16, 46, 0.15);
+  --input-focus-ring: 0 0 0 3px rgba(var(--color-primary-rgb), 0.25);
 }
 

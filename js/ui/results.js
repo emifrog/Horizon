@@ -78,12 +78,13 @@ function creerSectionResume(resultats) {
   const section = document.createElement('section');
   section.className = 'results-section results-section--resume';
 
+  section.setAttribute('aria-labelledby', 'section-resume-title');
   section.innerHTML = `
-    <h2 class="results-section__title">Résumé de votre situation</h2>
-    <div class="result-cards">
-      <div class="result-card result-card--highlight">
-        <div class="result-card__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <h2 id="section-resume-title" class="results-section__title">Résumé de votre situation</h2>
+    <div class="result-cards" role="list">
+      <article class="result-card result-card--highlight" role="listitem" aria-label="Pension estimée au taux plein">
+        <div class="result-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
           </svg>
         </div>
@@ -92,11 +93,11 @@ function creerSectionResume(resultats) {
           <span class="result-card__value">${formaterMontant(resultats.pensionTauxPlein?.pensionBruteMensuelle)}</span>
           <span class="result-card__sublabel">brut mensuel</span>
         </div>
-      </div>
+      </article>
 
-      <div class="result-card">
-        <div class="result-card__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <article class="result-card" role="listitem" aria-label="Date du taux plein">
+        <div class="result-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
             <line x1="16" y1="2" x2="16" y2="6"/>
             <line x1="8" y1="2" x2="8" y2="6"/>
@@ -105,28 +106,28 @@ function creerSectionResume(resultats) {
         </div>
         <div class="result-card__content">
           <span class="result-card__label">Date taux plein</span>
-          <span class="result-card__value">${formaterDateLongueFR(resultats.dateTauxPlein)}</span>
-          <span class="result-card__sublabel">${resultats.ageTauxPlein} ans</span>
+          <span class="result-card__value">${escapeHtml(formaterDateLongueFR(resultats.dateTauxPlein))}</span>
+          <span class="result-card__sublabel">${Number(resultats.ageTauxPlein) || 0} ans</span>
         </div>
-      </div>
+      </article>
 
-      <div class="result-card">
-        <div class="result-card__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <article class="result-card" role="listitem" aria-label="Durée d'assurance">
+        <div class="result-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12,6 12,12 16,14"/>
           </svg>
         </div>
         <div class="result-card__content">
           <span class="result-card__label">Durée d'assurance</span>
-          <span class="result-card__value">${formaterTrimestres(resultats.duree?.trimestresAssuranceTotale)}</span>
-          <span class="result-card__sublabel">sur ${resultats.duree?.trimestresRequis} requis</span>
+          <span class="result-card__value">${escapeHtml(formaterTrimestres(resultats.duree?.trimestresAssuranceTotale))}</span>
+          <span class="result-card__sublabel">sur ${Number(resultats.duree?.trimestresRequis) || 0} requis</span>
         </div>
-      </div>
+      </article>
 
-      <div class="result-card">
-        <div class="result-card__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <article class="result-card" role="listitem" aria-label="Taux de liquidation">
+        <div class="result-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
             <polyline points="22,4 12,14.01 9,11.01"/>
           </svg>
@@ -136,7 +137,7 @@ function creerSectionResume(resultats) {
           <span class="result-card__value">${formaterPourcentage(resultats.pensionTauxPlein?.tauxLiquidationNet)}</span>
           <span class="result-card__sublabel">maximum 75%</span>
         </div>
-      </div>
+      </article>
     </div>
   `;
 
@@ -179,18 +180,20 @@ function creerSectionScenarios(scenarios) {
     </tr>
   `).join('');
 
+  section.setAttribute('aria-labelledby', 'section-scenarios-title');
   section.innerHTML = `
-    <h2 class="results-section__title">Scénarios de départ</h2>
+    <h2 id="section-scenarios-title" class="results-section__title">Scénarios de départ</h2>
     <div class="table-container">
       <table class="table table--scenarios">
+        <caption class="visually-hidden">Scénarios de départ à la retraite calculés selon votre profil</caption>
         <thead>
           <tr>
-            <th>Scénario</th>
-            <th>Date</th>
-            <th>Âge</th>
-            <th>Trimestres</th>
-            <th>Taux</th>
-            <th>Statut</th>
+            <th scope="col">Scénario</th>
+            <th scope="col">Date</th>
+            <th scope="col">Âge</th>
+            <th scope="col">Trimestres</th>
+            <th scope="col">Taux</th>
+            <th scope="col">Statut</th>
           </tr>
         </thead>
         <tbody>
@@ -212,13 +215,14 @@ function creerSectionDetails(resultats) {
   const section = document.createElement('section');
   section.className = 'results-section results-section--details';
 
+  section.setAttribute('aria-labelledby', 'section-details-title');
   section.innerHTML = `
-    <h2 class="results-section__title">Détails du calcul</h2>
+    <h2 id="section-details-title" class="results-section__title">Détails du calcul</h2>
 
     <div class="details-grid">
       <!-- Détails durée -->
-      <div class="details-card">
-        <h3 class="details-card__title">Durée d'assurance</h3>
+      <article class="details-card" aria-labelledby="details-duree-title">
+        <h3 id="details-duree-title" class="details-card__title">Durée d'assurance</h3>
         <dl class="details-list">
           <div class="details-list__item">
             <dt>Services effectifs SPP</dt>
@@ -226,40 +230,40 @@ function creerSectionDetails(resultats) {
           </div>
           <div class="details-list__item">
             <dt>Bonification du 1/5ème</dt>
-            <dd>+${resultats.duree?.trimestresBonificationCinquieme || 0} trim.</dd>
+            <dd>+${Number(resultats.duree?.trimestresBonificationCinquieme) || 0} trim.</dd>
           </div>
           <div class="details-list__item">
             <dt>Bonification enfants</dt>
-            <dd>+${resultats.duree?.trimestresBonificationEnfants || 0} trim.</dd>
+            <dd>+${Number(resultats.duree?.trimestresBonificationEnfants) || 0} trim.</dd>
           </div>
           <div class="details-list__item">
             <dt>Majoration SPV</dt>
-            <dd>+${resultats.duree?.trimestresMajorationSPV || 0} trim.</dd>
+            <dd>+${Number(resultats.duree?.trimestresMajorationSPV) || 0} trim.</dd>
           </div>
           ${resultats.duree?.trimestresServicesMilitaires > 0 ? `
           <div class="details-list__item">
-            <dt>Services ${resultats.duree?.servicesMilitaires?.toUpperCase() || 'militaires'}</dt>
-            <dd>+${resultats.duree?.trimestresServicesMilitaires || 0} trim.</dd>
+            <dt>Services ${escapeHtml(resultats.duree?.servicesMilitaires?.toUpperCase() || 'militaires')}</dt>
+            <dd>+${Number(resultats.duree?.trimestresServicesMilitaires) || 0} trim.</dd>
           </div>
           <div class="details-list__item">
             <dt>Bonif. 1/5ème militaire</dt>
-            <dd>+${resultats.duree?.trimestresBonificationMilitaire || 0} trim.</dd>
+            <dd>+${Number(resultats.duree?.trimestresBonificationMilitaire) || 0} trim.</dd>
           </div>
           ` : ''}
           <div class="details-list__item">
             <dt>Autres régimes</dt>
-            <dd>+${resultats.duree?.trimestresAutresRegimes || 0} trim.</dd>
+            <dd>+${Number(resultats.duree?.trimestresAutresRegimes) || 0} trim.</dd>
           </div>
           <div class="details-list__item details-list__item--total">
             <dt>Total</dt>
             <dd><strong>${formaterTrimestres(resultats.duree?.trimestresAssuranceTotale)}</strong></dd>
           </div>
         </dl>
-      </div>
+      </article>
 
       <!-- Détails pension -->
-      <div class="details-card">
-        <h3 class="details-card__title">Calcul de la pension</h3>
+      <article class="details-card" aria-labelledby="details-pension-title">
+        <h3 id="details-pension-title" class="details-card__title">Calcul de la pension</h3>
         <dl class="details-list">
           <div class="details-list__item">
             <dt>Traitement indiciaire brut${resultats.pensionTauxPlein?.nbiIntegre ? ' (NBI incluse)' : ''}</dt>
@@ -268,7 +272,7 @@ function creerSectionDetails(resultats) {
           ${resultats.pensionTauxPlein?.nbiIntegre ? `
           <div class="details-list__item">
             <dt>dont NBI intégrée</dt>
-            <dd>${resultats.pensionTauxPlein.pointsNBIIntegres} pts</dd>
+            <dd>${Number(resultats.pensionTauxPlein.pointsNBIIntegres) || 0} pts</dd>
           </div>
           ` : ''}
           <div class="details-list__item">
@@ -278,7 +282,7 @@ function creerSectionDetails(resultats) {
           <div class="details-list__item">
             <dt>Décote/Surcote</dt>
             <dd>${resultats.pensionTauxPlein?.trimestresDecote > 0
-              ? `-${resultats.pensionTauxPlein.trimestresDecote} trim.`
+              ? `-${Number(resultats.pensionTauxPlein.trimestresDecote) || 0} trim.`
               : 'Aucune'}</dd>
           </div>
           <div class="details-list__item details-list__item--total">
@@ -290,18 +294,18 @@ function creerSectionDetails(resultats) {
             <dd>${formaterMontant(resultats.pensionTauxPlein?.pensionNetteMensuelle)}</dd>
           </div>
         </dl>
-      </div>
+      </article>
 
       <!-- Détails compléments -->
-      <div class="details-card">
-        <h3 class="details-card__title">Compléments</h3>
+      <article class="details-card" aria-labelledby="details-complements-title">
+        <h3 id="details-complements-title" class="details-card__title">Compléments</h3>
         <dl class="details-list">
           ${resultats.nbi?.eligible && resultats.nbi?.integreTIB ? `
             <div class="details-list__item">
               <dt>NBI intégrée au TIB</dt>
               <dd>
-                <span class="badge badge--success">Oui (${resultats.nbi.pointsNBI} pts)</span>
-                <br><small class="text--muted">${resultats.nbi.dureeAnneesNBI} ans de perception</small>
+                <span class="badge badge--success">Oui (${Number(resultats.nbi.pointsNBI) || 0} pts)</span>
+                <br><small class="text--muted">${Number(resultats.nbi.dureeAnneesNBI) || 0} ans de perception</small>
               </dd>
             </div>
           ` : resultats.nbi?.eligible ? `
@@ -318,7 +322,7 @@ function creerSectionDetails(resultats) {
           ` : ''}
           ${resultats.pfrSPV?.eligible ? `
             <div class="details-list__item">
-              <dt>PFR SPV (${escapeHtml(resultats.pfrSPV.anneesSPV)} ans)</dt>
+              <dt>PFR SPV (${Number(resultats.pfrSPV.anneesSPV) || 0} ans)</dt>
               <dd>+${formaterMontant(resultats.pfrSPV.montantMensuel)}/mois</dd>
             </div>
           ` : ''}
@@ -327,7 +331,7 @@ function creerSectionDetails(resultats) {
             <dd><strong>${formaterMontant(resultats.totalRetraite)}</strong>/mois</dd>
           </div>
         </dl>
-      </div>
+      </article>
     </div>
   `;
 
@@ -352,13 +356,14 @@ function creerSectionSurcote(resultats) {
     const gainAnnuelFormate = formaterMontant(scenario.gainAnnuel);
     const pensionFormatee = formaterMontant(scenario.pensionMensuelle);
 
+    const annees = Number(scenario.anneesSupplémentaires) || 0;
     return `
       <tr>
-        <td><strong>+${scenario.anneesSupplémentaires} an${scenario.anneesSupplémentaires > 1 ? 's' : ''}</strong></td>
+        <td><strong>+${annees} an${annees > 1 ? 's' : ''}</strong></td>
         <td>${escapeHtml(dateFormatee)}</td>
-        <td>${Math.floor(scenario.ageDepart)} ans</td>
-        <td>${scenario.trimestresSurcote} trim.</td>
-        <td class="text--success">+${scenario.tauxSurcote.toFixed(2)} %</td>
+        <td>${Math.floor(Number(scenario.ageDepart) || 0)} ans</td>
+        <td>${Number(scenario.trimestresSurcote) || 0} trim.</td>
+        <td class="text--success">+${(Number(scenario.tauxSurcote) || 0).toFixed(2)} %</td>
         <td><strong>${escapeHtml(pensionFormatee)}</strong></td>
         <td class="text--success">
           <strong>+${escapeHtml(gainMensuelFormate)}/mois</strong>
@@ -368,9 +373,10 @@ function creerSectionSurcote(resultats) {
     `;
   }).join('');
 
+  section.setAttribute('aria-labelledby', 'section-surcote-title');
   section.innerHTML = `
-    <h2 class="results-section__title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; color: var(--color-success);">
+    <h2 id="section-surcote-title" class="results-section__title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; color: var(--color-success);">
         <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/>
         <polyline points="17,6 23,6 23,12"/>
       </svg>
@@ -389,15 +395,16 @@ function creerSectionSurcote(resultats) {
 
     <div class="table-container">
       <table class="table table--surcote">
+        <caption class="visually-hidden">Impact de la surcote sur la pension selon les années supplémentaires travaillées</caption>
         <thead>
           <tr>
-            <th>Durée supplémentaire</th>
-            <th>Date de départ</th>
-            <th>Âge</th>
-            <th>Surcote</th>
-            <th>Majoration</th>
-            <th>Pension brute</th>
-            <th>Gain</th>
+            <th scope="col">Durée supplémentaire</th>
+            <th scope="col">Date de départ</th>
+            <th scope="col">Âge</th>
+            <th scope="col">Surcote</th>
+            <th scope="col">Majoration</th>
+            <th scope="col">Pension brute</th>
+            <th scope="col">Gain</th>
           </tr>
         </thead>
         <tbody>
@@ -489,15 +496,16 @@ function creerSectionGraphique(scenarios) {
   const descriptionId = 'pension-chart-desc';
   const descriptionTexte = construireDescriptionGraphique(scenarios);
 
+  section.setAttribute('aria-labelledby', 'section-graphique-title');
   section.innerHTML = `
-    <h2 class="results-section__title">Évolution de la pension selon l'âge de départ</h2>
+    <h2 id="section-graphique-title" class="results-section__title">Évolution de la pension selon l'âge de départ</h2>
     <div class="graphique-wrapper">
       <div class="graphique-container">
         <canvas id="pension-chart"
                 role="img"
                 aria-label="Graphique d'évolution de la pension selon l'âge de départ"
                 aria-describedby="${descriptionId}"></canvas>
-        <p id="${descriptionId}" class="visually-hidden">${descriptionTexte}</p>
+        <p id="${descriptionId}" class="visually-hidden">${escapeHtml(descriptionTexte)}</p>
         <div id="chart-tooltip" class="chart-tooltip"></div>
       </div>
       <div class="graphique-legende">
@@ -539,9 +547,10 @@ function creerSectionGraphique(scenarios) {
 function creerAvertissement() {
   const div = document.createElement('div');
   div.className = 'alert alert--warning';
+  div.setAttribute('role', 'note');
 
   div.innerHTML = `
-    <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
       <line x1="12" y1="9" x2="12" y2="13"/>
       <line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -836,14 +845,16 @@ function setupChartTooltip(canvas, tooltip, pointsData) {
       statusText = '<span style="color: #0d6efd;">Taux plein</span>';
     }
 
+    // statusText contient du HTML de confiance (chaînes codées en dur ci-dessus),
+    // tous les champs user-provided sont passés par escapeHtml ou Number()
     tooltip.innerHTML = `
       <div style="font-weight: 600; margin-bottom: 4px;">
         ${escapeHtml(scenario.description)}
         ${isRecommended ? '<span style="color: #28a745;"> ✓</span>' : ''}
       </div>
-      <div style="margin-bottom: 2px;"><strong>${pension.toLocaleString('fr-FR')} €</strong> /mois</div>
+      <div style="margin-bottom: 2px;"><strong>${(Number(pension) || 0).toLocaleString('fr-FR')} €</strong> /mois</div>
       <div style="font-size: 11px; color: #666;">
-        ${Math.floor(scenario.age)} ans · ${statusText}
+        ${Math.floor(Number(scenario.age) || 0)} ans · ${statusText}
       </div>
     `;
 

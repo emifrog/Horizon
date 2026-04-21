@@ -8,6 +8,7 @@
  */
 
 import { PFR, POINT_INDICE, getCoefficientRAFPAge } from '../config/parametres.js';
+import { arrondir } from '../utils/nombres.js';
 
 /**
  * Données pour le calcul PFR/RAFP
@@ -41,7 +42,7 @@ import { PFR, POINT_INDICE, getCoefficientRAFPAge } from '../config/parametres.j
  */
 export function calculerPFRTheorique(indiceBrut) {
   const traitementAnnuel = indiceBrut * POINT_INDICE.VALEUR_ANNUELLE;
-  return Math.round(traitementAnnuel * (PFR.TAUX_PRIME_FEU / 100) * 100) / 100;
+  return arrondir(traitementAnnuel * (PFR.TAUX_PRIME_FEU / 100), 2);
 }
 
 /**
@@ -51,7 +52,7 @@ export function calculerPFRTheorique(indiceBrut) {
  * @returns {number} Plafond annuel de l'assiette RAFP
  */
 export function calculerPlafondRAFP(traitementIndiciaireAnnuel) {
-  return Math.round(traitementIndiciaireAnnuel * (PFR.PLAFOND_ASSIETTE_RAFP / 100) * 100) / 100;
+  return arrondir(traitementIndiciaireAnnuel * (PFR.PLAFOND_ASSIETTE_RAFP / 100), 2);
 }
 
 /**
@@ -71,7 +72,7 @@ export function calculerAssietteRAFP(montantPFR, plafondRAFP) {
  * @returns {number} Cotisation annuelle
  */
 export function calculerCotisationRAFP(assietteRAFP) {
-  return Math.round(assietteRAFP * (PFR.TAUX_COTISATION_RAFP / 100) * 100) / 100;
+  return arrondir(assietteRAFP * (PFR.TAUX_COTISATION_RAFP / 100), 2);
 }
 
 /**
@@ -103,9 +104,7 @@ export function calculerRenteRAFP(totalPoints, ageDepart = 62) {
   
   // La valeur de service est utilisée pour calculer la rente annuelle
   const renteAnnuelle = totalPoints * PFR.VALEUR_SERVICE_POINT_RAFP * coeffAge;
-  const renteMensuelle = renteAnnuelle / 12;
-
-  return Math.round(renteMensuelle * 100) / 100;
+  return arrondir(renteAnnuelle / 12, 2);
 }
 
 /**
@@ -203,13 +202,13 @@ export function calculerPFR(donnees, ageDepart = 62) {
   
   // Calcul du capital si applicable
   const capitalRAFP = typePrestation.type !== 'rente'
-    ? Math.round(totalPointsRAFP * PFR.VALEUR_SERVICE_POINT_RAFP * coefficientAge * 100) / 100
+    ? arrondir(totalPointsRAFP * PFR.VALEUR_SERVICE_POINT_RAFP * coefficientAge, 2)
     : 0;
 
   return {
-    traitementIndiciaireAnnuel: Math.round(traitementIndiciaireAnnuel * 100) / 100,
-    montantPFRAnnuel: Math.round(montantPFRAnnuel * 100) / 100,
-    tauxPFR: Math.round(tauxPFR * 100) / 100,
+    traitementIndiciaireAnnuel: arrondir(traitementIndiciaireAnnuel, 2),
+    montantPFRAnnuel: arrondir(montantPFRAnnuel, 2),
+    tauxPFR: arrondir(tauxPFR, 2),
     plafondRAFP,
     assietteRAFP,
     cotisationAnnuelleRAFP,
@@ -264,14 +263,15 @@ export function comparerRevenusAvecSansPFR(pensionCNRACL, renteRAFP, montantPFRM
 
   const pertePFRNonIntegree = pensionHypothetique - retraiteAvecRAFP;
 
+  const denominateur = pensionCNRACL + montantPFRMensuel;
   return {
-    pensionCNRACL: Math.round(pensionCNRACL * 100) / 100,
-    renteRAFP: Math.round(renteRAFP * 100) / 100,
-    totalRetraite: Math.round(retraiteAvecRAFP * 100) / 100,
-    pfrEnActivite: Math.round(montantPFRMensuel * 100) / 100,
-    pensionHypothetiqueSiPFRIntegree: Math.round(pensionHypothetique * 100) / 100,
-    perteEstimee: Math.round(pertePFRNonIntegree * 100) / 100,
-    tauxRemplacement: Math.round((retraiteAvecRAFP / (pensionCNRACL + montantPFRMensuel)) * 100 * 100) / 100,
+    pensionCNRACL: arrondir(pensionCNRACL, 2),
+    renteRAFP: arrondir(renteRAFP, 2),
+    totalRetraite: arrondir(retraiteAvecRAFP, 2),
+    pfrEnActivite: arrondir(montantPFRMensuel, 2),
+    pensionHypothetiqueSiPFRIntegree: arrondir(pensionHypothetique, 2),
+    perteEstimee: arrondir(pertePFRNonIntegree, 2),
+    tauxRemplacement: denominateur > 0 ? arrondir((retraiteAvecRAFP / denominateur) * 100, 2) : 0,
   };
 }
 

@@ -4,7 +4,7 @@
  * @module utils/validators
  */
 
-import { ECHELLE_INDICIAIRE, AGES } from '../config/parametres.js';
+import { ECHELLE_INDICIAIRE, AGES, PFR, POINT_INDICE } from '../config/parametres.js';
 
 /**
  * Résultat de validation
@@ -277,11 +277,14 @@ export function validerProfil(profil) {
     }
   }
 
-  // Validation date d'entrée
-  if (profil.dateEntree) {
-    const resultat = validerDateEntree(profil.dateEntree, profil.dateNaissance);
+  // Validation date d'entrée SPP
+  // Le champ canonique dans ProfilAgent est `dateEntreeSPP` ; `dateEntree` est accepté
+  // par rétro-compatibilité au cas où un appelant transmettrait l'ancienne clé.
+  const dateEntreeValeur = profil.dateEntreeSPP ?? profil.dateEntree;
+  if (dateEntreeValeur) {
+    const resultat = validerDateEntree(dateEntreeValeur, profil.dateNaissance);
     if (!resultat.valide) {
-      erreurs.dateEntree = resultat.erreur;
+      erreurs.dateEntreeSPP = resultat.erreur;
     }
   }
 
@@ -312,6 +315,142 @@ export function validerProfil(profil) {
   return {
     valide: Object.keys(erreurs).length === 0,
     erreurs,
+  };
+}
+
+// =============================================================================
+// VALIDATIONS CROSS-FIELD
+// =============================================================================
+
+/**
+ * Nombre d'années entre deux dates (positif si d2 > d1).
+ * @param {Date} d1
+ * @param {Date} d2
+ * @returns {number}
+ */
+function anneesEntre(d1, d2) {
+  return (d2.getTime() - d1.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+}
+
+/**
+ * Vérifie la cohérence transversale d'un ensemble de données de simulation.
+ * Les contrôles mono-champ (plages, types) sont assurés par les autres validers ;
+ * cette fonction détecte les incohérences entre plusieurs champs, ex :
+ *  - dateEntreeSPP antérieure à la majorité de l'agent
+ *  - durée de perception NBI supérieure à l'ancienneté
+ *  - PFR saisi bien plus élevé que le plafond théorique (erreur de saisie)
+ *
+ * Retourne un objet par champ contenant des messages d'avertissement ou d'erreur.
+ * Les avertissements (warning) n'empêchent pas le calcul, les erreurs oui.
+ *
+ * @param {Object} donnees - Données collectées du formulaire
+ * @param {Date} [donnees.dateNaissance]
+ * @param {Date} [donnees.dateEntreeSPP]
+ * @param {number} [donnees.indiceBrut]
+ * @param {number} [donnees.montantPFR]     Montant ANNUEL
+ * @param {number} [donnees.dureeNBI]        En ANNÉES
+ * @param {number} [donnees.anneesCotisationRAFP]
+ * @param {number} [donnees.anneesSPV]
+ * @param {boolean} [donnees.doubleStatut]
+ * @param {string} [donnees.servicesMilitaires]   'aucun' | 'bspp' | 'bmpm'
+ * @param {number} [donnees.dureeServicesMilitairesAnnees]
+ * @param {number} [donnees.dureeServicesMilitairesMois]
+ * @returns {{valide: boolean, erreurs: Object<string, string>, warnings: Object<string, string>}}
+ */
+export function validerCoherenceProfil(donnees) {
+  const erreurs = {};
+  const warnings = {};
+  const maintenant = new Date();
+
+  const { dateNaissance, dateEntreeSPP } = donnees;
+
+  // --- Cohérence naissance / entrée SPP ---
+  if (dateNaissance instanceof Date && !isNaN(dateNaissance.getTime())
+    && dateEntreeSPP instanceof Date && !isNaN(dateEntreeSPP.getTime())) {
+
+    if (dateEntreeSPP < dateNaissance) {
+      erreurs.dateEntreeSPP = "La date d'entrée SPP est antérieure à la date de naissance.";
+    } else {
+      const ageEntree = anneesEntre(dateNaissance, dateEntreeSPP);
+      if (ageEntree < 16) {
+        erreurs.dateEntreeSPP = `Entrée SPP à ${ageEntree.toFixed(1)} ans : âge minimum légal en catégorie active = 16 ans.`;
+      } else if (ageEntree < 18) {
+        warnings.dateEntreeSPP = `Entrée SPP à ${ageEntree.toFixed(1)} ans : vérifiez la date (entrée active usuelle ≥ 18 ans).`;
+      } else if (ageEntree > 50) {
+        warnings.dateEntreeSPP = `Entrée SPP à ${ageEntree.toFixed(0)} ans : valeur inhabituelle, vérifiez la saisie.`;
+      }
+    }
+  }
+
+  // --- Durée NBI ≤ ancienneté SPP ---
+  if (typeof donnees.dureeNBI === 'number' && donnees.dureeNBI > 0
+    && dateEntreeSPP instanceof Date && !isNaN(dateEntreeSPP.getTime())) {
+    const ancienneteAnnees = anneesEntre(dateEntreeSPP, maintenant);
+    if (donnees.dureeNBI > ancienneteAnnees + 0.25) {
+      erreurs.dureeNBI = `Durée de perception NBI (${donnees.dureeNBI} ans) supérieure à l'ancienneté SPP (${ancienneteAnnees.toFixed(1)} ans).`;
+    }
+  }
+
+  // --- Années de cotisation RAFP cohérentes ---
+  // RAFP créé le 01/01/2005, cotisations = max(2005, entrée SPP) → aujourd'hui
+  if (typeof donnees.anneesCotisationRAFP === 'number' && donnees.anneesCotisationRAFP > 0
+    && dateEntreeSPP instanceof Date && !isNaN(dateEntreeSPP.getTime())) {
+    const creationRAFP = new Date(PFR.ANNEE_CREATION_RAFP, 0, 1);
+    const debutRAFP = dateEntreeSPP > creationRAFP ? dateEntreeSPP : creationRAFP;
+    const maxCotisationRAFP = Math.max(0, anneesEntre(debutRAFP, maintenant));
+    if (donnees.anneesCotisationRAFP > maxCotisationRAFP + 0.5) {
+      warnings.anneesCotisationRAFP = `Années RAFP (${donnees.anneesCotisationRAFP}) > plafond théorique (${maxCotisationRAFP.toFixed(1)}). Recalcul auto recommandé.`;
+    }
+  }
+
+  // --- Montant PFR cohérent avec l'indice ---
+  // La prime de feu théorique = TIB × 25 %. Au-delà de 30 % du TIB, probable erreur de saisie.
+  if (typeof donnees.montantPFR === 'number' && donnees.montantPFR > 0
+    && typeof donnees.indiceBrut === 'number' && donnees.indiceBrut > 0) {
+    const tibAnnuel = donnees.indiceBrut * POINT_INDICE.VALEUR_ANNUELLE;
+    const plafondRaisonnable = tibAnnuel * 0.30; // Marge au-delà des 25 % réglementaires
+    if (donnees.montantPFR > plafondRaisonnable) {
+      warnings.montantPFR = `PFR annuelle (${donnees.montantPFR} €) > 30 % du TIB (${plafondRaisonnable.toFixed(0)} €). Vérifiez que le montant est bien annuel.`;
+    }
+    // PFR trop faible : moins de 10 % du TIB = probablement mensuelle saisie à tort
+    const seuilFaible = tibAnnuel * 0.10;
+    if (donnees.montantPFR < seuilFaible && donnees.montantPFR > 100) {
+      warnings.montantPFR = `PFR annuelle (${donnees.montantPFR} €) < 10 % du TIB. Saisi-e par erreur en mensuel ?`;
+    }
+  }
+
+  // --- Années SPV cohérentes avec la vie professionnelle ---
+  if (typeof donnees.anneesSPV === 'number' && donnees.anneesSPV > 0
+    && dateNaissance instanceof Date && !isNaN(dateNaissance.getTime())) {
+    const ageActuel = anneesEntre(dateNaissance, maintenant);
+    // Engagement SPV possible dès 16 ans
+    const maxSPV = Math.max(0, ageActuel - 16);
+    if (donnees.anneesSPV > maxSPV + 1) {
+      erreurs.anneesSPV = `Années SPV (${donnees.anneesSPV}) incompatibles avec l'âge (${ageActuel.toFixed(0)} ans, maximum ~${maxSPV.toFixed(0)} ans).`;
+    }
+  }
+
+  // --- Services militaires : cohérence "type" vs "durée" ---
+  if (donnees.servicesMilitaires && donnees.servicesMilitaires !== 'aucun') {
+    const annees = donnees.dureeServicesMilitairesAnnees || 0;
+    const mois = donnees.dureeServicesMilitairesMois || 0;
+    if (annees === 0 && mois === 0) {
+      erreurs.dureeServicesMilitairesAnnees = `Type de services militaires renseigné (${donnees.servicesMilitaires.toUpperCase()}) sans durée — précisez les années ou mois.`;
+    }
+    if (mois >= 12) {
+      warnings.dureeServicesMilitairesMois = 'Le champ "mois" devrait être < 12 ; convertir l\'excédent en années.';
+    }
+  }
+
+  // --- Double statut sans années SPV ---
+  if (donnees.doubleStatut === true && (!donnees.anneesSPV || donnees.anneesSPV < 1)) {
+    erreurs.anneesSPV = 'Double statut SPP/SPV coché : précisez les années d\'engagement SPV.';
+  }
+
+  return {
+    valide: Object.keys(erreurs).length === 0,
+    erreurs,
+    warnings,
   };
 }
 

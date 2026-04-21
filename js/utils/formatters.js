@@ -48,7 +48,11 @@ export function formaterMontantAnnuel(montant) {
 }
 
 /**
- * Formate un pourcentage
+ * Formate un pourcentage en locale fr-FR.
+ * La valeur d'entrée est un pourcentage déjà multiplié (ex : `75` → "75,00 %"),
+ * et non une fraction. Intl.NumberFormat garantit la virgule décimale, les
+ * espaces insécables pour les milliers, et l'espace insécable avant le %.
+ *
  * @param {number} valeur - Valeur à formater (ex: 75 pour 75%)
  * @param {Object} [options] - Options de formatage
  * @param {number} [options.decimales=2] - Nombre de décimales
@@ -61,7 +65,12 @@ export function formaterPourcentage(valeur, options = {}) {
     return '- %';
   }
 
-  return `${valeur.toFixed(decimales).replace('.', ',')} %`;
+  const nombre = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
+  }).format(valeur);
+  // Espace insécable ( ) entre nombre et symbole (règle typo française)
+  return `${nombre} %`;
 }
 
 /**
@@ -149,17 +158,22 @@ export function formaterEcartTrimestres(ecart) {
 }
 
 /**
- * Formate une variation de taux
- * @param {number} variation - Variation en points de pourcentage
- * @returns {string} Variation formatée avec signe et couleur CSS
+ * Formate une variation de taux en points de pourcentage (avec signe explicite).
+ * @param {number} variation - Variation (ex: 1.25 → "+1,25 %")
+ * @returns {string} Variation formatée avec signe
  */
 export function formaterVariationTaux(variation) {
   if (typeof variation !== 'number' || isNaN(variation)) {
     return '-';
   }
 
-  const signe = variation >= 0 ? '+' : '';
-  return `${signe}${variation.toFixed(2).replace('.', ',')} %`;
+  // signDisplay: 'exceptZero' → pas de signe pour 0, + pour positifs, - pour négatifs
+  const formatter = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    signDisplay: 'exceptZero',
+  });
+  return `${formatter.format(variation)} %`;
 }
 
 /**

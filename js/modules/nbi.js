@@ -9,6 +9,7 @@
  */
 
 import { NBI, POINT_INDICE } from '../config/parametres.js';
+import { arrondir } from '../utils/nombres.js';
 
 /**
  * Données pour le calcul NBI
@@ -83,7 +84,7 @@ export function calculerMoyennePondereeNBI(pointsNBI, dureeMoisNBI, dureeService
 
   // Calcul au prorata de la durée de perception
   const ratio = Math.min(dureeMoisNBI / dureeServicesMois, 1);
-  return Math.round(pointsNBI * ratio * 100) / 100;
+  return arrondir(pointsNBI * ratio, 2);
 }
 
 /**
@@ -109,11 +110,10 @@ export function calculerSupplementNBI(moyennePondereeNBI, tauxLiquidation) {
 
   // Application du taux de liquidation
   const supplementAnnuel = traitementNBIAnnuel * (tauxLiquidation / 100);
-  const supplementMensuel = supplementAnnuel / 12;
 
   return {
-    mensuel: Math.round(supplementMensuel * 100) / 100,
-    annuel: Math.round(supplementAnnuel * 100) / 100,
+    mensuel: arrondir(supplementAnnuel / 12, 2),
+    annuel: arrondir(supplementAnnuel, 2),
   };
 }
 
@@ -155,7 +155,7 @@ export function calculerNBI(donnees) {
     eligible: true,
     pointsNBI,
     dureeMoisNBI,
-    dureeAnneesNBI: Math.round((dureeMoisNBI / 12) * 100) / 100,
+    dureeAnneesNBI: arrondir(dureeMoisNBI / 12, 2),
     moyennePonderee,
     supplementMensuel: supplement.mensuel,
     supplementAnnuel: supplement.annuel,
@@ -174,7 +174,7 @@ export function calculerNBIActivite(pointsNBI) {
   }
 
   const annuel = pointsNBI * POINT_INDICE.VALEUR_ANNUELLE;
-  return Math.round((annuel / 12) * 100) / 100;
+  return arrondir(annuel / 12, 2);
 }
 
 /**
@@ -189,9 +189,9 @@ export function comparerNBIActiviteRetraite(pointsNBI, supplementMensuel) {
   return {
     nbiActivite: nbiActivite,
     supplementRetraite: supplementMensuel,
-    difference: Math.round((supplementMensuel - nbiActivite) * 100) / 100,
+    difference: arrondir(supplementMensuel - nbiActivite, 2),
     tauxMaintien: nbiActivite > 0
-      ? Math.round((supplementMensuel / nbiActivite) * 100 * 100) / 100
+      ? arrondir((supplementMensuel / nbiActivite) * 100, 2)
       : 0,
   };
 }

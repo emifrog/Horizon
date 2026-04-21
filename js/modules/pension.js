@@ -9,6 +9,7 @@
 
 import { TAUX, POINT_INDICE, MINIMUM_GARANTI, COTISATIONS, PFR, getDureeAssuranceRequise } from '../config/parametres.js';
 import { calculerTrimestresDecote } from './ages.js';
+import { arrondir } from '../utils/nombres.js';
 
 /**
  * Données pour le calcul de la pension
@@ -62,8 +63,8 @@ export function calculerTraitementIndiciaire(indiceBrut, pointsNBIIntegres = 0) 
   const mensuel = annuel / 12;
 
   return {
-    annuel: Math.round(annuel * 100) / 100,
-    mensuel: Math.round(mensuel * 100) / 100,
+    annuel: arrondir(annuel, 2),
+    mensuel: arrondir(mensuel, 2),
     nbiIntegre: pointsNBIIntegres > 0,
     pointsNBI: pointsNBIIntegres,
   };
@@ -122,11 +123,10 @@ export function calculerTauxLiquidationNet(tauxBrut, coefficientDecote) {
  */
 export function calculerPensionBrute(traitementIndiciaire, tauxLiquidation) {
   const pensionAnnuelle = traitementIndiciaire * (tauxLiquidation / 100);
-  const pensionMensuelle = pensionAnnuelle / 12;
-
+  // Arrondi uniquement en sortie pour éviter l'accumulation d'écarts
   return {
-    annuel: Math.round(pensionAnnuelle * 100) / 100,
-    mensuel: Math.round(pensionMensuelle * 100) / 100,
+    annuel: arrondir(pensionAnnuelle, 2),
+    mensuel: arrondir(pensionAnnuelle / 12, 2),
   };
 }
 
@@ -186,10 +186,10 @@ export function calculerMajorationPrimeFeu(traitementIndiciaireAnnuel, tauxLiqui
   majorationAnnuelle = majorationAnnuelle * (tauxLiquidation / 100);
 
   return {
-    annuelle: Math.round(majorationAnnuelle * 100) / 100,
-    mensuelle: Math.round((majorationAnnuelle / 12) * 100) / 100,
+    annuelle: arrondir(majorationAnnuelle, 2),
+    mensuelle: arrondir(majorationAnnuelle / 12, 2),
     proratisee,
-    tauxProratisation: Math.round(tauxProratisation * 100) / 100,
+    tauxProratisation: arrondir(tauxProratisation, 2),
   };
 }
 
@@ -203,8 +203,9 @@ export function calculerMajorationPrimeFeu(traitementIndiciaireAnnuel, tauxLiqui
 export function calculerMinimumGaranti(trimestresLiquidables, trimestresRequis) {
   // Formule simplifiée du minimum garanti
   // Le minimum garanti est proratisé selon la durée de services
+  if (!trimestresRequis || trimestresRequis <= 0) return 0;
   const ratio = Math.min(trimestresLiquidables / trimestresRequis, 1);
-  return Math.round(MINIMUM_GARANTI.MONTANT_MENSUEL_2026 * ratio * 100) / 100;
+  return arrondir(MINIMUM_GARANTI.MONTANT_MENSUEL_2026 * ratio, 2);
 }
 
 /**
@@ -220,11 +221,11 @@ export function calculerCotisationsPension(pensionBruteMensuelle) {
   const total = csg + crds + casa;
 
   return {
-    total: Math.round(total * 100) / 100,
+    total: arrondir(total, 2),
     detail: {
-      csg: Math.round(csg * 100) / 100,
-      crds: Math.round(crds * 100) / 100,
-      casa: Math.round(casa * 100) / 100,
+      csg: arrondir(csg, 2),
+      crds: arrondir(crds, 2),
+      casa: arrondir(casa, 2),
     },
   };
 }
@@ -236,7 +237,7 @@ export function calculerCotisationsPension(pensionBruteMensuelle) {
  */
 export function calculerPensionNette(pensionBruteMensuelle) {
   const cotisations = calculerCotisationsPension(pensionBruteMensuelle);
-  return Math.round((pensionBruteMensuelle - cotisations.total) * 100) / 100;
+  return arrondir(pensionBruteMensuelle - cotisations.total, 2);
 }
 
 /**
@@ -308,13 +309,13 @@ export function calculerPension(donnees) {
   return {
     traitementIndiciaireAnnuel: traitement.annuel,
     traitementIndicaireMensuel: traitement.mensuel,
-    tauxLiquidationBrut: Math.round(tauxLiquidationBrut * 100) / 100,
-    coefficientDecote: Math.round(coefficientDecote * 10000) / 10000,
+    tauxLiquidationBrut: arrondir(tauxLiquidationBrut, 2),
+    coefficientDecote: arrondir(coefficientDecote, 4),
     trimestresDecote,
-    tauxLiquidationNet: Math.round(tauxLiquidationNet * 100) / 100,
+    tauxLiquidationNet: arrondir(tauxLiquidationNet, 2),
     // Pension base CNRACL (sans majoration prime de feu)
-    pensionBaseMensuelle: Math.round(pensionBrute.mensuel * 100) / 100,
-    pensionBaseAnnuelle: Math.round(pensionBrute.annuel * 100) / 100,
+    pensionBaseMensuelle: pensionBrute.mensuel,
+    pensionBaseAnnuelle: pensionBrute.annuel,
     // Majoration prime de feu
     majorationPrimeFeu: {
       mensuelle: majorationPrimeFeu.mensuelle,
@@ -323,10 +324,10 @@ export function calculerPension(donnees) {
       tauxProratisation: majorationPrimeFeu.tauxProratisation,
     },
     // Pension totale (base + majoration)
-    pensionBruteAnnuelle: Math.round(pensionBruteAnnuelleFinale * 100) / 100,
-    pensionBruteMensuelle: Math.round(pensionBruteMensuelleFinale * 100) / 100,
+    pensionBruteAnnuelle: arrondir(pensionBruteAnnuelleFinale, 2),
+    pensionBruteMensuelle: arrondir(pensionBruteMensuelleFinale, 2),
     pensionNetteMensuelle,
-    minimumGaranti: Math.round(minimumGaranti * 100) / 100,
+    minimumGaranti: arrondir(minimumGaranti, 2),
     minimumGarantiApplique,
     // Information sur la NBI intégrée au TIB
     nbiIntegre: traitement.nbiIntegre,
@@ -386,5 +387,5 @@ export function genererResumePension(resultat) {
 export function estimerCoutTrimestreDecote(traitementIndiciaire, tauxLiquidationBrut) {
   // Perte = TI × Taux × 1.25% / 12
   const perteMensuelle = (traitementIndiciaire * (tauxLiquidationBrut / 100) * (TAUX.DECOTE_PAR_TRIMESTRE / 100)) / 12;
-  return Math.round(perteMensuelle * 100) / 100;
+  return arrondir(perteMensuelle, 2);
 }
