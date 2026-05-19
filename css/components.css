@@ -236,6 +236,27 @@
   gap: var(--spacing-sm);
   position: relative;
   z-index: 1;
+  /* Reset du style natif <button> */
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+}
+
+.stepper__step--clickable {
+  cursor: pointer;
+}
+
+.stepper__step:focus-visible {
+  outline: none;
+}
+
+.stepper__step:focus-visible .stepper__step-number {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .stepper__step-number {
@@ -839,9 +860,9 @@
    UTILITAIRES TEXTE
    ======================================== */
 
-.text--success { color: var(--color-success); }
-.text--warning { color: #b8860b; }
-.text--error { color: var(--color-error); }
+.text--success { color: var(--color-success-text); }
+.text--warning { color: var(--color-warning-text); }
+.text--error { color: var(--color-error-text); }
 .text--muted { color: var(--color-text-muted); }
 .text--center { text-align: center; }
 .text--right { text-align: right; }
@@ -861,7 +882,7 @@
 .tooltip__icon {
   width: 1.125rem;
   height: 1.125rem;
-  color: var(--color-info);
+  color: var(--color-info-text);
   transition: transform var(--transition);
   vertical-align: middle;
 }
@@ -943,7 +964,7 @@ img.tooltip__icon {
   display: inline-flex;
   width: 1rem;
   height: 1rem;
-  color: var(--color-info);
+  color: var(--color-info-text);
 }
 
 .tooltip__icon--inline svg {
@@ -1072,6 +1093,14 @@ img.tooltip__icon {
 }
 
 /* Tableau alternatif des données du graphique (accessibilité) */
+.graphique-caption {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: var(--line-height-normal);
+}
+
 .graphique-table {
   padding: var(--spacing-md) var(--spacing-lg);
   border-top: var(--border-width) solid var(--color-border-light);
@@ -1112,6 +1141,146 @@ img.tooltip__icon {
 
 .graphique-legende__dot--surcote {
   background-color: #17a2b8;
+}
+
+/* ==========================================================================
+   Frise chronologique de carrière (timeline)
+   ========================================================================== */
+
+.timeline-figure {
+  margin: 0;
+}
+
+.timeline-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.timeline-svg {
+  display: block;
+  width: 100%;
+  min-width: 640px;
+  height: auto;
+}
+
+.timeline__axis {
+  stroke: var(--color-border);
+  stroke-width: 2;
+}
+
+.timeline__tick {
+  stroke: var(--color-gray-300);
+  stroke-width: 1.5;
+}
+
+.timeline__dot {
+  fill: var(--color-secondary);
+  stroke: var(--color-white);
+  stroke-width: 2;
+  transition: r var(--transition-fast), fill var(--transition-fast);
+}
+
+.timeline__label {
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  fill: var(--color-text);
+}
+
+.timeline__sublabel {
+  font-size: 13px;
+  fill: var(--color-text-muted);
+}
+
+/* Couleurs par type de jalon */
+.timeline__node--debut .timeline__dot { fill: var(--color-secondary); }
+.timeline__node--legal .timeline__dot { fill: #6b7280; }
+.timeline__node--tauxplein .timeline__dot { fill: #28a745; }
+.timeline__node--decote .timeline__dot { fill: #b7791f; }
+.timeline__node--limite .timeline__dot { fill: var(--color-primary); }
+.timeline__node--scenario-decote .timeline__dot { fill: #dc3545; }
+.timeline__node--scenario-surcote .timeline__dot { fill: #17a2b8; }
+.timeline__node--scenario-plein .timeline__dot { fill: #28a745; }
+
+.timeline__node {
+  cursor: pointer;
+}
+
+.timeline__node:focus {
+  outline: none;
+}
+
+.timeline__node:focus-visible .timeline__dot,
+.timeline__node--hover .timeline__dot {
+  r: 12;
+}
+
+.timeline__node:focus-visible .timeline__dot {
+  stroke: var(--color-primary);
+  stroke-width: 3;
+}
+
+.timeline-caption {
+  padding: var(--spacing-sm) var(--spacing-lg) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.timeline-tooltip {
+  margin: var(--spacing-md) auto 0;
+  max-width: 480px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-secondary);
+  color: var(--color-white);
+  border-radius: var(--radius);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+/* Liste textuelle : repli accessible + version mobile */
+.timeline-list {
+  list-style: none;
+  margin: var(--spacing-lg) 0 0;
+  padding: 0;
+  display: none;
+}
+
+.timeline-list__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-left: 4px solid var(--color-border);
+  margin-bottom: var(--spacing-sm);
+  background: var(--color-bg-alt);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.timeline-list__item--debut { border-left-color: var(--color-secondary); }
+.timeline-list__item--legal { border-left-color: #6b7280; }
+.timeline-list__item--tauxplein,
+.timeline-list__item--scenario-plein { border-left-color: #28a745; }
+.timeline-list__item--decote { border-left-color: #b7791f; }
+.timeline-list__item--limite { border-left-color: var(--color-primary); }
+.timeline-list__item--scenario-decote { border-left-color: #dc3545; }
+.timeline-list__item--scenario-surcote { border-left-color: #17a2b8; }
+
+.timeline-list__detail {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Mobile : on masque le SVG (peu lisible) au profit de la liste verticale */
+@media (max-width: 640px) {
+  .timeline-scroll,
+  .timeline-caption,
+  .timeline-tooltip {
+    display: none;
+  }
+
+  .timeline-list {
+    display: block;
+  }
 }
 
 /* ==========================================================================

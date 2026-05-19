@@ -81,6 +81,28 @@
     display: none !important;
   }
 
+  /* Frise chronologique : afficher la version liste verticale (SVG mal rendu si
+     contraint en largeur), mieux pour le papier. */
+  .timeline-scroll,
+  .timeline-tooltip,
+  .timeline-caption {
+    display: none !important;
+  }
+
+  .timeline-list {
+    display: block !important;
+    margin-top: 4mm;
+  }
+
+  .timeline-list__item {
+    background: #ffffff !important;
+    border-left-width: 4px;
+    border-left-style: solid;
+    border: 1px solid #cccccc;
+    page-break-inside: avoid;
+    padding: 2mm 3mm;
+  }
+
   .graphique-table {
     border: none !important;
     padding: 0 !important;
@@ -108,17 +130,45 @@
   }
 
   /* -------------------------------------------------------------
-     EN-TÊTE D'IMPRESSION
+     EN-TÊTE D'IMPRESSION (bloc HTML .print-header, masqué à l'écran)
      ------------------------------------------------------------- */
-  main.main::before {
-    content: 'Simulation retraite SPP — HorizonSP';
-    display: block;
-    font-size: 14pt;
-    font-weight: 700;
-    color: #111111;
+  .print-header {
+    display: flex !important;
+    align-items: center;
+    gap: 6mm;
     border-bottom: 2px solid #111111;
     padding-bottom: 4mm;
     margin-bottom: 6mm;
+  }
+
+  .print-header__logo {
+    width: 16mm;
+    height: 16mm;
+    flex-shrink: 0;
+  }
+
+  .print-header__titles {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .print-header__title {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #111111;
+  }
+
+  .print-header__subtitle {
+    font-size: 9.5pt;
+    color: #444444;
+  }
+
+  .print-header__date {
+    font-size: 9.5pt;
+    color: #444444;
+    white-space: nowrap;
+    align-self: flex-start;
   }
 
   main.main::after {

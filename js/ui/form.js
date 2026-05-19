@@ -93,8 +93,10 @@ function setupNavigationListeners() {
     btn.addEventListener('click', () => goToNextStep());
   });
 
-  // Navigation par le stepper
-  document.querySelectorAll('[data-step]').forEach((stepEl) => {
+  // Navigation par le stepper (tabs)
+  const tabs = Array.from(document.querySelectorAll('.stepper__step[data-step]'));
+
+  tabs.forEach((stepEl) => {
     stepEl.addEventListener('click', () => {
       const targetStep = parseInt(stepEl.dataset.step, 10);
       if (targetStep < formState.currentStep) {
@@ -102,6 +104,46 @@ function setupNavigationListeners() {
       }
     });
   });
+
+  // Pattern clavier WAI-ARIA Tabs : flèches, Home, End
+  const tablist = document.querySelector('.stepper[role="tablist"]');
+  if (tablist) {
+    tablist.addEventListener('keydown', (e) => {
+      const focusable = tabs.filter((t) => !t.disabled);
+      if (!focusable.length) return;
+      const currentIndex = focusable.indexOf(document.activeElement);
+      let nextIndex = null;
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % focusable.length;
+          break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          nextIndex = currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1;
+          break;
+        case 'Home':
+          nextIndex = 0;
+          break;
+        case 'End':
+          nextIndex = focusable.length - 1;
+          break;
+        default:
+          return;
+      }
+
+      e.preventDefault();
+      const target = focusable[nextIndex];
+      if (target) {
+        target.focus();
+        const targetStep = parseInt(target.dataset.step, 10);
+        if (targetStep < formState.currentStep) {
+          goToStep(targetStep);
+        }
+      }
+    });
+  }
 }
 
 /**
@@ -197,10 +239,15 @@ function displayFieldError(input, error) {
   input.classList.toggle('input--error', !!error);
   container.classList.toggle('has-error', !!error);
 
+  // Conserver le lien vers le texte d'aide (hint) existant
+  const hintEl = container.querySelector('.form-hint');
+  const hintId = hintEl ? hintEl.id : '';
+
   // Attributs ARIA pour l'accessibilité
   if (error) {
     input.setAttribute('aria-invalid', 'true');
-    input.setAttribute('aria-describedby', errorId);
+    // Hint + erreur : le lecteur d'écran annonce les deux
+    input.setAttribute('aria-describedby', [hintId, errorId].filter(Boolean).join(' '));
 
     const errorEl = document.createElement('span');
     errorEl.className = 'error-message';
@@ -211,7 +258,11 @@ function displayFieldError(input, error) {
     container.appendChild(errorEl);
   } else {
     input.setAttribute('aria-invalid', 'false');
-    input.removeAttribute('aria-describedby');
+    if (hintId) {
+      input.setAttribute('aria-describedby', hintId);
+    } else {
+      input.removeAttribute('aria-describedby');
+    }
   }
 }
 
@@ -270,8 +321,26 @@ function goToStep(step) {
     showStep(step);
     updateStepperUI();
     scrollToFormTop();
+    announceStep(step);
     document.dispatchEvent(new CustomEvent('horizon:step-changed', { detail: { step } }));
   }
+}
+
+/**
+ * Annonce le changement d'étape via la région live, pour les lecteurs d'écran.
+ * @param {number} step
+ */
+function announceStep(step) {
+  const announcer = document.getElementById('sr-announcer');
+  if (!announcer) return;
+  const tab = document.querySelector(`.stepper__step[data-step="${step}"]`);
+  const label = tab ? tab.querySelector('.stepper__step-label')?.textContent.trim() : '';
+  const message = `Étape ${step} sur ${formState.totalSteps}${label ? ` : ${label}` : ''}`;
+  // Vider puis réécrire force l'annonce même si le texte est identique
+  announcer.textContent = '';
+  requestAnimationFrame(() => {
+    announcer.textContent = message;
+  });
 }
 
 /**
@@ -387,23 +456,42 @@ function triggerCalculationIfNeeded(step) {
  * Met à jour l'interface du stepper
  */
 function updateStepperUI() {
-  document.querySelectorAll('[data-step]').forEach((el) => {
+  document.querySelectorAll('.stepper__step[data-step]').forEach((el) => {
     const step = parseInt(el.dataset.step, 10);
+    const isActive = step === formState.currentStep;
+    const isCompleted = step < formState.currentStep;
 
     el.classList.remove('stepper__step--active', 'stepper__step--completed', 'stepper__step--clickable');
 
-    if (step === formState.currentStep) {
+    if (isActive) {
       el.classList.add('stepper__step--active');
-    } else if (step < formState.currentStep) {
+    } else if (isCompleted) {
       el.classList.add('stepper__step--completed', 'stepper__step--clickable');
     }
+
+    // ARIA + roving tabindex (pattern tablist)
+    el.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    el.setAttribute('tabindex', isActive ? '0' : '-1');
+    // Une étape n'est atteignable au clavier/souris que si déjà complétée
+    el.disabled = !isActive && !isCompleted;
   });
 
-  // Mettre à jour la barre de progression
+  // Barre de progression
   const progress = ((formState.currentStep - 1) / (formState.totalSteps - 1)) * 100;
   const progressBar = document.querySelector('.stepper__progress-fill');
   if (progressBar) {
     progressBar.style.width = `${progress}%`;
+  }
+
+  // Mettre à jour le rôle progressbar (valeur + label parlé)
+  const progressEl = document.querySelector('.stepper__progress[role="progressbar"]');
+  if (progressEl) {
+    const pct = Math.round(progress);
+    progressEl.setAttribute('aria-valuenow', String(pct));
+    progressEl.setAttribute(
+      'aria-label',
+      `Progression du formulaire : étape ${formState.currentStep} sur ${formState.totalSteps}`
+    );
   }
 }
 
@@ -536,7 +624,13 @@ export function resetForm() {
   document.querySelectorAll('.input--error').forEach((el) => {
     el.classList.remove('input--error');
     el.setAttribute('aria-invalid', 'false');
-    el.removeAttribute('aria-describedby');
+    // Restaurer le lien vers le texte d'aide plutôt que de tout supprimer
+    const hint = el.closest('.form-group')?.querySelector('.form-hint');
+    if (hint && hint.id) {
+      el.setAttribute('aria-describedby', hint.id);
+    } else {
+      el.removeAttribute('aria-describedby');
+    }
   });
   document.querySelectorAll('.has-error').forEach((el) => el.classList.remove('has-error'));
 }

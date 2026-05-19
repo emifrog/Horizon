@@ -6,6 +6,7 @@
 
 import { formaterMontant, formaterPourcentage, formaterTrimestres } from '../utils/formatters.js';
 import { formaterDateLongueFR } from '../utils/dates.js';
+import { creerSectionTimeline } from './timeline.js';
 
 /**
  * Échappe les caractères HTML pour prévenir les attaques XSS
@@ -39,6 +40,12 @@ export function afficherResultats(resultats, container) {
   // Section résumé
   const resumeSection = creerSectionResume(resultats);
   container.appendChild(resumeSection);
+
+  // Section frise chronologique (synthèse visuelle de la carrière)
+  const timelineSection = creerSectionTimeline(resultats);
+  if (timelineSection) {
+    container.appendChild(timelineSection);
+  }
 
   // Section scénarios
   const scenariosSection = creerSectionScenarios(resultats.scenarios);
@@ -499,16 +506,16 @@ function creerSectionGraphique(scenarios) {
   section.setAttribute('aria-labelledby', 'section-graphique-title');
   section.innerHTML = `
     <h2 id="section-graphique-title" class="results-section__title">Évolution de la pension selon l'âge de départ</h2>
-    <div class="graphique-wrapper">
+    <figure class="graphique-wrapper">
       <div class="graphique-container">
         <canvas id="pension-chart"
                 role="img"
-                aria-label="Graphique d'évolution de la pension selon l'âge de départ"
+                aria-label="Graphique d'évolution de la pension brute mensuelle selon l'âge de départ"
                 aria-describedby="${descriptionId}"></canvas>
         <p id="${descriptionId}" class="visually-hidden">${escapeHtml(descriptionTexte)}</p>
-        <div id="chart-tooltip" class="chart-tooltip"></div>
+        <div id="chart-tooltip" class="chart-tooltip" aria-hidden="true"></div>
       </div>
-      <div class="graphique-legende">
+      <div class="graphique-legende" aria-hidden="true">
         <div class="graphique-legende__item">
           <span class="graphique-legende__dot graphique-legende__dot--decote"></span>
           <span>Avec décote</span>
@@ -522,11 +529,15 @@ function creerSectionGraphique(scenarios) {
           <span>Avec surcote</span>
         </div>
       </div>
+      <figcaption class="graphique-caption">
+        Pension brute mensuelle estimée selon l'âge de départ à la retraite.
+        Le point au taux plein (en vert) correspond au scénario recommandé.
+      </figcaption>
       <details class="graphique-table">
         <summary>Afficher les données du graphique sous forme de tableau</summary>
         ${construireTableauGraphique(scenarios)}
       </details>
-    </div>
+    </figure>
   `;
 
   // Afficher le graphique après insertion dans le DOM

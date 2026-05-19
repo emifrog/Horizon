@@ -101,7 +101,7 @@
     }
 
     .text-info {
-      color: var(--color-info);
+      color: var(--color-info-text);
       font-size: larger;
       font-weight: var(--font-weight-bold);
       text-align: center;
@@ -118,7 +118,7 @@
 
     .ref-box__title {
       font-weight: var(--font-weight-semibold);
-      color: var(--color-info);
+      color: var(--color-info-text);
       margin-bottom: var(--spacing-xs);
       font-size: var(--font-size-sm);
       text-transform: uppercase;
@@ -131,7 +131,7 @@
     }
 
     .ref-box__content a {
-      color: var(--color-info);
+      color: var(--color-info-text);
     }
 
     .table-wrapper {

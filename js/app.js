@@ -43,7 +43,7 @@ window.addEventListener('unhandledrejection', function(event) {
 // Imports des modules
 import { creerProfil, enrichirProfil } from './modules/profil.js';
 import { calculerDurees } from './modules/duree.js';
-import { genererScenariosDepart, calculerDateTauxPlein } from './modules/ages.js';
+import { genererScenariosDepart, calculerDateTauxPlein, genererResumeDates } from './modules/ages.js';
 import { calculerPension, calculerPensionsMultiScenarios } from './modules/pension.js';
 import { calculerPFR } from './modules/pfr.js';
 import { calculerNBI } from './modules/nbi.js';
@@ -78,6 +78,14 @@ let appState = {
  */
 function init() {
   console.log('Initialisation du Simulateur Retraite SPP...');
+
+  // Date d'édition affichée dans l'en-tête d'impression
+  const printDateEl = document.getElementById('print-header-date');
+  if (printDateEl) {
+    printDateEl.textContent = 'Édité le ' + new Date().toLocaleDateString('fr-FR', {
+      day: '2-digit', month: 'long', year: 'numeric',
+    });
+  }
 
   // Tooltips du glossaire (data-glossaire="...")
   initGlossaireTooltips();
@@ -162,6 +170,7 @@ function setupHamburgerMenu() {
   function openMenu() {
     hamburger.classList.add('is-active');
     hamburger.setAttribute('aria-expanded', 'true');
+    hamburger.setAttribute('aria-label', 'Fermer le menu de navigation');
     navMenu.classList.add('is-open');
     overlay.classList.add('is-visible');
     document.body.style.overflow = 'hidden';
@@ -170,6 +179,7 @@ function setupHamburgerMenu() {
   function closeMenu() {
     hamburger.classList.remove('is-active');
     hamburger.setAttribute('aria-expanded', 'false');
+    hamburger.setAttribute('aria-label', 'Ouvrir le menu de navigation');
     navMenu.classList.remove('is-open');
     overlay.classList.remove('is-visible');
     document.body.style.overflow = '';
@@ -808,9 +818,14 @@ function effectuerCalculs(formData, profilEnrichi) {
     );
   }
 
+  // Jalons de carrière pour la frise chronologique (timeline)
+  const resumeDates = genererResumeDates(donneesDepart);
+
   return {
     profil: profilEnrichi,
     duree: dureeTauxPlein,
+    dateNaissance: formData.dateNaissance,
+    dateEntreeSPP: formData.dateEntreeSPP,
     dateTauxPlein,
     ageTauxPlein,
     tauxPleinParDuree: resultatDateTauxPlein.atteintParDuree,
@@ -819,6 +834,7 @@ function effectuerCalculs(formData, profilEnrichi) {
     pensionTauxPlein,
     scenarios: scenariosAvecPension,
     scenariosSurcote,
+    resumeDates,
     pfr,
     pfrSPV,
     nbi,

@@ -385,6 +385,11 @@ a:hover {
   display: none;
 }
 
+/* En-tête d'impression : masqué à l'écran, révélé via print.css */
+.print-header {
+  display: none;
+}
+
 .footer {
   background-color: var(--color-secondary);
   border-top: var(--border-width) solid var(--color-border);

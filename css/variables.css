@@ -42,6 +42,13 @@
   --color-info-bg: #d1ecf1;
   --color-info-border: #bee5eb;
 
+  /* Variantes accessibles WCAG AA (≥ 4.5:1 sur fond clair) — réservées au TEXTE.
+     Les couleurs vives ci-dessus restent pour les fonds, bordures et icônes. */
+  --color-success-text: #157f3a;
+  --color-error-text: #b21f2d;
+  --color-warning-text: #8a6100;
+  --color-info-text: #0f6674;
+
   /* ========================================
      COULEURS NEUTRES
      ======================================== */
