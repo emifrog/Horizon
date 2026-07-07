@@ -273,7 +273,7 @@ const surcoteOK = calculerSurcote({
   dateTauxPlein: new Date(2024, 0, 1),
 });
 
-test('Surcote — éligible quand âge sédentaire atteint + taux plein',
+test('Surcote — éligible quand âge légal actif atteint + taux plein',
   surcoteOK.eligible === true);
 test('Surcote — trimestres > 0', surcoteOK.trimestresSurcote > 0);
 test('Surcote — coefficient > 1', surcoteOK.coefficientMajoration > 1);
@@ -289,15 +289,15 @@ const surcoteKO1 = calculerSurcote({
 test('Surcote — non éligible si trimestres < requis',
   surcoteKO1.eligible === false);
 
-// Inéligible : âge trop jeune
+// Inéligible : âge < âge légal actif (57-59 ans selon génération)
 const surcoteKO2 = calculerSurcote({
   dateNaissance: new Date(1970, 0, 1),
-  dateDepart: new Date(2030, 0, 1),  // 60 ans < 63-64 ans sédentaire
+  dateDepart: new Date(2026, 6, 1),  // ~56,5 ans < âge légal actif (58 ans 3 mois pour 1970)
   trimestresAssurance: 180,
   trimestresRequis: 172,
-  dateTauxPlein: new Date(2028, 0, 1),
+  dateTauxPlein: new Date(2024, 0, 1),
 });
-test('Surcote — non éligible si âge < âge sédentaire',
+test('Surcote — non éligible si âge < âge légal actif',
   surcoteKO2.eligible === false);
 
 // Calcul du taux

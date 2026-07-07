@@ -294,18 +294,17 @@ export function calculerPension(donnees) {
     trimestresRequis                          // trimestresRequis (génération)
   );
 
-  // Pension brute totale (base + majoration prime de feu)
-  const pensionBruteTotaleMensuelle = pensionBrute.mensuel + majorationPrimeFeu.mensuelle;
-  const pensionBruteTotaleAnnuelle = pensionBruteTotaleMensuelle * 12;
-
-  // Vérification du minimum garanti (sur la pension totale)
+  // Minimum garanti : c'est un PLANCHER sur la pension de BASE (hors majoration prime
+  // de feu). La majoration prime de feu s'ajoute ensuite au montant plancher — elle
+  // n'est PAS absorbée par le minimum garanti.
+  // NB : formule simplifiée (proratisation linéaire) → estimation, à distinguer du
+  // barème réel de l'art. L17 (voir minimumGarantiEstimation).
   const minimumGaranti = calculerMinimumGaranti(trimestresLiquidables, trimestresRequis);
-  const minimumGarantiApplique = pensionBruteTotaleMensuelle < minimumGaranti;
+  const minimumGarantiApplique = minimumGaranti > pensionBrute.mensuel;
 
-  // Pension finale (avec minimum garanti si applicable)
-  const pensionBruteMensuelleFinale = minimumGarantiApplique
-    ? minimumGaranti
-    : pensionBruteTotaleMensuelle;
+  // Base retenue = max(base calculée, minimum garanti), puis on ajoute la prime de feu
+  const pensionBaseFinaleMensuelle = Math.max(pensionBrute.mensuel, minimumGaranti);
+  const pensionBruteMensuelleFinale = pensionBaseFinaleMensuelle + majorationPrimeFeu.mensuelle;
   const pensionBruteAnnuelleFinale = pensionBruteMensuelleFinale * 12;
 
   // Calcul de la pension nette
@@ -334,6 +333,7 @@ export function calculerPension(donnees) {
     pensionNetteMensuelle,
     minimumGaranti: arrondir(minimumGaranti, 2),
     minimumGarantiApplique,
+    minimumGarantiEstimation: true, // formule simplifiée, non conforme au barème exact art. L17
     // Information sur la NBI intégrée au TIB
     nbiIntegre: traitement.nbiIntegre,
     pointsNBIIntegres: traitement.pointsNBI,

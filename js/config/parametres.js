@@ -393,7 +393,16 @@ export function getDureeAssuranceRequise(anneeNaissance) {
   if (anneeNaissance in DUREE_ASSURANCE_PAR_GENERATION) {
     return DUREE_ASSURANCE_PAR_GENERATION[anneeNaissance];
   }
-  // Pour les générations non listées, appliquer la valeur par défaut
+  // Générations ANTÉRIEURES à la table (< 1960) : la durée requise était plus faible
+  // (≤ 167 trimestres). On retient la plus ancienne valeur connue plutôt que le défaut
+  // 172, qui surestimerait la durée requise (donc sous-estimerait le taux) pour ces
+  // générations déjà retraitées.
+  const anneesConnues = Object.keys(DUREE_ASSURANCE_PAR_GENERATION).map(Number);
+  const anneeMin = Math.min(...anneesConnues);
+  if (anneeNaissance < anneeMin) {
+    return DUREE_ASSURANCE_PAR_GENERATION[anneeMin];
+  }
+  // Générations POSTÉRIEURES à la table (≥ 1974) : valeur par défaut (172).
   return DUREE_ASSURANCE_DEFAUT;
 }
 

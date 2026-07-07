@@ -14,8 +14,9 @@
 
 import { calculerDurees } from '../js/modules/duree.js';
 import { calculerTrimestresDecote } from '../js/modules/ages.js';
-import { calculerMajorationPrimeFeu, calculerTraitementIndiciaire } from '../js/modules/pension.js';
-import { POINT_INDICE } from '../js/config/parametres.js';
+import { calculerMajorationPrimeFeu, calculerTraitementIndiciaire, calculerPension } from '../js/modules/pension.js';
+import { verifierEligibiliteSurcote } from '../js/modules/surcote.js';
+import { POINT_INDICE, getDureeAssuranceRequise } from '../js/config/parametres.js';
 
 let passed = 0;
 let failed = 0;
@@ -185,6 +186,48 @@ test('TIB sans NBI intégrée (nbiIntegre = false)', tibSansNBI.nbiIntegre === f
 test('TIB annuel = indice × valeur point (aucune NBI ajoutée)',
   approx(tibSansNBI.annuel, 526 * POINT_INDICE.VALEUR_ANNUELLE, 0.5),
   `Calculé: ${tibSansNBI.annuel} | Attendu: ${(526 * POINT_INDICE.VALEUR_ANNUELLE).toFixed(2)}`);
+
+console.log('');
+
+// ============================================================================
+// MINEURS (b) — surcote âge actif, minimum garanti, générations < 1960
+// ============================================================================
+console.log('📋 Mineurs (b) : surcote (âge actif), minimum garanti, gén. < 1960');
+console.log('───────────────────────────────────────────────────────────────────');
+
+// m1 — Surcote basée sur l'âge légal ACTIF (57-59), atteignable par un SPP
+// Né en 1965 (âge actif 57 → dès 2022). Départ 2027 (62 ans), durée pleine → éligible.
+const surcOK = verifierEligibiliteSurcote(new Date(1965, 0, 1), new Date(2027, 0, 1), 176, 172);
+test('Surcote éligible pour un SPP à 62 ans (âge légal actif)', surcOK.eligible === true,
+  `motif: ${surcOK.motif}`);
+// Départ avant l'âge légal actif → non éligible
+const surcKO = verifierEligibiliteSurcote(new Date(1965, 0, 1), new Date(2021, 0, 1), 176, 172);
+test('Surcote non éligible avant l\'âge légal actif', surcKO.eligible === false);
+
+// m4 — Minimum garanti = plancher sur la BASE, prime de feu ajoutée par-dessus
+// Pension faible (indice min, peu de trimestres) → minimum garanti applicable.
+const resMG = calculerPension({
+  indiceBrut: 367,
+  trimestresLiquidables: 40,
+  trimestresAssurance: 40,
+  trimestresRequis: 172,
+  dateNaissance: new Date(1970, 0, 1),
+  dateDepart: new Date(2027, 0, 1),
+});
+test('Minimum garanti appliqué (pension faible)', resMG.minimumGarantiApplique === true,
+  `min: ${resMG.minimumGaranti} | base: ${resMG.pensionBaseMensuelle}`);
+test('Prime de feu ajoutée PAR-DESSUS le minimum garanti (non absorbée)',
+  resMG.pensionBruteMensuelle > resMG.minimumGaranti,
+  `total: ${resMG.pensionBruteMensuelle} | min: ${resMG.minimumGaranti}`);
+test('Pension totale = minimum garanti + majoration prime de feu',
+  approx(resMG.pensionBruteMensuelle, resMG.minimumGaranti + resMG.majorationPrimeFeu.mensuelle, 1),
+  `total: ${resMG.pensionBruteMensuelle} | attendu: ${(resMG.minimumGaranti + resMG.majorationPrimeFeu.mensuelle).toFixed(2)}`);
+
+// m5 — Générations < 1960 : durée requise plafonnée à la plus ancienne valeur connue (167)
+test('Durée requise génération 1955 = 167 (et non 172)', getDureeAssuranceRequise(1955) === 167,
+  `Calculé: ${getDureeAssuranceRequise(1955)}`);
+test('Durée requise génération 1980 = 172', getDureeAssuranceRequise(1980) === 172,
+  `Calculé: ${getDureeAssuranceRequise(1980)}`);
 
 console.log('');
 
