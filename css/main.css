@@ -366,11 +366,10 @@ a:hover {
   transition: opacity var(--transition), visibility var(--transition);
 }
 
-/*.nav-overlay.is-visible {
+.nav-overlay.is-visible {
   opacity: 1;
   visibility: visible;
 }
-*/
 .main {
   flex: 1;
   padding: var(--spacing-xl) var(--spacing-lg);

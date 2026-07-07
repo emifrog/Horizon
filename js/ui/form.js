@@ -322,7 +322,23 @@ function goToStep(step) {
     updateStepperUI();
     scrollToFormTop();
     announceStep(step);
+    focusStepPanel(step);
     document.dispatchEvent(new CustomEvent('horizon:step-changed', { detail: { step } }));
+  }
+}
+
+/**
+ * Déplace le focus clavier vers le panneau de la nouvelle étape.
+ * Corrige la perte de focus au changement d'étape (notamment à l'étape 4 où le
+ * bouton « Suivant » disparaît, ce qui renvoyait le focus sur <body>).
+ * Le panneau porte tabindex="-1" ; on préserve le défilement déjà géré par
+ * scrollToFormTop().
+ * @param {number} step
+ */
+function focusStepPanel(step) {
+  const panel = document.querySelector(`[data-step-content="${step}"]`);
+  if (panel && typeof panel.focus === 'function') {
+    panel.focus({ preventScroll: true });
   }
 }
 

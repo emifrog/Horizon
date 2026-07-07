@@ -185,6 +185,11 @@ export function clearLocalSimulation() {
 
 /**
  * Construit une URL partageable contenant la simulation courante.
+ *
+ * ⚠️ Les données du profil (date de naissance, indice, montants…) sont encodées
+ * en base64url — ce qui n'est PAS du chiffrement : elles sont lisibles par
+ * quiconque dispose du lien. L'appelant doit avertir l'utilisateur avant partage.
+ *
  * @returns {string} URL absolue
  */
 export function buildShareUrl() {
@@ -476,11 +481,15 @@ export async function shareSimulation() {
   const url = buildShareUrl();
   const ok = await copyToClipboard(url);
   if (ok) {
-    showNotification('Lien de la simulation copié dans le presse-papiers', 'success');
+    // Avertissement RGPD : le lien contient les données personnelles en clair.
+    showNotification(
+      'Lien copié. ⚠️ Il contient vos données (date de naissance, indice…) en clair : ne le partagez qu\'avec des personnes de confiance.',
+      'warning'
+    );
   } else {
     showNotification('Copie automatique indisponible — le lien s\'affiche dans une boîte de dialogue', 'warning');
-    // Fallback : prompt non bloquant avec le lien
-    window.prompt('Copiez ce lien :', url);
+    // Fallback : prompt non bloquant avec le lien (rappel de sensibilité inclus)
+    window.prompt('Copiez ce lien (⚠️ contient vos données personnelles en clair) :', url);
   }
   return url;
 }
