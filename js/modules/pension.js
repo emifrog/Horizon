@@ -281,12 +281,17 @@ export function calculerPension(donnees) {
   const pensionBrute = calculerPensionBrute(traitement.annuel, tauxLiquidationNet);
 
   // Calcul de la majoration prime de feu
+  // Signature : (TIB, taux, droit, trimestresSPP, trimestresBonificationSPP, trimestresTotal, trimestresRequis)
+  // Les arguments doivent être passés dans le bon ordre, sinon la proratisation
+  // (carrières mixtes) ne s'active jamais.
   const majorationPrimeFeu = calculerMajorationPrimeFeu(
     traitement.annuel,
     tauxLiquidationNet,
     droitMajorationPrimeFeu,
-    trimestresSPP || trimestresLiquidables,
-    trimestresTotal || trimestresLiquidables
+    trimestresSPP || trimestresLiquidables,   // trimestresSPP
+    0,                                        // trimestresBonificationSPP (non détaillé ici)
+    trimestresTotal || trimestresLiquidables, // trimestresTotal
+    trimestresRequis                          // trimestresRequis (génération)
   );
 
   // Pension brute totale (base + majoration prime de feu)

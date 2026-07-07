@@ -433,10 +433,12 @@ export function genererScenariosDepart(donnees) {
  * @returns {number} Nombre de trimestres de décote (0 à 20)
  */
 export function calculerTrimestresDecote(dateNaissance, dateDepart, trimestresAssurance, trimestresRequis) {
-  const ageDepart = calculerAge(dateNaissance, dateDepart);
+  // Âge d'annulation de la décote PROGRESSIF selon la génération (62 à 64 ans,
+  // réforme 2023) et non figé à 62 ans. Réf: Loi n°2023-270, Code des pensions Art. L14.
+  const dateAnnulation = calculerDateAnnulationDecote(dateNaissance);
 
-  // Pas de décote après l'âge d'annulation
-  if (ageDepart >= AGES.ANNULATION_DECOTE) {
+  // Pas de décote si le départ intervient à/après l'âge d'annulation de la décote
+  if (dateDepart >= dateAnnulation) {
     return 0;
   }
 
@@ -444,7 +446,6 @@ export function calculerTrimestresDecote(dateNaissance, dateDepart, trimestresAs
   const trimestresManquantsDuree = Math.max(0, trimestresRequis - trimestresAssurance);
 
   // Calcul des trimestres manquants par rapport à l'âge d'annulation
-  const dateAnnulation = calculerDateAnnulationDecote(dateNaissance);
   const trimestresManquantsAge = calculerTrimestresEntreDates(dateDepart, dateAnnulation);
 
   // La décote s'applique sur le plus petit des deux

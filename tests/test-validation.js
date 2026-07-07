@@ -235,8 +235,11 @@ console.log(`\nValeurs attendues :`);
 console.log(`  TIB annuel attendu: ${tibAttendu.toFixed(2)}€`);
 console.log(`  Pension brute mensuelle attendue: ${pensionBruteAttendue.toFixed(2)}€`);
 
-test('Pension brute mensuelle taux plein (≈2074€)',
-  resultatTauxPlein.pensionBruteMensuelle,
+// On compare la pension de BASE (hors majoration prime de feu), qui correspond à
+// la valeur attendue 2074€. pensionBruteMensuelle inclut, elle, la majoration
+// prime de feu et serait donc nettement supérieure.
+test('Pension base mensuelle taux plein (≈2074€)',
+  resultatTauxPlein.pensionBaseMensuelle,
   pensionBruteAttendue,
   100
 );
@@ -372,11 +375,17 @@ test('Bonification enfants = 8', resultatDuree.trimestresBonificationEnfants, 8,
 // 12 ans SPV = 1 trimestre (seuil 10 ans)
 test('Majoration SPV 12 ans = 1', resultatDuree.trimestresMajorationSPV, 1, 0);
 
-// Total liquidables = 140 + 20 + 8 + 1 = 169
-test('Total liquidables = 169', resultatDuree.trimestresLiquidables, 169, 0);
+// Trimestres LIQUIDABLES (montant) = 140 services + 20 bonif 1/5 + 8 enfants = 168.
+// La majoration SPV (1) N'entre PAS dans les liquidables (correction C1) : c'est une
+// majoration de durée d'assurance uniquement.
+test('Total liquidables = 168 (sans majoration SPV)', resultatDuree.trimestresLiquidables, 168, 0);
 
-// Total assurance = 169 + 8 = 177
-test('Total assurance = 177', resultatDuree.trimestresAssuranceTotale, 177, 0);
+// Durée d'ASSURANCE = 140 + 20 + 8 + 1 (SPV) + 8 (autres régimes) = 177.
+test('Total assurance = 177 (avec SPV + autres régimes)', resultatDuree.trimestresAssuranceTotale, 177, 0);
+
+// La différence liquidables/assurance CNRACL correspond exactement à la majoration SPV.
+test('Assurance CNRACL = liquidables + majoration SPV',
+  resultatDuree.trimestresAssuranceCNRACL, resultatDuree.trimestresLiquidables + resultatDuree.trimestresMajorationSPV, 0);
 
 console.log('');
 

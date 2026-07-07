@@ -43,7 +43,12 @@ const attendu = {
   trimestresServicesEffectifs: 153,  // 38 ans 4 mois
   bonificationCinquieme: 20,  // plafonné
   majorationSPV: 3,  // décret 2026-18
-  totalLiquidable: 176,
+  // Liquidables (montant) = 153 services + 20 bonif = 173.
+  // La majoration SPV (3) ne compte QUE pour la durée d'assurance (correction C1),
+  // donc la durée d'assurance CNRACL = 176 (le total du document de référence).
+  // Le taux reste plafonné à 75 % dans les deux cas → montant identique.
+  totalLiquidable: 173,
+  totalAssurance: 176,
   trimestresRequis: 172,
   tauxLiquidation: 75,
   tibMensuel: 2589.38,
@@ -139,9 +144,13 @@ test('Majoration SPV (décret 2026-18) = 3',
   `Calculé: ${durees.trimestresMajorationSPV} | Attendu: ${attendu.majorationSPV}`);
 
 const totalLiquidable = durees.trimestresLiquidables;
-test('Total trimestres liquidables ≈ 176',
-  approx(totalLiquidable, attendu.totalLiquidable, 3),
+test('Total trimestres liquidables = 173 (services + bonif, sans SPV)',
+  approx(totalLiquidable, attendu.totalLiquidable, 1),
   `Calculé: ${totalLiquidable} | Attendu: ${attendu.totalLiquidable}`);
+
+test('Durée d\'assurance = 176 (avec majoration SPV)',
+  approx(durees.trimestresAssuranceTotale, attendu.totalAssurance, 1),
+  `Calculé: ${durees.trimestresAssuranceTotale} | Attendu: ${attendu.totalAssurance}`);
 
 console.log('');
 

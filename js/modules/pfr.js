@@ -156,6 +156,8 @@ export function calculerPFR(donnees, ageDepart = 62) {
       typePrestation: { type: 'capital_unique', description: 'Capital unique' },
       renteRAFPMensuelle: 0,
       capitalRAFP: 0,
+      capitalRAFPEstimation: false,
+      capitalRAFPNote: '',
     };
   }
 
@@ -200,10 +202,19 @@ export function calculerPFR(donnees, ageDepart = 62) {
     ? calculerRenteRAFP(totalPointsRAFP, ageDepart) 
     : 0;
   
-  // Calcul du capital si applicable
+  // Calcul du capital si applicable.
+  // ATTENTION : le versement en capital (points < seuil de rente) est calculé par la
+  // CNRACL via un BARÈME OFFICIEL DE CONVERSION EN CAPITAL (coefficient dépendant de
+  // l'âge, non intégré ici). La valeur ci-dessous, basée sur la valeur de service du
+  // point, ne représente qu'un ORDRE DE GRANDEUR (proche d'une annuité de rente) et
+  // sous-estime le capital réel. À afficher comme une estimation, pas comme un montant exact.
   const capitalRAFP = typePrestation.type !== 'rente'
     ? arrondir(totalPointsRAFP * PFR.VALEUR_SERVICE_POINT_RAFP * coefficientAge, 2)
     : 0;
+  const capitalRAFPEstimation = typePrestation.type !== 'rente';
+  const capitalRAFPNote = capitalRAFPEstimation
+    ? 'Estimation indicative — le capital réel est déterminé par le barème de conversion officiel de la CNRACL (non disponible dans le simulateur).'
+    : '';
 
   return {
     traitementIndiciaireAnnuel: arrondir(traitementIndiciaireAnnuel, 2),
@@ -218,6 +229,8 @@ export function calculerPFR(donnees, ageDepart = 62) {
     typePrestation,
     renteRAFPMensuelle,
     capitalRAFP,
+    capitalRAFPEstimation,
+    capitalRAFPNote,
   };
 }
 

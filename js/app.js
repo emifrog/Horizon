@@ -661,11 +661,10 @@ function effectuerCalculs(formData, profilEnrichi) {
     anneeNaissance
   );
 
-  // 3. Déterminer si la NBI doit être intégrée au TIB (perception ≥ 15 ans)
-  // Réf: Décret n°2006-779, Art. 2 - NBI intégrée si perçue 15 ans ou plus
-  const dureeNBIAnnees = formData.dureeNBI || 0;
-  const nbiIntegrable = dureeNBIAnnees >= 15;
-  const pointsNBIIntegres = nbiIntegrable ? (formData.pointsNBI || 0) : 0;
+  // 3. La NBI est traitée comme un SUPPLÉMENT DE PENSION séparé et proratisé
+  // (décret 2006-779), calculé à l'étape 7. Elle n'est PAS intégrée au TIB :
+  // l'intégration ferait porter à tort la majoration prime de feu (25 %) sur la NBI.
+  const pointsNBIIntegres = 0;
 
   // 4. Calculer la pension pour chaque scénario
   const scenariosAvecPension = scenarios.map((scenario) => {
@@ -759,34 +758,16 @@ function effectuerCalculs(formData, profilEnrichi) {
     anneesCotisation: anneesRAFP,
   }, ageTauxPleinRAFP);
 
-  // 7. Calculer le supplément NBI
-  // Note : Si la NBI est intégrée au TIB (≥ 15 ans), le supplément séparé est nul
-  // car la NBI fait déjà partie du calcul de la pension principale
-  let nbi;
-  if (nbiIntegrable) {
-    // NBI intégrée au TIB - pas de supplément séparé
-    nbi = {
-      eligible: true,
-      integreTIB: true,
-      pointsNBI: formData.pointsNBI,
-      dureeMoisNBI: formData.dureeNBI * 12,
-      dureeAnneesNBI: formData.dureeNBI,
-      moyennePonderee: formData.pointsNBI, // 100% car ≥ 15 ans
-      supplementMensuel: 0, // Intégré au TIB, pas de supplément séparé
-      supplementAnnuel: 0,
-      motifIneligibilite: '',
-    };
-  } else {
-    // NBI en supplément séparé (prorata)
-    nbi = calculerNBI({
-      pointsNBI: formData.pointsNBI,
-      dureeMoisNBI: formData.dureeNBI * 12,
-      dureeServicesTotal: dureeTauxPlein.trimestresLiquidables,
-      tauxLiquidation: pensionTauxPlein.tauxLiquidationNet,
-    });
-    if (nbi.eligible) {
-      nbi.integreTIB = false;
-    }
+  // 7. Calculer le supplément NBI — toujours en supplément séparé et proratisé
+  // (décret 2006-779). La NBI ne subit pas la majoration prime de feu.
+  const nbi = calculerNBI({
+    pointsNBI: formData.pointsNBI,
+    dureeMoisNBI: formData.dureeNBI * 12,
+    dureeServicesTotal: dureeTauxPlein.trimestresLiquidables,
+    tauxLiquidation: pensionTauxPlein.tauxLiquidationNet,
+  });
+  if (nbi.eligible) {
+    nbi.integreTIB = false;
   }
 
   // 8. Calculer la PFR SPV (double statut) - utilise anneesSPV du profil

@@ -95,17 +95,18 @@ export function calculerBonificationCinquieme(trimestresServicesActifs, options 
     trimestresServicesEffectifs,
     trimestresSPP,
     exceptionSansCondition = false,
+    appliquerPlafond = true,
   } = options;
 
   // Vérification des conditions (sauf exceptions : invalidité, reclassement, CRO)
   if (!exceptionSansCondition && BONIFICATIONS.CINQUIEME_ACTIF.dureeMinServicesEffectifs) {
     // Condition 27 ans de services effectifs
-    if (trimestresServicesEffectifs !== undefined && 
+    if (trimestresServicesEffectifs !== undefined &&
         trimestresServicesEffectifs < BONIFICATIONS.CINQUIEME_ACTIF.dureeMinServicesEffectifs) {
       return 0;
     }
     // Condition 17 ans en qualité SPP
-    if (trimestresSPP !== undefined && 
+    if (trimestresSPP !== undefined &&
         trimestresSPP < BONIFICATIONS.CINQUIEME_ACTIF.dureeMinSPP) {
       return 0;
     }
@@ -113,8 +114,13 @@ export function calculerBonificationCinquieme(trimestresServicesActifs, options 
 
   // 1 trimestre de bonification pour 5 trimestres de services actifs
   const bonification = Math.floor(trimestresServicesActifs * BONIFICATIONS.CINQUIEME_ACTIF.ratio);
-  
-  // Plafonnée à 5 ans (20 trimestres) de bonification
+
+  // Plafond de 5 ans (20 trimestres). Ce plafond est GLOBAL (Art. L12 b) : lorsque
+  // plusieurs assiettes de services actifs coexistent (SPP + militaire BSPP/BMPM),
+  // l'appelant passe appliquerPlafond=false et plafonne la somme une seule fois.
+  if (!appliquerPlafond) {
+    return bonification;
+  }
   const plafond = BONIFICATIONS.CINQUIEME_ACTIF.plafond || 20;
   return Math.min(bonification, plafond);
 }
@@ -154,12 +160,16 @@ export function verifierConditionDureePension(trimestresServices) {
 }
 
 /**
- * Calcule la durée totale liquidable CNRACL
+ * Calcule la durée totale liquidable CNRACL (base du montant / taux de liquidation).
+ *
+ * NB : la majoration SPV (décret 2026-18) est une majoration de DURÉE D'ASSURANCE ;
+ * elle n'entre PAS dans les trimestres liquidables (elle n'augmente pas le montant),
+ * mais uniquement dans la durée d'assurance (décote / atteinte du taux plein).
+ *
  * @param {Object} params - Paramètres de calcul
- * @param {number} params.trimestresServicesEffectifs - Services effectifs SPP
+ * @param {number} params.trimestresServicesEffectifs - Services effectifs SPP (proratisés quotité)
  * @param {number} params.trimestresBonificationCinquieme - Bonification du 1/5e (SPP)
  * @param {number} params.trimestresBonificationEnfants - Bonification enfants
- * @param {number} params.trimestresMajorationSPV - Majoration SPV
  * @param {number} params.trimestresServicesMilitaires - Services militaires (BSPP/BMPM)
  * @param {number} params.trimestresBonificationMilitaire - Bonification du 1/5e sur services militaires
  * @returns {number} Total trimestres liquidables
@@ -168,7 +178,6 @@ export function calculerTrimestresLiquidables({
   trimestresServicesEffectifs,
   trimestresBonificationCinquieme,
   trimestresBonificationEnfants,
-  trimestresMajorationSPV,
   trimestresServicesMilitaires = 0,
   trimestresBonificationMilitaire = 0,
 }) {
@@ -176,7 +185,6 @@ export function calculerTrimestresLiquidables({
     trimestresServicesEffectifs +
     trimestresBonificationCinquieme +
     trimestresBonificationEnfants +
-    trimestresMajorationSPV +
     trimestresServicesMilitaires +
     trimestresBonificationMilitaire
   );
@@ -221,7 +229,17 @@ export function calculerDurees(donnees, anneeNaissance) {
     exceptionBonification = false,  // Invalidité, reclassement, CRO
   } = donnees;
 
-  // Calcul des services effectifs SPP
+  // Calcul des services effectifs SPP.
+  // Deux assiettes distinctes selon l'usage :
+  //  - Temps plein (durée d'ASSURANCE) : les périodes à temps partiel comptent comme
+  //    du temps plein pour la durée d'assurance (décote / taux plein). Réf: Art. L5.
+  //  - Proratisé quotité (LIQUIDATION) : le temps partiel compte au prorata pour le
+  //    montant de la pension. Réf: Art. L9.
+  const trimestresServicesTempsPlein = calculerTrimestresServicesEffectifs(
+    dateEntreeSPP,
+    dateDepart,
+    1
+  );
   const trimestresServicesEffectifs = calculerTrimestresServicesEffectifs(
     dateEntreeSPP,
     dateDepart,
@@ -234,38 +252,56 @@ export function calculerDurees(donnees, anneeNaissance) {
   // Total des services actifs (SPP + militaires) pour la condition des 17 ans
   const totalServicesActifs = trimestresServicesEffectifs + trimServicesMilitaires;
 
-  // Calcul des bonifications SPP avec conditions strictes
-  // Conditions : 27 ans services effectifs + 17 ans SPP (sauf exceptions)
-  const trimestresBonificationCinquieme = calculerBonificationCinquieme(trimestresServicesEffectifs, {
+  // Bonification du 1/5e (SPP + militaire) — plafond GLOBAL de 20 trimestres.
+  // Conditions : 27 ans services effectifs + 17 ans SPP (sauf exceptions).
+  // On calcule chaque assiette SANS plafond, puis on plafonne la SOMME une seule fois
+  // (Art. L12 b : la bonification du cinquième est plafonnée à 5 annuités, tous
+  // services actifs confondus).
+  const bonifCinquiemeSPP = calculerBonificationCinquieme(trimestresServicesEffectifs, {
     trimestresServicesEffectifs: totalServicesActifs,
     trimestresSPP: trimestresServicesEffectifs,
     exceptionSansCondition: exceptionBonification,
+    appliquerPlafond: false,
   });
-
-  // Bonification du 1/5e sur les services militaires (catégorie active)
-  const trimestresBonificationMilitaire = calculerBonificationCinquieme(trimServicesMilitaires, {
+  const bonifCinquiemeMilitaire = calculerBonificationCinquieme(trimServicesMilitaires, {
     trimestresServicesEffectifs: totalServicesActifs,
     trimestresSPP: trimestresServicesEffectifs,
     exceptionSansCondition: exceptionBonification,
+    appliquerPlafond: false,
   });
+  const plafondCinquieme = BONIFICATIONS.CINQUIEME_ACTIF.plafond || 20;
+  const bonificationCinquiemeTotale = Math.min(bonifCinquiemeSPP + bonifCinquiemeMilitaire, plafondCinquieme);
+  // Répartition SPP / militaire pour l'affichage, dans la limite du plafond global.
+  const trimestresBonificationCinquieme = Math.min(bonifCinquiemeSPP, plafondCinquieme);
+  const trimestresBonificationMilitaire = bonificationCinquiemeTotale - trimestresBonificationCinquieme;
 
   const trimestresBonificationEnfants = calculerBonificationEnfants(enfantsAvant2004);
 
-  // Majoration SPV selon le décret 2026-18 (applicable aux pensions après 01/07/2026)
+  // Majoration SPV (décret 2026-18, pensions à effet ≥ 01/07/2026).
+  // Majoration de DURÉE D'ASSURANCE : agit sur la décote / le taux plein, PAS sur le montant.
   const trimestresMajorationSPV = getMajorationSPVDecret2026(anneesSPV, dateDepart);
 
-  // Calcul des totaux
+  // Trimestres liquidables (base du montant / taux de liquidation) :
+  // services PRORATISÉS + bonifications + services militaires. SANS majoration SPV.
   const trimestresLiquidables = calculerTrimestresLiquidables({
     trimestresServicesEffectifs,
     trimestresBonificationCinquieme,
     trimestresBonificationEnfants,
-    trimestresMajorationSPV,
     trimestresServicesMilitaires: trimServicesMilitaires,
     trimestresBonificationMilitaire,
   });
 
+  // Durée d'assurance CNRACL (décote / taux plein) :
+  // services à TEMPS PLEIN + bonifications + services militaires + majoration SPV.
+  const trimestresAssuranceCNRACL =
+    trimestresServicesTempsPlein +
+    bonificationCinquiemeTotale +
+    trimestresBonificationEnfants +
+    trimServicesMilitaires +
+    trimestresMajorationSPV;
+
   const trimestresAssuranceTotale = calculerDureeAssuranceTotale(
-    trimestresLiquidables,
+    trimestresAssuranceCNRACL,
     trimestresAutresRegimes
   );
 
@@ -281,6 +317,7 @@ export function calculerDurees(donnees, anneeNaissance) {
 
   return {
     trimestresServicesEffectifs,
+    trimestresServicesTempsPlein,
     trimestresBonificationCinquieme,
     trimestresBonificationEnfants,
     trimestresMajorationSPV,
@@ -289,6 +326,7 @@ export function calculerDurees(donnees, anneeNaissance) {
     totalServicesActifs,
     trimestresLiquidables,
     trimestresAutresRegimes,
+    trimestresAssuranceCNRACL,
     trimestresAssuranceTotale,
     trimestresRequis,
     ecartTauxPlein,
