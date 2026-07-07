@@ -6,20 +6,8 @@
 
 import { formaterMontant, formaterPourcentage, formaterTrimestres } from '../utils/formatters.js';
 import { formaterDateLongueFR } from '../utils/dates.js';
+import { escapeHtml } from '../utils/html.js';
 import { creerSectionTimeline } from './timeline.js';
-
-/**
- * Échappe les caractères HTML pour prévenir les attaques XSS
- * @param {string} text - Texte à échapper
- * @returns {string} Texte échappé
- */
-function escapeHtml(text) {
-  if (text === null || text === undefined) return '';
-  const str = String(text);
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
 
 /**
  * Affiche les résultats complets de la simulation

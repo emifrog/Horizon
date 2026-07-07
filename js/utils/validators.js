@@ -5,6 +5,7 @@
  */
 
 import { ECHELLE_INDICIAIRE, AGES, PFR, POINT_INDICE } from '../config/parametres.js';
+import { MS_PAR_AN } from './dates.js';
 
 /**
  * Résultat de validation
@@ -329,7 +330,7 @@ export function validerProfil(profil) {
  * @returns {number}
  */
 function anneesEntre(d1, d2) {
-  return (d2.getTime() - d1.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  return (d2.getTime() - d1.getTime()) / MS_PAR_AN;
 }
 
 /**

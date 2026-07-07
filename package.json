@@ -1,0 +1,19 @@
+{
+  "name": "horizon-simulateur-retraite-spp",
+  "version": "1.0.0",
+  "description": "Simulateur de retraite pour sapeurs-pompiers professionnels (SPP) — régime CNRACL. 100% client-side, sans dépendance d'exécution.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node tests/run-all.js",
+    "serve": "python -m http.server 8080"
+  },
+  "keywords": [
+    "retraite",
+    "cnracl",
+    "sapeurs-pompiers",
+    "spp",
+    "simulateur"
+  ],
+  "license": "MIT"
+}

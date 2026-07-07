@@ -73,6 +73,22 @@ export function calculerAnneesEntreDates(dateDebut, dateFin) {
   return Math.floor(calculerMoisEntreDates(dateDebut, dateFin) / 12);
 }
 
+/** Nombre de millisecondes dans une année moyenne (365,25 jours). */
+export const MS_PAR_AN = 365.25 * 24 * 60 * 60 * 1000;
+
+/**
+ * Nombre d'années entières entre deux dates, calcul par différence de
+ * millisecondes (année moyenne de 365,25 jours). Jamais négatif.
+ * Utilisé pour les estimations d'âge et de durées de cotisation (RAFP).
+ * @param {Date} dateDebut
+ * @param {Date} dateFin
+ * @returns {number} Années entières (≥ 0)
+ */
+export function anneesEntre(dateDebut, dateFin) {
+  if (!dateDebut || !dateFin) return 0;
+  return Math.max(0, Math.floor((dateFin.getTime() - dateDebut.getTime()) / MS_PAR_AN));
+}
+
 /**
  * Convertit des trimestres en années et trimestres restants
  * @param {number} trimestres - Nombre total de trimestres

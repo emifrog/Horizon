@@ -18,31 +18,45 @@ simulateur-retraite-spp/
 ├── css/
 │   ├── main.css            # Styles principaux
 │   ├── variables.css       # Variables CSS (couleurs, espacements)
-│   └── components.css      # Styles des composants (formulaires, cartes, etc.)
+│   ├── components.css      # Styles des composants (formulaires, cartes, etc.)
+│   ├── print.css           # Feuille de style dédiée à l'impression / export PDF
+│   ├── contact.css         # Styles de la page contact
+│   └── reglementaire.css   # Styles de la page réglementaire
 ├── js/
-│   ├── app.js              # Point d'entrée JS, orchestration
+│   ├── app.js              # Point d'entrée JS, orchestration (+ debug gated)
 │   ├── config/
-│   │   └── parametres.js   # Paramètres réglementaires (âges, durées, taux)
+│   │   ├── parametres.js   # Paramètres réglementaires (âges, durées, taux)
+│   │   └── glossaire.js    # Définitions des termes techniques (tooltips)
 │   ├── modules/
 │   │   ├── profil.js       # Module 1 : Saisie profil agent
 │   │   ├── duree.js        # Module 2 : Durée d'assurance et services
 │   │   ├── ages.js         # Module 3 : Âges et dates de départ
 │   │   ├── pension.js      # Module 4 : Calcul pension CNRACL
-│   │   ├── pfr.js          # Module 5 : Prime de feu (PFR)
+│   │   ├── pfr.js          # Module 5 : Prime de feu (PFR) et RAFP
 │   │   ├── nbi.js          # Module 6 : Nouvelle Bonification Indiciaire
 │   │   └── surcote.js      # Module 7 : Calcul surcote
 │   ├── utils/
-│   │   ├── dates.js        # Utilitaires de calcul de dates
+│   │   ├── dates.js        # Calcul de dates (+ anneesEntre, MS_PAR_AN)
 │   │   ├── formatters.js   # Formatage (montants, pourcentages)
-│   │   └── validators.js   # Validation des saisies
+│   │   ├── nombres.js      # Arrondi commercial (IEEE 754), bornage
+│   │   ├── html.js         # escapeHtml partagé (barrière anti-XSS)
+│   │   └── validators.js   # Validation des saisies (+ cohérence cross-field)
 │   └── ui/
-│       ├── form.js         # Gestion du formulaire multi-étapes avec animations
+│       ├── form.js         # Formulaire multi-étapes (stepper ARIA, focus, animations)
 │       ├── results.js      # Affichage des résultats et graphiques (Canvas API)
-│       └── export.js       # Export PDF et CSV
-├── assets/
-│   └── icons/              # Icônes SVG inline si nécessaire
+│       ├── timeline.js     # Frise chronologique de carrière (SVG)
+│       ├── glossaire.js    # Injection des tooltips de glossaire
+│       ├── persistence.js  # Sauvegarde locale (opt-in) + partage par lien
+│       └── export.js       # Export PDF (window.print) et CSV
+├── pages/
+│   ├── apropos.html        # Page « À propos »
+│   ├── contact.html        # Page « Contact »
+│   └── reglementaire.html  # Page des références réglementaires
+├── assets/                 # Logo, favicon, icônes SVG, images
+├── tests/                  # Suites de tests Node (npm test → tests/run-all.js)
 ├── docs/
 │   └── references.md       # Références réglementaires détaillées
+├── package.json            # Scripts npm (test, serve)
 └── CLAUDE.md               # Ce fichier
 ```
 
@@ -316,7 +330,7 @@ export function validerAnneeNaissance(annee) {
 }
 
 export function validerIndiceBrut(indice) {
-  return indice >= 350 && indice <= 1027;  // Échelle indiciaire FPT
+  return indice >= 367 && indice <= 1027;  // Échelle indiciaire FPT (ECHELLE_INDICIAIRE)
 }
 ```
 
@@ -351,10 +365,13 @@ const decote = Math.min(trimestresManquants, 20) * 0.0125;
 
 ```bash
 # Serveur de développement local
-python3 -m http.server 8080
+python3 -m http.server 8080   # ou : npm run serve
 
 # Ou avec Node
 npx serve .
+
+# Lancer toutes les suites de tests (Node, sans dépendance)
+npm test                       # = node tests/run-all.js
 
 # Validation HTML
 npx html-validate index.html

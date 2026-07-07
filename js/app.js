@@ -44,12 +44,12 @@ window.addEventListener('unhandledrejection', function(event) {
 import { creerProfil, enrichirProfil } from './modules/profil.js';
 import { calculerDurees } from './modules/duree.js';
 import { genererScenariosDepart, calculerDateTauxPlein, genererResumeDates } from './modules/ages.js';
-import { calculerPension, calculerPensionsMultiScenarios } from './modules/pension.js';
+import { calculerPension } from './modules/pension.js';
 import { calculerPFR } from './modules/pfr.js';
 import { calculerNBI } from './modules/nbi.js';
 import { calculerSurcote, appliquerSurcote } from './modules/surcote.js';
-import { initForm, getFormData, goToStep, showNotification } from './ui/form.js';
-import { afficherResultats, masquerResultats } from './ui/results.js';
+import { initForm, goToStep, showNotification } from './ui/form.js';
+import { afficherResultats } from './ui/results.js';
 import { exporterPDF, exporterCSV } from './ui/export.js';
 import {
   initPersistence,
@@ -62,7 +62,33 @@ import { initGlossaireTooltips } from './ui/glossaire.js';
 import { getDureeAssuranceRequise, PFR, PFR_SPV, getMontantPFRSPV } from './config/parametres.js';
 import { simulerScenariosSurcote } from './modules/surcote.js';
 import { arrondir } from './utils/nombres.js';
+import { anneesEntre } from './utils/dates.js';
 import { validerCoherenceProfil } from './utils/validators.js';
+
+/**
+ * Journalisation de debug — désactivée par défaut (aucune donnée personnelle en
+ * console en production). Activable via l'URL (?debug) ou localStorage
+ * (horizon:debug = '1') pour le diagnostic.
+ */
+const DEBUG = (() => {
+  try {
+    return new URLSearchParams(window.location.search).has('debug')
+      || localStorage.getItem('horizon:debug') === '1';
+  } catch {
+    return false;
+  }
+})();
+
+/** Référence directe pour éviter toute confusion avec les appels remplacés. */
+const _consoleLog = console.log.bind(console);
+
+/**
+ * Log de debug conditionnel (no-op hors mode debug).
+ * @param {...*} args
+ */
+function debug(...args) {
+  if (DEBUG) _consoleLog(...args);
+}
 
 /**
  * État global de l'application
@@ -77,7 +103,7 @@ let appState = {
  * Initialisation de l'application
  */
 function init() {
-  console.log('Initialisation du Simulateur Retraite SPP...');
+  debug('Initialisation du Simulateur Retraite SPP...');
 
   // Date d'édition affichée dans l'en-tête d'impression
   const printDateEl = document.getElementById('print-header-date');
@@ -138,7 +164,7 @@ function init() {
   // Header auto-hide au scroll (mobile)
   setupHeaderAutoHide();
 
-  console.log('Application initialisée.');
+  debug('Application initialisée.');
 }
 
 /**
@@ -375,12 +401,10 @@ function setupAnneesRAFPAutoCalcul() {
     
     // Date de fin = aujourd'hui (pour l'instant, sera la date de départ au calcul final)
     const dateFin = new Date();
-    
+
     // Calcul des années
-    const anneesRAFP = Math.max(0, Math.floor(
-      (dateFin.getTime() - dateDebutRAFP.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-    ));
-    
+    const anneesRAFP = anneesEntre(dateDebutRAFP, dateFin);
+
     anneesCotisationRAFPInput.value = anneesRAFP;
   }
 
@@ -487,7 +511,7 @@ function handleSubmit(event) {
   try {
     // Récupérer les données du formulaire
     const formData = collectFormData();
-    console.log('Données du formulaire:', formData);
+    debug('Données du formulaire:', formData);
 
     // Vérifier les données obligatoires
     if (!formData.dateNaissance || !formData.dateEntreeSPP || !formData.indiceBrut) {
@@ -515,10 +539,10 @@ function handleSubmit(event) {
 
     // Créer et enrichir le profil
     const profil = creerProfil(formData);
-    console.log('Profil créé:', profil);
+    debug('Profil créé:', profil);
 
     const profilEnrichi = enrichirProfil(profil);
-    console.log('Profil enrichi:', profilEnrichi);
+    debug('Profil enrichi:', profilEnrichi);
 
     if (!profilEnrichi.valide) {
       console.warn('Profil invalide:', profilEnrichi.erreurs);
@@ -541,14 +565,14 @@ function handleSubmit(event) {
     // Les avertissements (non bloquants) sont simplement remontés en notification info
     if (coherence.warnings && Object.keys(coherence.warnings).length > 0) {
       const warning = Object.values(coherence.warnings)[0];
-      console.info('Avertissement cross-field:', coherence.warnings);
+      debug('Avertissement cross-field:', coherence.warnings);
       showNotification(warning, 'warning');
     }
 
     // Effectuer les calculs
-    console.log('Début des calculs...');
+    debug('Début des calculs...');
     const resultats = effectuerCalculs(formData, profilEnrichi);
-    console.log('Résultats calculés:', resultats);
+    debug('Résultats calculés:', resultats);
 
     // Stocker dans l'état
     appState.profil = profilEnrichi;
@@ -557,7 +581,7 @@ function handleSubmit(event) {
 
     // Afficher les résultats
     const container = document.getElementById('results-container');
-    console.log('Container trouvé:', container);
+    debug('Container trouvé:', container);
     afficherResultats(resultats, container);
 
     // Notification de succès
@@ -740,23 +764,17 @@ function effectuerCalculs(formData, profilEnrichi) {
       formData.dateEntreeSPP.getTime(),
       new Date(PFR.ANNEE_CREATION_RAFP, 0, 1).getTime()
     ));
-    anneesRAFP = Math.max(0, Math.floor(
-      (dateTauxPlein.getTime() - dateDebutRAFP.getTime()) /
-      (365.25 * 24 * 60 * 60 * 1000)
-    ));
+    anneesRAFP = anneesEntre(dateDebutRAFP, dateTauxPlein);
   }
 
-  // Calculer l'âge au taux plein pour le coefficient RAFP
-  const ageTauxPleinRAFP = Math.floor(
-    (dateTauxPlein.getTime() - formData.dateNaissance.getTime()) /
-    (365.25 * 24 * 60 * 60 * 1000)
-  );
+  // Âge au taux plein (sert au coefficient RAFP et à l'affichage)
+  const ageTauxPlein = anneesEntre(formData.dateNaissance, dateTauxPlein);
 
   const pfr = calculerPFR({
     indiceBrut: formData.indiceBrut,
     montantAnnuelPFR: formData.montantPFR,
     anneesCotisation: anneesRAFP,
-  }, ageTauxPleinRAFP);
+  }, ageTauxPlein);
 
   // 7. Calculer le supplément NBI — toujours en supplément séparé et proratisé
   // (décret 2006-779). La NBI ne subit pas la majoration prime de feu.
@@ -780,11 +798,7 @@ function effectuerCalculs(formData, profilEnrichi) {
     pfr.renteRAFPMensuelle +
     (pfrSPV.eligible ? pfrSPV.montantMensuel : 0);
 
-  // 10. Calculer l'âge au taux plein
-  const ageTauxPlein = Math.floor(
-    (dateTauxPlein.getTime() - formData.dateNaissance.getTime()) /
-    (365.25 * 24 * 60 * 60 * 1000)
-  );
+  // 10. L'âge au taux plein est déjà calculé plus haut (const ageTauxPlein)
 
   // 11. Générer les scénarios de surcote (si taux plein atteint par durée)
   let scenariosSurcote = [];

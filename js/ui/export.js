@@ -8,6 +8,18 @@
 
 import { formaterMontant, formaterPourcentage, formaterTrimestres } from '../utils/formatters.js';
 import { formaterDateLongueFR, formaterDateFR } from '../utils/dates.js';
+import { POINT_INDICE } from '../config/parametres.js';
+
+/**
+ * Neutralise l'injection de formule dans une cellule CSV (Excel/LibreOffice) :
+ * préfixe d'une apostrophe toute valeur commençant par = + - @ (ou tab/retour).
+ * @param {*} value
+ * @returns {string}
+ */
+function csvSafe(value) {
+  const str = String(value ?? '');
+  return /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+}
 
 /**
  * Génère et affiche la version imprimable des résultats
@@ -372,7 +384,7 @@ function genererContenuImpression(resultats, profil) {
       ${resultats.pensionTauxPlein?.nbiIntegre ? `
       <tr>
         <td>dont NBI intégrée (${resultats.pensionTauxPlein.pointsNBIIntegres} points)</td>
-        <td class="text-right">${formaterMontant(resultats.pensionTauxPlein.pointsNBIIntegres * 4.92278)}</td>
+        <td class="text-right">${formaterMontant(resultats.pensionTauxPlein.pointsNBIIntegres * POINT_INDICE.VALEUR_ANNUELLE)}</td>
       </tr>
       ` : ''}
       <tr>
@@ -498,7 +510,7 @@ export function exporterCSV(resultats, profil) {
   if (resultats.scenarios && Array.isArray(resultats.scenarios)) {
     resultats.scenarios.forEach(s => {
       const statut = s.decote ? 'Décote' : (s.surcote ? 'Surcote' : 'Taux plein');
-      csv += `${s.description}${separator}`;
+      csv += `${csvSafe(s.description)}${separator}`;
       csv += `${formaterDateFR(s.date)}${separator}`;
       csv += `${Math.floor(s.age)} ans${separator}`;
       csv += `${s.trimestresLiquidables}${separator}`;
@@ -516,7 +528,7 @@ export function exporterCSV(resultats, profil) {
   csv += `Bonification enfants${separator}${resultats.duree?.trimestresBonificationEnfants || 0} trimestres\n`;
   csv += `Majoration SPV${separator}${resultats.duree?.trimestresMajorationSPV || 0} trimestres\n`;
   if (resultats.duree?.trimestresServicesMilitaires > 0) {
-    csv += `Services ${resultats.duree?.servicesMilitaires?.toUpperCase() || 'militaires'}${separator}${resultats.duree?.trimestresServicesMilitaires || 0} trimestres\n`;
+    csv += `Services ${csvSafe(resultats.duree?.servicesMilitaires?.toUpperCase() || 'militaires')}${separator}${resultats.duree?.trimestresServicesMilitaires || 0} trimestres\n`;
     csv += `Bonification 1/5ème militaire${separator}${resultats.duree?.trimestresBonificationMilitaire || 0} trimestres\n`;
   }
   csv += `Autres régimes${separator}${resultats.duree?.trimestresAutresRegimes || 0} trimestres\n`;

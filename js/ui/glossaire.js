@@ -14,6 +14,7 @@
  */
 
 import { getTerme } from '../config/glossaire.js';
+import { escapeHtml } from '../utils/html.js';
 
 const ICON_SVG = `
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -22,20 +23,6 @@ const ICON_SVG = `
     <line x1="12" y1="8" x2="12.01" y2="8"/>
   </svg>
 `;
-
-/**
- * Échappe les caractères HTML d'une chaîne.
- * @param {string} str
- * @returns {string}
- */
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 /**
  * Construit le markup d'un tooltip à partir d'une entrée de glossaire.
