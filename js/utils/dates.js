@@ -77,16 +77,21 @@ export function calculerAnneesEntreDates(dateDebut, dateFin) {
 export const MS_PAR_AN = 365.25 * 24 * 60 * 60 * 1000;
 
 /**
- * Nombre d'années entières entre deux dates, calcul par différence de
- * millisecondes (année moyenne de 365,25 jours). Jamais négatif.
- * Utilisé pour les estimations d'âge et de durées de cotisation (RAFP).
+ * Nombre d'années entières (anniversaires révolus) entre deux dates. Jamais négatif.
+ * Utilisé pour l'âge et les durées de cotisation (RAFP).
+ *
+ * Calcul CALENDAIRE (via le décompte des mois), et NON un ratio ms / 365,25 :
+ * ce dernier sous-compte les durées exprimées en années entières lorsqu'elles
+ * contiennent peu d'années bissextiles (ex : 2005→2042 donnait 36 au lieu de 37,
+ * sous-estimant les années de cotisation RAFP).
+ *
  * @param {Date} dateDebut
  * @param {Date} dateFin
  * @returns {number} Années entières (≥ 0)
  */
 export function anneesEntre(dateDebut, dateFin) {
   if (!dateDebut || !dateFin) return 0;
-  return Math.max(0, Math.floor((dateFin.getTime() - dateDebut.getTime()) / MS_PAR_AN));
+  return calculerAnneesEntreDates(dateDebut, dateFin);
 }
 
 /**

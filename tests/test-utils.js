@@ -52,9 +52,15 @@ console.log('');
 console.log('📋 anneesEntre / MS_PAR_AN');
 console.log('───────────────────────────────────────────────────────────────────');
 
-// NB : calcul par ms / 365,25 → une année moyenne. Un span exprimé en années
-// entières est planché ; on teste hors des zones-limites d'année calendaire.
+// Calcul CALENDAIRE (anniversaires révolus). Verrouille la correction du
+// sous-comptage ms/365,25 qui rabaissait d'1 an les spans en années entières.
 test('MS_PAR_AN = 365,25 jours en ms', MS_PAR_AN === 365.25 * 24 * 60 * 60 * 1000);
+test('10 années calendaires pleines = 10 (et non 9)',
+  anneesEntre(new Date(2010, 0, 1), new Date(2020, 0, 1)) === 10,
+  `Calculé: ${anneesEntre(new Date(2010, 0, 1), new Date(2020, 0, 1))}`);
+test('Années de cotisation RAFP 2005→2042 = 37 (et non 36)',
+  anneesEntre(new Date(2005, 0, 1), new Date(2042, 0, 1)) === 37,
+  `Calculé: ${anneesEntre(new Date(2005, 0, 1), new Date(2042, 0, 1))}`);
 test('~10,5 ans → 10', anneesEntre(new Date(2000, 0, 1), new Date(2010, 6, 1)) === 10,
   `Calculé: ${anneesEntre(new Date(2000, 0, 1), new Date(2010, 6, 1))}`);
 test('5 ans 9 mois → 5 (années partielles planchées)',
