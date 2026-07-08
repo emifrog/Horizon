@@ -1,0 +1,12 @@
+# Dépendances (le projet n'a aucune dépendance d'exécution ; node_modules ne sert
+# qu'à des outils ponctuels de développement et ne doit pas être versionné)
+node_modules/
+package-lock.json
+
+# Fichiers système / éditeurs
+.DS_Store
+Thumbs.db
+*.log
+
+# Sorties temporaires
+*.tmp
