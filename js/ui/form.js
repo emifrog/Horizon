@@ -10,10 +10,11 @@ import { validerProfil, validerIndiceBrut, validerTrimestres } from '../utils/va
 /**
  * État du formulaire
  */
+// Source de vérité des VALEURS de champs = le DOM (lu à la demande via FormData
+// dans app.js / persistence.js). Cet état ne suit que la navigation et la validation.
 let formState = {
   currentStep: 1,
   totalSteps: 4,
-  data: {},
   errors: {},
   touched: {},
 };
@@ -28,7 +29,6 @@ export function initForm(formElement) {
   formState = {
     currentStep: 1,
     totalSteps: 4,
-    data: {},
     errors: {},
     touched: {},
   };
@@ -60,10 +60,7 @@ function setupInputListeners(formElement) {
     });
 
     input.addEventListener('input', () => {
-      // Mise à jour des données
-      updateFormData(input);
-
-      // Validation si le champ a déjà été touché
+      // Validation si le champ a déjà été touché (les valeurs restent dans le DOM)
       if (formState.touched[input.name]) {
         validateField(input);
       }
@@ -143,24 +140,6 @@ function setupNavigationListeners() {
         }
       }
     });
-  }
-}
-
-/**
- * Met à jour les données du formulaire
- * @param {HTMLInputElement} input - Champ de saisie
- */
-function updateFormData(input) {
-  const { name, type, value, checked } = input;
-
-  if (type === 'checkbox') {
-    formState.data[name] = checked;
-  } else if (type === 'number') {
-    formState.data[name] = value ? parseFloat(value) : null;
-  } else if (type === 'date') {
-    formState.data[name] = value ? new Date(value) : null;
-  } else {
-    formState.data[name] = value;
   }
 }
 
@@ -583,21 +562,11 @@ function createNotificationContainer() {
 }
 
 /**
- * Récupère les données du formulaire
- * @returns {Object} Données du formulaire
- */
-export function getFormData() {
-  return { ...formState.data };
-}
-
-/**
- * Définit les données du formulaire
+ * Définit les données du formulaire en écrivant directement dans les champs du DOM
+ * (source de vérité). Utilisé par la restauration d'une simulation (persistence).
  * @param {Object} data - Données à définir
  */
 export function setFormData(data) {
-  formState.data = { ...formState.data, ...data };
-
-  // Mettre à jour les champs
   Object.entries(data).forEach(([name, value]) => {
     const input = document.querySelector(`[name="${name}"]`);
     if (input) {
@@ -624,7 +593,6 @@ export function resetForm() {
   formState = {
     currentStep: 1,
     totalSteps: 4,
-    data: {},
     errors: {},
     touched: {},
   };

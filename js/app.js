@@ -45,7 +45,7 @@ import { creerProfil, enrichirProfil } from './modules/profil.js';
 import { calculerDurees } from './modules/duree.js';
 import { genererScenariosDepart, calculerDateTauxPlein, genererResumeDates } from './modules/ages.js';
 import { calculerPension } from './modules/pension.js';
-import { calculerPFR } from './modules/pfr.js';
+import { calculerPFR, calculerPFRSPV } from './modules/pfr.js';
 import { calculerNBI } from './modules/nbi.js';
 import { calculerSurcote, appliquerSurcote } from './modules/surcote.js';
 import { initForm, goToStep, showNotification } from './ui/form.js';
@@ -59,9 +59,8 @@ import {
   clearSessionProgress,
 } from './ui/persistence.js';
 import { initGlossaireTooltips } from './ui/glossaire.js';
-import { getDureeAssuranceRequise, PFR, PFR_SPV, getMontantPFRSPV } from './config/parametres.js';
+import { getDureeAssuranceRequise, PFR } from './config/parametres.js';
 import { simulerScenariosSurcote } from './modules/surcote.js';
-import { arrondir } from './utils/nombres.js';
 import { anneesEntre } from './utils/dates.js';
 import { validerCoherenceProfil } from './utils/validators.js';
 
@@ -452,38 +451,6 @@ function setupServicesMilitairesToggle() {
       }
     });
   }
-}
-
-/**
- * Calcule la PFR SPV pour les agents en double statut.
- * Le barème et la fonction de barème sont centralisés dans config/parametres.js
- * (PFR_SPV.BAREME / getMontantPFRSPV) — cette fonction en est le consommateur UI.
- *
- * @param {boolean} doubleStatut - Si l'agent a le double statut
- * @param {number} anneesSPV - Années de service SPV
- * @param {number} montantManuel - Montant saisi manuellement (optionnel)
- * @returns {Object} Résultat du calcul PFR SPV
- */
-function calculerPFRSPV(doubleStatut, anneesSPV, montantManuel) {
-  if (!doubleStatut || anneesSPV < PFR_SPV.ANCIENNETE_MIN_INCAPACITE) {
-    return {
-      eligible: false,
-      anneesSPV: anneesSPV || 0,
-      montantAnnuel: 0,
-      montantMensuel: 0,
-    };
-  }
-
-  // Utiliser le montant manuel si renseigné, sinon calcul automatique via le barème
-  const montantAnnuel = montantManuel > 0 ? montantManuel : getMontantPFRSPV(anneesSPV);
-
-  return {
-    eligible: anneesSPV >= PFR_SPV.ANCIENNETE_MIN,
-    eligibleIncapacite: anneesSPV >= PFR_SPV.ANCIENNETE_MIN_INCAPACITE && anneesSPV < PFR_SPV.ANCIENNETE_MIN,
-    anneesSPV,
-    montantAnnuel,
-    montantMensuel: arrondir(montantAnnuel / 12, 2),
-  };
 }
 
 /**

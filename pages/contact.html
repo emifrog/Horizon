@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Contactez-nous pour toute question sur le simulateur de retraite SPP">
     <title>Contact | Horizon</title>
@@ -123,17 +124,7 @@
         </footer>
     </div>
 
-    <script>
-        document.getElementById('contact-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            
-            alert('Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.');
-            this.reset();
-        });
-    </script>
+    <script src="../js/pages/contact.js"></script>
 </body>
 
 </html>

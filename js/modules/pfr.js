@@ -7,7 +7,7 @@
  * @module modules/pfr
  */
 
-import { PFR, POINT_INDICE, getCoefficientRAFPAge } from '../config/parametres.js';
+import { PFR, PFR_SPV, POINT_INDICE, getCoefficientRAFPAge, getMontantPFRSPV } from '../config/parametres.js';
 import { arrondir } from '../utils/nombres.js';
 
 /**
@@ -231,6 +231,38 @@ export function calculerPFR(donnees, ageDepart = 62) {
     capitalRAFP,
     capitalRAFPEstimation,
     capitalRAFPNote,
+  };
+}
+
+/**
+ * Calcule la Prestation de Fidélisation et de Reconnaissance (PFR SPV) pour les
+ * agents en double statut SPP/SPV.
+ * Le barème est centralisé dans config/parametres.js (PFR_SPV.BAREME / getMontantPFRSPV).
+ *
+ * @param {boolean} doubleStatut - Si l'agent a le double statut SPP/SPV
+ * @param {number} anneesSPV - Années de service SPV
+ * @param {number} [montantManuel] - Montant annuel saisi manuellement (optionnel)
+ * @returns {{eligible: boolean, eligibleIncapacite?: boolean, anneesSPV: number, montantAnnuel: number, montantMensuel: number}}
+ */
+export function calculerPFRSPV(doubleStatut, anneesSPV, montantManuel) {
+  if (!doubleStatut || anneesSPV < PFR_SPV.ANCIENNETE_MIN_INCAPACITE) {
+    return {
+      eligible: false,
+      anneesSPV: anneesSPV || 0,
+      montantAnnuel: 0,
+      montantMensuel: 0,
+    };
+  }
+
+  // Montant manuel si renseigné, sinon calcul automatique via le barème
+  const montantAnnuel = montantManuel > 0 ? montantManuel : getMontantPFRSPV(anneesSPV);
+
+  return {
+    eligible: anneesSPV >= PFR_SPV.ANCIENNETE_MIN,
+    eligibleIncapacite: anneesSPV >= PFR_SPV.ANCIENNETE_MIN_INCAPACITE && anneesSPV < PFR_SPV.ANCIENNETE_MIN,
+    anneesSPV,
+    montantAnnuel,
+    montantMensuel: arrondir(montantAnnuel / 12, 2),
   };
 }
 
