@@ -1,0 +1,27 @@
+{
+  "name": "Horizon — Simulateur de retraite SPP",
+  "short_name": "Horizon SPP",
+  "description": "Simulateur de retraite pour les sapeurs-pompiers professionnels (SPP) relevant de la CNRACL. Outil indicatif, 100% hors ligne.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1E3A5F",
+  "theme_color": "#C8102E",
+  "categories": ["utilities", "finance"],
+  "icons": [
+    {
+      "src": "assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
