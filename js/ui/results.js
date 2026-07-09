@@ -567,6 +567,31 @@ function creerAvertissement() {
   return div;
 }
 
+// État du dernier graphique rendu, pour le redessiner au redimensionnement / rotation.
+let _dernierGraphique = null;
+let _graphResizeLie = false;
+let _graphResizeTimer = null;
+
+/**
+ * Lie (une seule fois) le redraw débouncé du graphique aux événements resize et
+ * orientationchange. Corrige le rendu figé/flou après rotation sur mobile.
+ */
+function lierRedrawGraphique() {
+  if (_graphResizeLie) return;
+  _graphResizeLie = true;
+  const redraw = () => {
+    clearTimeout(_graphResizeTimer);
+    _graphResizeTimer = setTimeout(() => {
+      const g = _dernierGraphique;
+      if (g && g.canvas && g.canvas.isConnected) {
+        afficherGraphiquePension(g.scenarios, g.canvas);
+      }
+    }, 150);
+  };
+  window.addEventListener('resize', redraw);
+  window.addEventListener('orientationchange', redraw);
+}
+
 /**
  * Crée un graphique d'évolution de la pension avec support Retina et tooltips
  * @param {Array} scenarios - Scénarios de départ
@@ -574,6 +599,10 @@ function creerAvertissement() {
  */
 export function afficherGraphiquePension(scenarios, canvas) {
   if (!canvas || !scenarios.length) return;
+
+  // Mémoriser pour le redraw responsive (resize / rotation) et lier le handler.
+  _dernierGraphique = { scenarios, canvas };
+  lierRedrawGraphique();
 
   // Support Retina / HiDPI
   const dpr = window.devicePixelRatio || 1;
@@ -876,8 +905,10 @@ function setupChartTooltip(canvas, tooltip, pointsData) {
     tooltip.style.display = 'none';
   }
 
-  // Événements
-  canvas.addEventListener('mousemove', (e) => {
+  // Événements : liés UNE SEULE FOIS par canvas, mais délèguent aux closures de la
+  // dernière frame (mises à jour à chaque redraw) — évite les doublons de listeners
+  // au redimensionnement tout en gardant une géométrie de tooltip à jour.
+  canvas._onGraphHover = (e) => {
     const point = getHoveredPoint(e);
     if (point) {
       canvas.style.cursor = 'pointer';
@@ -886,12 +917,16 @@ function setupChartTooltip(canvas, tooltip, pointsData) {
       canvas.style.cursor = 'default';
       hideTooltip();
     }
-  });
-
-  canvas.addEventListener('mouseleave', () => {
+  };
+  canvas._onGraphLeave = () => {
     canvas.style.cursor = 'default';
     hideTooltip();
-  });
+  };
+  if (!canvas._graphEventsBound) {
+    canvas.addEventListener('mousemove', (e) => canvas._onGraphHover && canvas._onGraphHover(e));
+    canvas.addEventListener('mouseleave', () => canvas._onGraphLeave && canvas._onGraphLeave());
+    canvas._graphEventsBound = true;
+  }
 }
 
 /**

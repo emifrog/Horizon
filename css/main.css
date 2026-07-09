@@ -32,6 +32,15 @@ body {
   background-color: var(--color-bg-alt);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Filet anti-débordement horizontal. `clip` (et non `hidden`) pour ne pas
+     créer de conteneur de défilement qui casserait le header en position:sticky. */
+  overflow-x: clip;
+}
+
+/* Images responsives par défaut (les règles de classe plus spécifiques priment). */
+img {
+  max-width: 100%;
+  height: auto;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -553,7 +562,9 @@ a:hover {
 
 .details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  /* min(100%, 300px) : la colonne rétrécit sous 300px au lieu de déborder
+     sur les très petits écrans (≤ 320px). */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: var(--spacing-lg);
 }
 
