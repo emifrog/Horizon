@@ -101,15 +101,17 @@ test('Assurance CNRACL = 180 (160 temps plein + 20 bonif, NON proratisée)', mTP
 console.log('');
 
 // ============================================================================
-// M2 — Plafond global de 20 trimestres pour la bonification du 1/5e
+// #10 — BSPP/BMPM hors 1/5e (militaires exclus de la bonification du cinquième)
 // ============================================================================
-console.log('📋 M2 : Plafond global du 1/5e (SPP + militaire)');
+console.log('📋 #10 : BSPP/BMPM hors bonification du 1/5e');
 console.log('───────────────────────────────────────────────────────────────────');
 
-// 100 trim SPP (bonif 20) + 30 trim militaires (bonif 6) → total plafonné à 20, pas 26
-const m2 = calculerDurees({
+// SPP 30 ans (120 trim, condition 27 ans OK) + 30 trim militaires.
+// La bonification 1/5e ne porte QUE sur les services SPP (plafond 20) ; les militaires
+// comptent dans les liquidables mais n'ouvrent PAS le 1/5e.
+const m10 = calculerDurees({
   dateEntreeSPP: new Date(2004, 0, 1),
-  dateDepart: new Date(2029, 0, 1),
+  dateDepart: new Date(2034, 0, 1),
   quotite: 1,
   trimestresAutresRegimes: 0,
   anneesSPV: 0,
@@ -118,11 +120,40 @@ const m2 = calculerDurees({
   trimestresServicesMilitaires: 30,
 }, 1980);
 
-const bonifTotale = m2.trimestresBonificationCinquieme + m2.trimestresBonificationMilitaire;
-test('Bonification 1/5e totale (SPP + militaire) = 20, plafond global', bonifTotale === 20,
-  `Calculé: ${bonifTotale} (SPP ${m2.trimestresBonificationCinquieme} + mil ${m2.trimestresBonificationMilitaire})`);
-test('Liquidables = 150 (100 services + 20 bonif + 30 militaires)', m2.trimestresLiquidables === 150,
-  `Calculé: ${m2.trimestresLiquidables}`);
+test('Bonification militaire = 0 (BSPP/BMPM hors 1/5e)', m10.trimestresBonificationMilitaire === 0,
+  `Calculé: ${m10.trimestresBonificationMilitaire}`);
+test('Bonification 1/5e = 20 (sur les seuls services SPP, plafonné)', m10.trimestresBonificationCinquieme === 20,
+  `Calculé: ${m10.trimestresBonificationCinquieme}`);
+test('Liquidables = 170 (120 SPP + 20 bonif + 30 militaires)', m10.trimestresLiquidables === 170,
+  `Calculé: ${m10.trimestresLiquidables}`);
+
+// ============================================================================
+// #9 — Services CNRACL hors SPP : comptent pour la condition des 27 ans (fonctionnaire)
+// ============================================================================
+console.log('\n📋 #9 : Services CNRACL hors SPP (condition 27 ans)');
+console.log('───────────────────────────────────────────────────────────────────');
+
+// SPP 26 ans (104 trim < 108) : sans services hors SPP, condition 27 ans NON remplie → 1/5e = 0.
+const m9sans = calculerDurees({
+  dateEntreeSPP: new Date(2004, 0, 1),
+  dateDepart: new Date(2030, 0, 1), // 26 ans → 104 trim
+  quotite: 1, anneesSPV: 0, enfantsAvant2004: 0,
+  servicesMilitaires: 'aucun', trimestresServicesMilitaires: 0,
+  trimestresServicesHorsSPP: 0,
+}, 1980);
+test('Sans services hors SPP : SPP 26 ans < 27 → bonification 1/5e = 0', m9sans.trimestresBonificationCinquieme === 0,
+  `Calculé: ${m9sans.trimestresBonificationCinquieme}`);
+
+// Avec 8 trim hors SPP : services fonctionnaire = 104 + 8 = 112 ≥ 108 → condition remplie → 1/5e actif.
+const m9avec = calculerDurees({
+  dateEntreeSPP: new Date(2004, 0, 1),
+  dateDepart: new Date(2030, 0, 1),
+  quotite: 1, anneesSPV: 0, enfantsAvant2004: 0,
+  servicesMilitaires: 'aucun', trimestresServicesMilitaires: 0,
+  trimestresServicesHorsSPP: 8,
+}, 1980);
+test('Avec 8 trim hors SPP : condition 27 ans remplie → bonification 1/5e > 0', m9avec.trimestresBonificationCinquieme > 0,
+  `Calculé: ${m9avec.trimestresBonificationCinquieme} (services fonctionnaire ${m9avec.servicesFonctionnaire})`);
 
 console.log('');
 

@@ -602,6 +602,8 @@ function collectFormData() {
     dureeNBI: parseInt(formData.get('dureeNBI'), 10) || 0,
     montantPFR: parseFloat(formData.get('montantPFR')) || null,
     anneesCotisationRAFP: parseInt(formData.get('anneesCotisationRAFP'), 10) || 0,
+    // Services CNRACL hors qualité SPP (territorial/hospitalier) — en trimestres
+    trimestresServicesHorsSPP: (parseInt(formData.get('anneesServicesHorsSPP'), 10) || 0) * 4,
     // Double statut SPP/SPV (utilise anneesSPV du profil)
     doubleStatut: formData.get('doubleStatut') === 'on',
     montantPFRSPV: parseFloat(formData.get('montantPFRSPV')) || 0,
@@ -637,6 +639,8 @@ function effectuerCalculs(formData, profilEnrichi) {
     // Services militaires (BSPP/BMPM)
     servicesMilitaires: formData.servicesMilitaires,
     trimestresServicesMilitaires: formData.trimestresServicesMilitaires,
+    // Services CNRACL hors qualité SPP (condition 27 ans fonctionnaire + proratisation PF)
+    trimestresServicesHorsSPP: formData.trimestresServicesHorsSPP,
   };
 
   const scenarios = genererScenariosDepart(donneesDepart);
@@ -672,6 +676,10 @@ function effectuerCalculs(formData, profilEnrichi) {
       trimestresLiquidables: duree.trimestresLiquidables,
       trimestresAssurance: duree.trimestresAssuranceTotale,
       trimestresServicesEffectifs: duree.trimestresServicesEffectifs,
+      // Proratisation prime de feu : services SPP / totalité des services liquidés.
+      trimestresSPP: duree.trimestresServicesEffectifs,
+      trimestresBonificationSPP: duree.trimestresBonificationCinquieme,
+      trimestresTotal: duree.trimestresLiquidables,
       trimestresRequis,
       dateNaissance: formData.dateNaissance,
       dateDepart: scenario.date,
@@ -718,6 +726,9 @@ function effectuerCalculs(formData, profilEnrichi) {
     trimestresLiquidables: dureeTauxPlein.trimestresLiquidables,
     trimestresAssurance: dureeTauxPlein.trimestresAssuranceTotale,
     trimestresServicesEffectifs: dureeTauxPlein.trimestresServicesEffectifs,
+    trimestresSPP: dureeTauxPlein.trimestresServicesEffectifs,
+    trimestresBonificationSPP: dureeTauxPlein.trimestresBonificationCinquieme,
+    trimestresTotal: dureeTauxPlein.trimestresLiquidables,
     trimestresRequis,
     dateNaissance: formData.dateNaissance,
     dateDepart: dateTauxPlein,
@@ -836,6 +847,7 @@ function updatePreview() {
         enfantsAvant2004: formData.enfantsAvant2004,
         servicesMilitaires: formData.servicesMilitaires,
         trimestresServicesMilitaires: formData.trimestresServicesMilitaires,
+        trimestresServicesHorsSPP: formData.trimestresServicesHorsSPP,
       },
       anneeNaissance
     );

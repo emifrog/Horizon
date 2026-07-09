@@ -269,6 +269,7 @@ export function calculerPension(donnees) {
     pointsNBIIntegres = 0,
     droitMajorationPrimeFeu = true,  // Par défaut, SPP a droit à la majoration
     trimestresSPP,
+    trimestresBonificationSPP,        // bonif 1/5e SPP (pour l'exemption de proratisation prime de feu)
     trimestresTotal,
     trimestresServicesEffectifs,     // pour la base du minimum garanti (années de services)
   } = donnees;
@@ -302,9 +303,9 @@ export function calculerPension(donnees) {
     traitement.annuel,
     tauxLiquidationNet,
     droitMajorationPrimeFeu,
-    trimestresSPP || trimestresLiquidables,   // trimestresSPP
-    0,                                        // trimestresBonificationSPP (non détaillé ici)
-    trimestresTotal || trimestresLiquidables, // trimestresTotal
+    trimestresSPP || trimestresLiquidables,   // trimestresSPP (services en qualité SPP)
+    trimestresBonificationSPP || 0,           // trimestresBonificationSPP (1/5e SPP)
+    trimestresTotal || trimestresLiquidables, // trimestresTotal (totalité des services liquidés)
     trimestresRequis                          // trimestresRequis (génération)
   );
 

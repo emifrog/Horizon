@@ -229,80 +229,59 @@ export function calculerDurees(donnees, anneeNaissance) {
     enfantsAvant2004 = 0,
     servicesMilitaires = 'aucun',
     trimestresServicesMilitaires = 0,
+    trimestresServicesHorsSPP = 0,  // services CNRACL hors qualité SPP (ex-territorial/hospitalier)
     exceptionBonification = false,  // Invalidité, reclassement, CRO
   } = donnees;
 
-  // Calcul des services effectifs SPP.
-  // Deux assiettes distinctes selon l'usage :
-  //  - Temps plein (durée d'ASSURANCE) : les périodes à temps partiel comptent comme
-  //    du temps plein pour la durée d'assurance (décote / taux plein). Réf: Art. L5.
-  //  - Proratisé quotité (LIQUIDATION) : le temps partiel compte au prorata pour le
-  //    montant de la pension. Réf: Art. L9.
-  const trimestresServicesTempsPlein = calculerTrimestresServicesEffectifs(
-    dateEntreeSPP,
-    dateDepart,
-    1
-  );
-  const trimestresServicesEffectifs = calculerTrimestresServicesEffectifs(
-    dateEntreeSPP,
-    dateDepart,
-    quotite
-  );
+  // Services SPP : temps plein (durée d'ASSURANCE, temps partiel = temps plein, Art. L5)
+  // vs proratisé quotité (LIQUIDATION, Art. L9).
+  const trimestresServicesTempsPlein = calculerTrimestresServicesEffectifs(dateEntreeSPP, dateDepart, 1);
+  const trimestresServicesEffectifs = calculerTrimestresServicesEffectifs(dateEntreeSPP, dateDepart, quotite);
 
-  // Services militaires (BSPP/BMPM) - comptent comme services actifs
+  // Services militaires (BSPP/BMPM) : ils comptent pour la pension mais N'OUVRENT PAS le
+  // 1/5e (art. 15-II-2° réservé aux SPP) — ils relèvent des bénéfices de campagne
+  // (non modélisés ici) et d'une pension militaire distincte.
   const trimServicesMilitaires = servicesMilitaires !== 'aucun' ? trimestresServicesMilitaires : 0;
 
-  // Total des services actifs (SPP + militaires) pour la condition des 17 ans
+  // Total des services actifs (SPP + militaires) — condition des 17 ans / départ anticipé.
   const totalServicesActifs = trimestresServicesEffectifs + trimServicesMilitaires;
 
-  // Bonification du 1/5e (SPP + militaire) — plafond GLOBAL de 20 trimestres.
-  // Conditions : 27 ans services effectifs + 17 ans SPP (sauf exceptions).
-  // On calcule chaque assiette SANS plafond, puis on plafonne la SOMME une seule fois
-  // (Art. L12 b : la bonification du cinquième est plafonnée à 5 annuités, tous
-  // services actifs confondus).
-  const bonifCinquiemeSPP = calculerBonificationCinquieme(trimestresServicesEffectifs, {
-    trimestresServicesEffectifs: totalServicesActifs,
-    trimestresSPP: trimestresServicesEffectifs,
+  // Bonification du 1/5e : UNIQUEMENT sur les services SPP, plafond 20 trimestres.
+  // Conditions (art. 15-II-2°) : 17 ans en qualité SPP (68 trim) ET 27 ans de services
+  // de FONCTIONNAIRE (108 trim = SPP + services CNRACL hors SPP), hors militaire.
+  const servicesFonctionnaire = trimestresServicesEffectifs + trimestresServicesHorsSPP;
+  const trimestresBonificationCinquieme = calculerBonificationCinquieme(trimestresServicesEffectifs, {
+    trimestresServicesEffectifs: servicesFonctionnaire,   // condition 27 ans (fonctionnaire)
+    trimestresSPP: trimestresServicesEffectifs,           // condition 17 ans (SPP)
     exceptionSansCondition: exceptionBonification,
-    appliquerPlafond: false,
   });
-  const bonifCinquiemeMilitaire = calculerBonificationCinquieme(trimServicesMilitaires, {
-    trimestresServicesEffectifs: totalServicesActifs,
-    trimestresSPP: trimestresServicesEffectifs,
-    exceptionSansCondition: exceptionBonification,
-    appliquerPlafond: false,
-  });
-  const plafondCinquieme = BONIFICATIONS.CINQUIEME_ACTIF.plafond || 20;
-  const bonificationCinquiemeTotale = Math.min(bonifCinquiemeSPP + bonifCinquiemeMilitaire, plafondCinquieme);
-  // Répartition SPP / militaire pour l'affichage, dans la limite du plafond global.
-  const trimestresBonificationCinquieme = Math.min(bonifCinquiemeSPP, plafondCinquieme);
-  const trimestresBonificationMilitaire = bonificationCinquiemeTotale - trimestresBonificationCinquieme;
+  const bonificationCinquiemeTotale = trimestresBonificationCinquieme;
+  const trimestresBonificationMilitaire = 0; // #10 : plus de 1/5e sur les services militaires
 
   const trimestresBonificationEnfants = calculerBonificationEnfants(enfantsAvant2004);
 
-  // Majoration SPV (décret 2026-18, pensions à effet ≥ 01/07/2026).
-  // Majoration de DURÉE D'ASSURANCE : agit sur la décote / le taux plein, PAS sur le montant.
+  // Majoration SPV (décret 2026-18, pensions à effet ≥ 01/07/2026) — compte dans les deux.
   const trimestresMajorationSPV = getMajorationSPVDecret2026(anneesSPV, dateDepart);
 
-  // Trimestres liquidables (base du montant / taux de liquidation) :
-  // services PRORATISÉS + bonifications + majoration SPV + services militaires.
-  const trimestresLiquidables = calculerTrimestresLiquidables({
-    trimestresServicesEffectifs,
-    trimestresBonificationCinquieme,
-    trimestresBonificationEnfants,
-    trimestresMajorationSPV,
-    trimestresServicesMilitaires: trimServicesMilitaires,
-    trimestresBonificationMilitaire,
-  });
+  // Trimestres liquidables (montant) : services SPP proratisés + bonif 1/5e + enfants
+  // + SPV + services CNRACL hors SPP + services militaires.
+  const trimestresLiquidables =
+    trimestresServicesEffectifs +
+    trimestresBonificationCinquieme +
+    trimestresBonificationEnfants +
+    trimestresMajorationSPV +
+    trimestresServicesHorsSPP +
+    trimServicesMilitaires;
 
-  // Durée d'assurance CNRACL (décote / taux plein) :
-  // services à TEMPS PLEIN + bonifications + services militaires + majoration SPV.
+  // Durée d'assurance CNRACL (décote / taux plein) : services SPP à TEMPS PLEIN + bonif
+  // + enfants + SPV + services hors SPP + services militaires.
   const trimestresAssuranceCNRACL =
     trimestresServicesTempsPlein +
     bonificationCinquiemeTotale +
     trimestresBonificationEnfants +
-    trimServicesMilitaires +
-    trimestresMajorationSPV;
+    trimestresMajorationSPV +
+    trimestresServicesHorsSPP +
+    trimServicesMilitaires;
 
   const trimestresAssuranceTotale = calculerDureeAssuranceTotale(
     trimestresAssuranceCNRACL,
@@ -326,8 +305,10 @@ export function calculerDurees(donnees, anneeNaissance) {
     trimestresBonificationEnfants,
     trimestresMajorationSPV,
     trimestresServicesMilitaires: trimServicesMilitaires,
+    trimestresServicesHorsSPP,
     trimestresBonificationMilitaire,
     totalServicesActifs,
+    servicesFonctionnaire,
     trimestresLiquidables,
     trimestresAutresRegimes,
     trimestresAssuranceCNRACL,

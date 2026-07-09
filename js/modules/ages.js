@@ -18,6 +18,7 @@ import {
 } from '../config/parametres.js';
 import { dateAtteindreAge, calculerAge, calculerTrimestresEntreDates, formaterDateLongueFR } from '../utils/dates.js';
 import { calculerDurees, verifierConditionServicesActifs } from './duree.js';
+import { calculerSurcote } from './surcote.js';
 
 /**
  * Données pour le calcul des dates de départ
@@ -400,16 +401,19 @@ export function genererScenariosDepart(donnees) {
     (resultatLimite.trimestresLiquidables / trimestresRequis) * 75
   );
 
-  // La surcote s'applique uniquement si :
-  // 1. La durée d'assurance dépasse le nombre requis
-  // 2. L'agent a dépassé la date du taux plein (pas juste l'âge d'ouverture)
-  const surcoteLimite = resultatLimite.trimestresAssuranceTotale > trimestresRequis &&
-    dateLimite > dateTauxPlein;
-
-  // Calculer le nombre de trimestres de surcote
-  const trimestresSurcoteLimite = surcoteLimite
-    ? Math.max(0, resultatLimite.trimestresAssuranceTotale - trimestresRequis)
-    : 0;
+  // Surcote : déléguée au module dédié (source de vérité). Elle exige l'âge légal
+  // SÉDENTAIRE et ne compte que les trimestres COTISÉS au-delà du taux plein (hors
+  // bonifications de service). Pour un SPP (limite d'âge active 62 ans), elle est donc
+  // quasi toujours inatteignable — le flag reflète désormais la réalité.
+  const surcoteInfo = calculerSurcote({
+    dateNaissance: donnees.dateNaissance,
+    dateDepart: dateLimite,
+    trimestresAssurance: resultatLimite.trimestresAssuranceTotale,
+    trimestresRequis,
+    dateTauxPlein,
+  });
+  const surcoteLimite = surcoteInfo.eligible && surcoteInfo.trimestresSurcote > 0;
+  const trimestresSurcoteLimite = surcoteLimite ? surcoteInfo.trimestresSurcote : 0;
 
   scenarios.push({
     type: 'limite',

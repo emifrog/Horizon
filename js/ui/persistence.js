@@ -31,6 +31,7 @@ const FIELDS = [
   'dureeServicesMilitairesAnnees',
   'dureeServicesMilitairesMois',
   'trimestresAutresRegimes',
+  'anneesServicesHorsSPP',
   'enfantsAvant2004',
   'indiceBrut',
   'pointsNBI',
