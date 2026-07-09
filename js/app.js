@@ -722,6 +722,14 @@ function effectuerCalculs(formData, profilEnrichi) {
       ...scenario,
       trimestresLiquidables: duree.trimestresLiquidables,
       trimestresAssurance: duree.trimestresAssuranceTotale,
+      // Flags d'affichage AUTORITÉS : issus du calcul de pension / surcote (source de
+      // vérité), et non des valeurs provisoires recalculées à la main dans ages.js.
+      // Corrige les incohérences « badge Taux plein / taux brut » vs décote réellement appliquée.
+      tauxLiquidation: pensionFinale.tauxLiquidationNet,
+      decote: pensionFinale.trimestresDecote > 0,
+      trimestresDecote: pensionFinale.trimestresDecote,
+      surcote: !!(pensionFinale.surcote && pensionFinale.surcote.eligible),
+      trimestresSurcote: pensionFinale.surcote ? pensionFinale.surcote.trimestresSurcote : 0,
       pension: pensionFinale,
     };
   });
