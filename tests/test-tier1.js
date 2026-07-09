@@ -179,15 +179,19 @@ test('Scénario C — TIB gonflé par la NBI intégrée',
 test('Scénario C — pension brute > scénario A (même carrière + NBI)',
   pensionC.pensionBruteMensuelle > pensionA.pensionBruteMensuelle);
 
-// Minimum garanti
-test('calculerMinimumGaranti(172, 172) > 0',
-  calculerMinimumGaranti(172, 172) > 0);
+// Minimum garanti — barème par paliers sur les ANNÉES de services effectifs.
+test('calculerMinimumGaranti(43 ans) > 0 (carrière pleine)',
+  calculerMinimumGaranti(43) > 0);
 
-test('calculerMinimumGaranti(0, 172) = 0',
-  calculerMinimumGaranti(0, 172) === 0);
+test('calculerMinimumGaranti(0 an) = 0',
+  calculerMinimumGaranti(0) === 0);
 
-test('calculerMinimumGaranti(172, 0) = 0 (protection div/0)',
-  calculerMinimumGaranti(172, 0) === 0);
+test('calculerMinimumGaranti croît par paliers (15 < 30 < 40 ans)',
+  calculerMinimumGaranti(15) < calculerMinimumGaranti(30)
+  && calculerMinimumGaranti(30) < calculerMinimumGaranti(40));
+
+test('calculerMinimumGaranti(40 ans) = montant plein (100 %)',
+  proche(calculerMinimumGaranti(40), 1366.35, 0.5));
 
 // Coût d'un trimestre de décote
 const coutDecote = estimerCoutTrimestreDecote(tibAttendu, 75);

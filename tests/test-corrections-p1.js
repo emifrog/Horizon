@@ -206,24 +206,40 @@ const surcOK = verifierEligibiliteSurcote(new Date(1965, 0, 1), new Date(2030, 0
 test('Surcote éligible une fois l\'âge sédentaire atteint (65 ans)', surcOK.eligible === true,
   `motif: ${surcOK.motif}`);
 
-// m4 — Minimum garanti = plancher sur la BASE, prime de feu ajoutée par-dessus
-// Pension faible (indice min, peu de trimestres) → minimum garanti applicable.
+// #7 — Minimum garanti : barème par paliers + condition taux plein (pas de décote).
+// Cas applicable : indice bas, 40 ans de services effectifs (MG à 100 %), départ à 62 ans
+// (âge d'annulation atteint → PAS de décote). MG dépasse la base → servi.
 const resMG = calculerPension({
-  indiceBrut: 367,
-  trimestresLiquidables: 40,
-  trimestresAssurance: 40,
+  indiceBrut: 340,
+  trimestresLiquidables: 160,        // 40 ans
+  trimestresAssurance: 160,
+  trimestresServicesEffectifs: 160,  // 40 ans → MG à 100 %
   trimestresRequis: 172,
-  dateNaissance: new Date(1970, 0, 1),
-  dateDepart: new Date(2027, 0, 1),
+  dateNaissance: new Date(1965, 0, 1),
+  dateDepart: new Date(2027, 0, 1),  // 62 ans → aucune décote
 });
-test('Minimum garanti appliqué (pension faible)', resMG.minimumGarantiApplique === true,
-  `min: ${resMG.minimumGaranti} | base: ${resMG.pensionBaseMensuelle}`);
+test('Minimum garanti appliqué (pension faible, taux plein sans décote)', resMG.minimumGarantiApplique === true,
+  `min: ${resMG.minimumGaranti} | base: ${resMG.pensionBaseMensuelle} | décote: ${resMG.trimestresDecote}`);
 test('Prime de feu ajoutée PAR-DESSUS le minimum garanti (non absorbée)',
   resMG.pensionBruteMensuelle > resMG.minimumGaranti,
   `total: ${resMG.pensionBruteMensuelle} | min: ${resMG.minimumGaranti}`);
 test('Pension totale = minimum garanti + majoration prime de feu',
   approx(resMG.pensionBruteMensuelle, resMG.minimumGaranti + resMG.majorationPrimeFeu.mensuelle, 1),
   `total: ${resMG.pensionBruteMensuelle} | attendu: ${(resMG.minimumGaranti + resMG.majorationPrimeFeu.mensuelle).toFixed(2)}`);
+
+// #7 — Minimum garanti NON servi si la pension subit une décote (condition taux plein).
+const resMGdecote = calculerPension({
+  indiceBrut: 340,
+  trimestresLiquidables: 80,
+  trimestresAssurance: 80,
+  trimestresServicesEffectifs: 80,
+  trimestresRequis: 172,
+  dateNaissance: new Date(1970, 0, 1),
+  dateDepart: new Date(2027, 0, 1),  // 57 ans → décote (âge d'annulation non atteint)
+});
+test('Minimum garanti NON servi si décote (condition taux plein non remplie)',
+  resMGdecote.minimumGarantiApplique === false && resMGdecote.trimestresDecote > 0,
+  `applique: ${resMGdecote.minimumGarantiApplique} | décote: ${resMGdecote.trimestresDecote}`);
 
 // m5 — Générations < 1960 : durée requise plafonnée à la plus ancienne valeur connue (167)
 test('Durée requise génération 1955 = 167 (et non 172)', getDureeAssuranceRequise(1955) === 167,

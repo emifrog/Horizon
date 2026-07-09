@@ -194,18 +194,31 @@ export function calculerMajorationPrimeFeu(traitementIndiciaireAnnuel, tauxLiqui
 }
 
 /**
- * Calcule le minimum garanti applicable
- * Réf: Code des pensions, Art. L17
- * @param {number} trimestresLiquidables - Trimestres liquidables
- * @param {number} trimestresRequis - Trimestres requis
+ * Pourcentage du minimum garanti plein (barème par paliers, art. 22-I) selon les
+ * années de services effectifs.
+ * @param {number} anneesServices - Années de services EFFECTIFS (bonifications exclues)
+ * @returns {number} Pourcentage (0 à 100)
+ */
+export function calculerPourcentageMinimumGaranti(anneesServices) {
+  const b = MINIMUM_GARANTI.BAREME;
+  if (anneesServices <= 0) return 0;
+  if (anneesServices >= b.ANNEE_PLEINE) return 100;
+  if (anneesServices >= 30) return b.PCT_30ANS + b.PENTE_30_40 * (anneesServices - 30);
+  if (anneesServices >= b.ANNEE_PIVOT) return b.PCT_15ANS + b.PENTE_15_30 * (anneesServices - b.ANNEE_PIVOT);
+  // En deçà de 15 ans : 1/15 du montant des 15 ans par année de services.
+  return (b.PCT_15ANS / b.ANNEE_PIVOT) * anneesServices;
+}
+
+/**
+ * Calcule le montant mensuel du minimum garanti (barème par paliers, art. 22-I).
+ * La base est le nombre d'ANNÉES DE SERVICES EFFECTIFS (et non les trimestres
+ * liquidables bonifications comprises).
+ * @param {number} anneesServicesEffectifs - Années de services effectifs
  * @returns {number} Montant mensuel du minimum garanti
  */
-export function calculerMinimumGaranti(trimestresLiquidables, trimestresRequis) {
-  // Formule simplifiée du minimum garanti
-  // Le minimum garanti est proratisé selon la durée de services
-  if (!trimestresRequis || trimestresRequis <= 0) return 0;
-  const ratio = Math.min(trimestresLiquidables / trimestresRequis, 1);
-  return arrondir(MINIMUM_GARANTI.MONTANT_MENSUEL_2026 * ratio, 2);
+export function calculerMinimumGaranti(anneesServicesEffectifs) {
+  const pct = calculerPourcentageMinimumGaranti(anneesServicesEffectifs || 0);
+  return arrondir(MINIMUM_GARANTI.MONTANT_MENSUEL_2026 * (pct / 100), 2);
 }
 
 /**
@@ -257,6 +270,7 @@ export function calculerPension(donnees) {
     droitMajorationPrimeFeu = true,  // Par défaut, SPP a droit à la majoration
     trimestresSPP,
     trimestresTotal,
+    trimestresServicesEffectifs,     // pour la base du minimum garanti (années de services)
   } = donnees;
 
   // Calcul du traitement indiciaire (avec NBI intégrée si ≥ 15 ans de perception)
@@ -294,16 +308,20 @@ export function calculerPension(donnees) {
     trimestresRequis                          // trimestresRequis (génération)
   );
 
-  // Minimum garanti : c'est un PLANCHER sur la pension de BASE (hors majoration prime
-  // de feu). La majoration prime de feu s'ajoute ensuite au montant plancher — elle
-  // n'est PAS absorbée par le minimum garanti.
-  // NB : formule simplifiée (proratisation linéaire) → estimation, à distinguer du
-  // barème réel de l'art. L17 (voir minimumGarantiEstimation).
-  const minimumGaranti = calculerMinimumGaranti(trimestresLiquidables, trimestresRequis);
-  const minimumGarantiApplique = minimumGaranti > pensionBrute.mensuel;
+  // Minimum garanti (barème par paliers art. 22-I) sur les ANNÉES DE SERVICES EFFECTIFS.
+  // C'est un PLANCHER sur la pension de BASE ; la majoration prime de feu s'ajoute ensuite.
+  const anneesServicesEffectifs = (trimestresServicesEffectifs || trimestresLiquidables) / 4;
+  const minimumGaranti = calculerMinimumGaranti(anneesServicesEffectifs);
 
-  // Base retenue = max(base calculée, minimum garanti), puis on ajoute la prime de feu
-  const pensionBaseFinaleMensuelle = Math.max(pensionBrute.mensuel, minimumGaranti);
+  // Condition d'attribution (loi 2010-1330) : la pension doit remplir la condition du
+  // taux plein — durée requise atteinte OU âge d'annulation de la décote atteint — soit
+  // ici : AUCUNE décote. (S'y ajoute une condition de subrogation non modélisable :
+  // avoir fait valoir l'ensemble de ses pensions personnelles.)
+  const conditionTauxPlein = trimestresDecote === 0;
+  const minimumGarantiApplique = conditionTauxPlein && minimumGaranti > pensionBrute.mensuel;
+
+  // Base retenue = minimum garanti si applicable, sinon base calculée ; + prime de feu.
+  const pensionBaseFinaleMensuelle = minimumGarantiApplique ? minimumGaranti : pensionBrute.mensuel;
   const pensionBruteMensuelleFinale = pensionBaseFinaleMensuelle + majorationPrimeFeu.mensuelle;
   const pensionBruteAnnuelleFinale = pensionBruteMensuelleFinale * 12;
 
@@ -333,7 +351,7 @@ export function calculerPension(donnees) {
     pensionNetteMensuelle,
     minimumGaranti: arrondir(minimumGaranti, 2),
     minimumGarantiApplique,
-    minimumGarantiEstimation: true, // formule simplifiée, non conforme au barème exact art. L17
+    minimumGarantiEstimation: false, // barème par paliers art. 22-I (montant 2026 à re-sourcer annuellement)
     // Information sur la NBI intégrée au TIB
     nbiIntegre: traitement.nbiIntegre,
     pointsNBIIntegres: traitement.pointsNBI,

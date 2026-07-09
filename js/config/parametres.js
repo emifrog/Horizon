@@ -364,11 +364,28 @@ export const NBI = {
 // =============================================================================
 
 export const MINIMUM_GARANTI = {
-  /** Valeur annuelle de l'indice majoré 227 (base du minimum garanti) */
+  /** Indice majoré de référence (base historique du minimum garanti) */
   INDICE_REFERENCE: 227,
 
-  /** Montant mensuel brut du minimum garanti 2026 (estimé) */
-  MONTANT_MENSUEL_2026: 1367.51,
+  /** Montant PLEIN du minimum garanti 2026 (atteint à 40 ans de services effectifs). */
+  MONTANT_ANNUEL_2026: 16396.20,
+  MONTANT_MENSUEL_2026: 1366.35,
+
+  /**
+   * Barème par paliers (art. 22-I décret 2003-1306), en % du montant plein, selon les
+   * ANNÉES DE SERVICES EFFECTIFS (bonifications exclues) :
+   *  - en deçà de 15 ans : 1/15 du montant des 15 ans par année ;
+   *  - 57,5 % à 15 ans ; +2,5 pts/an de 15 à 30 ans (→ 95 % à 30 ans) ;
+   *  - +0,5 pt/an de 30 à 40 ans (→ 100 % à 40 ans).
+   */
+  BAREME: {
+    ANNEE_PLEINE: 40,
+    ANNEE_PIVOT: 15,
+    PCT_15ANS: 57.5,
+    PCT_30ANS: 95,
+    PENTE_15_30: 2.5,
+    PENTE_30_40: 0.5,
+  },
 };
 
 // =============================================================================
