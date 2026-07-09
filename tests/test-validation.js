@@ -11,7 +11,7 @@ import { POINT_INDICE, TAUX, getDureeAssuranceRequise, BONIFICATIONS } from '../
 import { calculerTraitementIndiciaire, calculerTauxLiquidationBrut, calculerCoefficientDecote, calculerPension, calculerPensionBrute } from '../js/modules/pension.js';
 import { calculerDurees, calculerBonificationCinquieme, calculerTrimestresServicesEffectifs } from '../js/modules/duree.js';
 import { calculerTrimestresDecote, genererScenariosDepart } from '../js/modules/ages.js';
-import { calculerNBI, calculerMoyennePondereeNBI, calculerSupplementNBI } from '../js/modules/nbi.js';
+import { calculerNBI } from '../js/modules/nbi.js';
 import { calculerSurcote, calculerTauxSurcote } from '../js/modules/surcote.js';
 import { calculerAge, calculerTrimestresEntreDates } from '../js/utils/dates.js';
 
@@ -289,35 +289,29 @@ console.log('');
 console.log('📋 TEST 9 : Supplément NBI');
 console.log('─────────────────────────────────────────────────────────────────');
 
-// Cas 1 : NBI 30 points, 15 ans de perception (intégration complète)
-// Supplément = 30 × valeurPoint × tauxLiquidation
-// = 30 × 59.07 × 0.75 = 1329€/an = 110.75€/mois
-
+// Formule officielle (décret 2006-779) : supplément établi à part, taux d'un trimestre.
+// NBI 30 points, 15 ans de perception (60 trim.), durée requise 172.
+// SUP_annuel = 30 × 60 × (75/172/100) × valeur annuelle du point.
 const donneesNBI = {
   pointsNBI: 30,
-  dureeMoisNBI: 180, // 15 ans = intégration complète
-  dureeServicesTotal: 172,
-  tauxLiquidation: 75,
+  dureeMoisNBI: 180,
+  dureeRequise: 172,
 };
 
 const resultatNBI = calculerNBI(donneesNBI);
 
 console.log(`\nRésultat NBI :`);
 console.log(`  Points NBI: ${resultatNBI.pointsNBI}`);
-console.log(`  Moyenne pondérée: ${resultatNBI.moyennePonderee}`);
+console.log(`  Durée perception (trim.): ${resultatNBI.dureeTrimestresNBI}`);
 console.log(`  Supplément mensuel: ${resultatNBI.supplementMensuel}€`);
 
-// Avec intégration complète (≥15 ans), moyenne pondérée = points NBI
-test('Moyenne pondérée NBI ≥15 ans = 30 points', resultatNBI.moyennePonderee, 30, 0);
+const supplementAttendu = 30 * (180 / 3) * (75 / 172 / 100) * POINT_INDICE.VALEUR_ANNUELLE / 12;
+console.log(`  Supplément attendu: ${supplementAttendu.toFixed(2)}€/mois`);
 
-// Supplément attendu avec valeur point correcte
-const supplementAttendu = (30 * 59.07 * 0.75) / 12;
-console.log(`  Supplément attendu (valeur point 59.07€): ${supplementAttendu.toFixed(2)}€/mois`);
-
-test('Supplément NBI mensuel (≈110€)',
+test('Supplément NBI mensuel conforme à la formule officielle',
   resultatNBI.supplementMensuel,
   supplementAttendu,
-  10
+  0.5
 );
 
 console.log('');
@@ -375,17 +369,17 @@ test('Bonification enfants = 8', resultatDuree.trimestresBonificationEnfants, 8,
 // 12 ans SPV = 1 trimestre (seuil 10 ans)
 test('Majoration SPV 12 ans = 1', resultatDuree.trimestresMajorationSPV, 1, 0);
 
-// Trimestres LIQUIDABLES (montant) = 140 services + 20 bonif 1/5 + 8 enfants = 168.
-// La majoration SPV (1) N'entre PAS dans les liquidables (correction C1) : c'est une
-// majoration de durée d'assurance uniquement.
-test('Total liquidables = 168 (sans majoration SPV)', resultatDuree.trimestresLiquidables, 168, 0);
+// Trimestres LIQUIDABLES (montant) = 140 services + 20 bonif 1/5 + 8 enfants + 1 SPV = 169.
+// La majoration SPV compte dans les liquidables ET la durée d'assurance (art. L.173-1-5 CSS,
+// décret 2026-18 en titre III liquidation).
+test('Total liquidables = 169 (SPV comprise)', resultatDuree.trimestresLiquidables, 169, 0);
 
-// Durée d'ASSURANCE = 140 + 20 + 8 + 1 (SPV) + 8 (autres régimes) = 177.
-test('Total assurance = 177 (avec SPV + autres régimes)', resultatDuree.trimestresAssuranceTotale, 177, 0);
+// Durée d'ASSURANCE totale = 169 + 8 (autres régimes) = 177.
+test('Total assurance = 177 (avec autres régimes)', resultatDuree.trimestresAssuranceTotale, 177, 0);
 
-// La différence liquidables/assurance CNRACL correspond exactement à la majoration SPV.
-test('Assurance CNRACL = liquidables + majoration SPV',
-  resultatDuree.trimestresAssuranceCNRACL, resultatDuree.trimestresLiquidables + resultatDuree.trimestresMajorationSPV, 0);
+// SPV comptée dans les deux → assurance CNRACL = liquidables.
+test('Assurance CNRACL = liquidables (SPV dans les deux)',
+  resultatDuree.trimestresAssuranceCNRACL, resultatDuree.trimestresLiquidables, 0);
 
 console.log('');
 

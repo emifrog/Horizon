@@ -9,7 +9,7 @@
  * @module modules/surcote
  */
 
-import { TAUX, AGES, getDureeAssuranceRequise, getAgeLegalActif } from '../config/parametres.js';
+import { TAUX, AGES, getDureeAssuranceRequise, getAgeLegalSedentaire } from '../config/parametres.js';
 import { calculerAge, calculerTrimestresEntreDates } from '../utils/dates.js';
 import { arrondir } from '../utils/nombres.js';
 
@@ -66,20 +66,20 @@ const TAUX_LIQUIDATION_MAX = 100;
  * @returns {{eligible: boolean, motif: string}}
  */
 export function verifierEligibiliteSurcote(dateNaissance, dateDepart, trimestresAssurance, trimestresRequis) {
-  // La surcote s'applique à partir de l'âge légal d'OUVERTURE DES DROITS de l'agent.
-  // Pour un SPP (catégorie active), c'est l'âge ACTIF (57-59 ans selon génération),
-  // et non l'âge sédentaire. Réf: Code des pensions, Art. L14.
-  // Comparaison au mois près (et non en années révolues) pour tenir compte des
-  // âges légaux progressifs (ex: 57 ans 3 mois).
-  const ageLegal = getAgeLegalActif(dateNaissance);
+  // La surcote suit l'âge légal de la catégorie SÉDENTAIRE (62-64 ans), et NON l'âge
+  // actif : le SRE exclut la surcote pour les départs anticipés, l'âge de surcote étant
+  // celui des sédentaires. Réf: SRE, Code des pensions Art. L14.
+  // Conséquence : pour un SPP (limite d'âge active 62 ans), la surcote est quasi
+  // inatteignable sauf prolongation d'activité jusqu'à la limite sédentaire (art. L556-7 CGFP).
+  const ageLegal = getAgeLegalSedentaire(dateNaissance);
   const dateAgeLegal = dateAgeAvecMois(dateNaissance, ageLegal.ans, ageLegal.mois);
 
-  // Condition 1 : Avoir atteint l'âge légal d'ouverture des droits
+  // Condition 1 : Avoir atteint l'âge légal sédentaire
   if (dateDepart < dateAgeLegal) {
     const libelleMois = ageLegal.mois ? ` et ${ageLegal.mois} mois` : '';
     return {
       eligible: false,
-      motif: `Âge insuffisant pour la surcote (minimum : âge légal ${ageLegal.ans} ans${libelleMois})`,
+      motif: `Âge insuffisant pour la surcote (minimum : âge légal sédentaire ${ageLegal.ans} ans${libelleMois})`,
     };
   }
 
@@ -107,11 +107,11 @@ export function verifierEligibiliteSurcote(dateNaissance, dateDepart, trimestres
  * @returns {Date} Date de début de la surcote
  */
 export function calculerDateDebutSurcote(dateNaissance, dateTauxPlein) {
-  // Date de l'âge légal d'ouverture des droits (actif : 57-59 ans selon génération)
-  const ageLegal = getAgeLegalActif(dateNaissance);
+  // Date de l'âge légal SÉDENTAIRE (62-64 ans selon génération)
+  const ageLegal = getAgeLegalSedentaire(dateNaissance);
   const dateAgeLegal = dateAgeAvecMois(dateNaissance, ageLegal.ans, ageLegal.mois);
 
-  // La surcote commence à la date la plus tardive entre l'âge légal et le taux plein
+  // La surcote commence à la date la plus tardive entre l'âge sédentaire et le taux plein
   return dateTauxPlein > dateAgeLegal ? dateTauxPlein : dateAgeLegal;
 }
 

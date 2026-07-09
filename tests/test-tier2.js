@@ -50,23 +50,20 @@ test('DATE_MAJ_PARAMETRES défini et au format ISO',
 
 test('PARAMS.DATE_MAJ exposé', PARAMS.DATE_MAJ === DATE_MAJ_PARAMETRES);
 
-test('COEFFICIENTS_RAFP_AGE couvre 50-70 ans',
-  Object.keys(COEFFICIENTS_RAFP_AGE).length >= 20
-  && 50 in COEFFICIENTS_RAFP_AGE
-  && 70 in COEFFICIENTS_RAFP_AGE);
+test('COEFFICIENTS_RAFP_AGE démarre à 62 (aucun coefficient < 62)',
+  62 in COEFFICIENTS_RAFP_AGE && !(61 in COEFFICIENTS_RAFP_AGE) && !(50 in COEFFICIENTS_RAFP_AGE));
 
 test('COEFFICIENTS_RAFP_AGE[62] = 1.00 (âge pivot)',
   COEFFICIENTS_RAFP_AGE[62] === 1.00);
 
-test('COEFFICIENTS_RAFP_AGE monotone croissant 55→67',
-  [55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67]
-    .every((age, i, arr) => i === 0 || COEFFICIENTS_RAFP_AGE[age] >= COEFFICIENTS_RAFP_AGE[arr[i - 1]]));
+test('COEFFICIENTS_RAFP_AGE : valeurs officielles 66→1.17, 67→1.22, 70→1.40',
+  COEFFICIENTS_RAFP_AGE[66] === 1.17 && COEFFICIENTS_RAFP_AGE[67] === 1.22 && COEFFICIENTS_RAFP_AGE[70] === 1.40);
 
-test('getCoefficientRAFPAge(45) = 0.60 (clamp bas)',
-  getCoefficientRAFPAge(45) === 0.60);
+test('getCoefficientRAFPAge(57) = 1.00 (plancher, pas de minoration avant 62)',
+  getCoefficientRAFPAge(57) === 1.00);
 
-test('getCoefficientRAFPAge(75) = 1.36 (clamp haut)',
-  getCoefficientRAFPAge(75) === 1.36);
+test('getCoefficientRAFPAge(75) = 1.80 (clamp haut)',
+  getCoefficientRAFPAge(75) === 1.80);
 
 // Barème PFR SPV
 test('PFR_SPV.ANCIENNETE_MIN = 20', PFR_SPV.ANCIENNETE_MIN === 20);

@@ -8,7 +8,7 @@
  * @module modules/nbi
  */
 
-import { NBI, POINT_INDICE } from '../config/parametres.js';
+import { TAUX, POINT_INDICE } from '../config/parametres.js';
 import { arrondir } from '../utils/nombres.js';
 
 /**
@@ -34,82 +34,30 @@ import { arrondir } from '../utils/nombres.js';
  */
 
 /**
- * Vérifie l'éligibilité au supplément NBI
- * Réf: Décret n°2006-779 du 3 juillet 2006
- * @param {number} dureeMoisNBI - Durée de perception en mois
- * @returns {{eligible: boolean, motif: string}}
- */
-export function verifierEligibiliteNBI(dureeMoisNBI) {
-  const dureeMinMois = NBI.DUREE_MIN_PERCEPTION * 12; // 12 mois minimum
-
-  if (!dureeMoisNBI || dureeMoisNBI < dureeMinMois) {
-    return {
-      eligible: false,
-      motif: `Durée de perception insuffisante (minimum ${NBI.DUREE_MIN_PERCEPTION} an)`,
-    };
-  }
-
-  return {
-    eligible: true,
-    motif: '',
-  };
-}
-
-/**
- * Calcule la moyenne pondérée des points NBI
- * La NBI est prise en compte au prorata de la durée de perception
- * par rapport à la durée totale des services
+ * Calcule le supplément de pension NBI (décret 2006-779).
  *
- * @param {number} pointsNBI - Nombre de points NBI
- * @param {number} dureeMoisNBI - Durée de perception en mois
- * @param {number} dureeServicesTotal - Durée totale des services en trimestres
- * @returns {number} Points NBI moyens pondérés
- */
-export function calculerMoyennePondereeNBI(pointsNBI, dureeMoisNBI, dureeServicesTotal) {
-  if (!pointsNBI || !dureeMoisNBI || !dureeServicesTotal) {
-    return 0;
-  }
-
-  // Conversion des trimestres en mois pour le calcul
-  const dureeServicesMois = dureeServicesTotal * 3;
-
-  // Si perception pendant au moins 15 ans, on prend la moyenne des 6 derniers mois
-  // Sinon, on calcule la moyenne sur toute la carrière
-  const dureeAnneesNBI = dureeMoisNBI / 12;
-
-  if (dureeAnneesNBI >= NBI.DUREE_INTEGRATION_COMPLETE) {
-    // Intégration complète de la NBI
-    return pointsNBI;
-  }
-
-  // Calcul au prorata de la durée de perception
-  const ratio = Math.min(dureeMoisNBI / dureeServicesMois, 1);
-  return arrondir(pointsNBI * ratio, 2);
-}
-
-/**
- * Calcule le supplément de pension NBI
- * Formule : Points NBI × Valeur point × (Durée NBI / Durée services) × Taux liquidation
+ * Le supplément est établi À PART : il ne subit ni décote, ni minoration, ni
+ * majoration. On applique donc le taux d'UN trimestre (75 / durée requise), et non
+ * le taux de liquidation de la pension. Il n'y a pas non plus d'intégration au TIB
+ * ni de seuil de perception minimale (la formule gère nativement les durées partielles).
  *
- * @param {number} moyennePondereeNBI - Points NBI moyens pondérés
- * @param {number} tauxLiquidation - Taux de liquidation (en %)
+ *   SUP_annuel = points NBI × (durée de perception en trimestres)
+ *                × (75 / durée requise / 100) × valeur annuelle du point
+ *
+ * @param {number} pointsNBI - Moyenne annuelle des points majorés NBI
+ * @param {number} dureeTrimestresNBI - Durée de perception en trimestres
+ * @param {number} dureeRequise - Durée d'assurance requise (trimestres) l'année d'ouverture des droits
  * @returns {{mensuel: number, annuel: number}} Supplément mensuel et annuel
  */
-export function calculerSupplementNBI(moyennePondereeNBI, tauxLiquidation) {
-  // Protection contre les valeurs nulles ou invalides
-  if (!moyennePondereeNBI || moyennePondereeNBI <= 0) {
+export function calculerSupplementNBI(pointsNBI, dureeTrimestresNBI, dureeRequise) {
+  if (!pointsNBI || pointsNBI <= 0 || !dureeTrimestresNBI || dureeTrimestresNBI <= 0
+      || !dureeRequise || dureeRequise <= 0) {
     return { mensuel: 0, annuel: 0 };
   }
 
-  if (!tauxLiquidation || tauxLiquidation <= 0) {
-    return { mensuel: 0, annuel: 0 };
-  }
-
-  // Traitement NBI annuel = Points NBI × Valeur du point
-  const traitementNBIAnnuel = moyennePondereeNBI * POINT_INDICE.VALEUR_ANNUELLE;
-
-  // Application du taux de liquidation
-  const supplementAnnuel = traitementNBIAnnuel * (tauxLiquidation / 100);
+  // Taux de rémunération d'UN trimestre (et non le taux de liquidation de la pension).
+  const tauxTrimestre = (TAUX.PLEIN / dureeRequise) / 100; // 75 / requise / 100
+  const supplementAnnuel = pointsNBI * dureeTrimestresNBI * tauxTrimestre * POINT_INDICE.VALEUR_ANNUELLE;
 
   return {
     mensuel: arrondir(supplementAnnuel / 12, 2),
@@ -118,45 +66,36 @@ export function calculerSupplementNBI(moyennePondereeNBI, tauxLiquidation) {
 }
 
 /**
- * Effectue le calcul complet du supplément NBI
- * @param {DonneesNBI} donnees - Données pour le calcul
+ * Effectue le calcul complet du supplément NBI.
+ * @param {{pointsNBI:number, dureeMoisNBI:number, dureeRequise:number}} donnees
  * @returns {ResultatNBI} Résultat complet
  */
-export function calculerNBI(donnees) {
-  const { pointsNBI, dureeMoisNBI, dureeServicesTotal, tauxLiquidation } = donnees;
+export function calculerNBI({ pointsNBI, dureeMoisNBI, dureeRequise }) {
+  const pts = pointsNBI || 0;
+  const mois = dureeMoisNBI || 0;
 
-  // Vérification de l'éligibilité
-  const { eligible, motif } = verifierEligibiliteNBI(dureeMoisNBI);
-
-  if (!eligible) {
+  if (pts <= 0 || mois <= 0) {
     return {
       eligible: false,
-      pointsNBI: pointsNBI || 0,
-      dureeMoisNBI: dureeMoisNBI || 0,
-      dureeAnneesNBI: (dureeMoisNBI || 0) / 12,
-      moyennePonderee: 0,
+      pointsNBI: pts,
+      dureeMoisNBI: mois,
+      dureeAnneesNBI: arrondir(mois / 12, 2),
+      dureeTrimestresNBI: 0,
       supplementMensuel: 0,
       supplementAnnuel: 0,
-      motifIneligibilite: motif,
+      motifIneligibilite: pts <= 0 ? 'Aucun point NBI' : 'Aucune durée de perception',
     };
   }
 
-  // Calcul de la moyenne pondérée
-  const moyennePonderee = calculerMoyennePondereeNBI(
-    pointsNBI,
-    dureeMoisNBI,
-    dureeServicesTotal
-  );
-
-  // Calcul du supplément
-  const supplement = calculerSupplementNBI(moyennePonderee, tauxLiquidation);
+  const dureeTrimestresNBI = mois / 3;
+  const supplement = calculerSupplementNBI(pts, dureeTrimestresNBI, dureeRequise);
 
   return {
     eligible: true,
-    pointsNBI,
-    dureeMoisNBI,
-    dureeAnneesNBI: arrondir(dureeMoisNBI / 12, 2),
-    moyennePonderee,
+    pointsNBI: pts,
+    dureeMoisNBI: mois,
+    dureeAnneesNBI: arrondir(mois / 12, 2),
+    dureeTrimestresNBI,
     supplementMensuel: supplement.mensuel,
     supplementAnnuel: supplement.annuel,
     motifIneligibilite: '',

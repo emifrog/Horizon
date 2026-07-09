@@ -99,6 +99,35 @@ export const DUREE_ASSURANCE_PAR_GENERATION = {
 export const DUREE_ASSURANCE_DEFAUT = 172;
 
 // =============================================================================
+// DURÉE REQUISE — TABLE SPÉCIFIQUE CATÉGORIE ACTIVE (départ anticipé SPP)
+// Réf: art. 20-II décret 2003-1306 ; exemple CNRACL (SPP né 01/01/1968 → 170).
+// Différente de la table de droit commun ci-dessus. Borne fine : 01/09/1966
+// (nés avant → ancienne réglementation, durée de l'année d'ouverture du droit).
+// source: juris-cnracl / exemple officiel prime de feu — DATE_VERIFICATION: 2026-07-09
+// =============================================================================
+export const DUREE_ASSURANCE_ACTIVE_PAR_GENERATION = {
+  1966: 169, // nés à partir du 01/09/1966
+  1967: 169,
+  1968: 170,
+  1969: 171,
+  1970: 172, // 172 à compter de la génération 1970
+};
+
+// =============================================================================
+// SUSPENSION DE LA RÉFORME 2023 (LFSS 2026)
+// Nouveaux paramètres pour les pensions prenant effet à compter de cette date.
+// ⚠️ Table post-suspension INCOMPLÈTE dans les sources disponibles : seuls les
+// deltas ci-dessous sont confirmés. À compléter avec le texte LFSS 2026 / l'arrêté.
+// =============================================================================
+export const DATE_SUSPENSION_LFSS = '2026-09-01';
+
+/** Deltas connus de durée requise (catégorie active) après la suspension. */
+export const DUREE_ASSURANCE_ACTIVE_POST_SUSPENSION = {
+  1969: 170, // au lieu de 171 (nés 01/01/1969 → 31/03/1970)
+  1970: 171, // au lieu de 172 (nés 01/04/1970 → 31/12/1970)
+};
+
+// =============================================================================
 // CONDITIONS DE SERVICES - Catégorie active
 // Réf: Décret n°2003-1306, Art. 25
 // =============================================================================
@@ -245,31 +274,36 @@ export const PFR = {
 
 // =============================================================================
 // COEFFICIENTS DE MAJORATION RAFP SELON L'ÂGE
-// Réf: Décret n°2004-569 relatif au RAFP
+// Réf: Décret n°2004-569 relatif au RAFP / ERAFP.
+// Le barème DÉMARRE À 62 ANS (âge légal sédentaire) : il n'existe AUCUN coefficient
+// de minoration en dessous. La rente n'est d'ailleurs pas servie avant 62 ans (même
+// pour un actif ayant validé sa durée). Valeurs 71-74 non publiées ici (75 → 1,80).
+// source: ERAFP — DATE_VERIFICATION: 2026-07-09
 // =============================================================================
 
+/** Âge minimal de liquidation de la rente RAFP (âge légal sédentaire). */
+export const AGE_MIN_RAFP = 62;
+
 export const COEFFICIENTS_RAFP_AGE = {
-  50: 0.60,
-  51: 0.64,
-  52: 0.68,
-  53: 0.72,
-  54: 0.72,
-  55: 0.76,
-  56: 0.80,
-  57: 0.84,
-  58: 0.88,
-  59: 0.92,
-  60: 0.96,
-  61: 0.98,
   62: 1.00,
   63: 1.04,
   64: 1.08,
   65: 1.12,
-  66: 1.18,
-  67: 1.24,
+  66: 1.17,
+  67: 1.22,
   68: 1.28,
-  69: 1.32,
-  70: 1.36,
+  69: 1.33,
+  70: 1.40,
+  75: 1.80,
+};
+
+// Coefficient de conversion en CAPITAL (points < seuil de rente).
+// capital = points × valeur de service × coef. majoration × coef. conversion.
+// Valeurs 62-64 sourcées ; au-delà, à compléter.
+export const COEFFICIENTS_CONVERSION_CAPITAL_RAFP = {
+  62: 27.11,
+  63: 26.34,
+  64: 25.57,
 };
 
 // =============================================================================
@@ -360,15 +394,17 @@ export const COTISATIONS = {
 // Réf: Grilles indiciaires de la FPT
 // =============================================================================
 
+// Bornes exprimées en INDICE MAJORÉ (IM) : c'est l'indice qui, multiplié par la
+// valeur du point, donne le traitement. À ne pas confondre avec l'indice brut (IB).
 export const ECHELLE_INDICIAIRE = {
-  /** Indice brut minimum (sapeur 1er échelon) */
-  MIN: 367,
+  /** Indice majoré minimum (bas de grille SPP) */
+  MIN: 340,
 
-  /** Indice brut maximum (colonel hors classe dernier échelon) */
-  MAX: 1027,
+  /** Indice majoré maximum (haut de grille officier supérieur) */
+  MAX: 830,
 
-  /** Quelques repères indicatifs */
-  REPERES: {
+  /** Quelques repères indicatifs, exprimés en indice BRUT (informatif seulement) */
+  REPERES_INDICE_BRUT: {
     SAPEUR_1C_1: 367,
     CAPORAL_1: 368,
     SERGENT_1: 376,
@@ -385,24 +421,40 @@ export const ECHELLE_INDICIAIRE = {
 // =============================================================================
 
 /**
- * Retourne la durée d'assurance requise pour le taux plein selon l'année de naissance
- * @param {number} anneeNaissance - Année de naissance de l'agent
+ * Retourne la durée d'assurance requise pour le taux plein (départ anticipé
+ * catégorie active), en tenant compte de la suspension LFSS 2026.
+ *
+ * @param {number|Date} anneeOuDate - Année (ou date) de naissance de l'agent
+ * @param {Date|string} [dateEffet] - Date d'effet de la pension. Si ≥ 01/09/2026,
+ *        applique les deltas post-suspension connus (table complète à sourcer).
  * @returns {number} Nombre de trimestres requis
  */
-export function getDureeAssuranceRequise(anneeNaissance) {
-  if (anneeNaissance in DUREE_ASSURANCE_PAR_GENERATION) {
-    return DUREE_ASSURANCE_PAR_GENERATION[anneeNaissance];
+export function getDureeAssuranceRequise(anneeOuDate, dateEffet) {
+  const annee = anneeOuDate instanceof Date ? anneeOuDate.getFullYear() : anneeOuDate;
+
+  // Suspension LFSS : pension à effet ≥ 01/09/2026 → deltas post-suspension connus.
+  if (dateEffet && new Date(dateEffet) >= new Date(DATE_SUSPENSION_LFSS)
+      && annee in DUREE_ASSURANCE_ACTIVE_POST_SUSPENSION) {
+    return DUREE_ASSURANCE_ACTIVE_POST_SUSPENSION[annee];
   }
-  // Générations ANTÉRIEURES à la table (< 1960) : la durée requise était plus faible
-  // (≤ 167 trimestres). On retient la plus ancienne valeur connue plutôt que le défaut
-  // 172, qui surestimerait la durée requise (donc sous-estimerait le taux) pour ces
-  // générations déjà retraitées.
+
+  // Table SPÉCIFIQUE catégorie active (générations ≥ 1966, ≠ droit commun).
+  if (annee in DUREE_ASSURANCE_ACTIVE_PAR_GENERATION) {
+    return DUREE_ASSURANCE_ACTIVE_PAR_GENERATION[annee];
+  }
+
+  // Droit commun / anciennes réglementations (générations ≤ 1965).
+  if (annee in DUREE_ASSURANCE_PAR_GENERATION) {
+    return DUREE_ASSURANCE_PAR_GENERATION[annee];
+  }
+  // Générations antérieures à la table (< 1960) : retenir la plus ancienne valeur
+  // connue (≤ 167) plutôt que 172, qui surestimerait la durée requise.
   const anneesConnues = Object.keys(DUREE_ASSURANCE_PAR_GENERATION).map(Number);
   const anneeMin = Math.min(...anneesConnues);
-  if (anneeNaissance < anneeMin) {
+  if (annee < anneeMin) {
     return DUREE_ASSURANCE_PAR_GENERATION[anneeMin];
   }
-  // Générations POSTÉRIEURES à la table (≥ 1974) : valeur par défaut (172).
+  // Générations postérieures (≥ 1971) : 172 (cible de la réforme).
   return DUREE_ASSURANCE_DEFAUT;
 }
 
@@ -457,22 +509,42 @@ export function getAgeLegalSedentaire(dateNaissance) {
 }
 
 /**
- * Retourne le coefficient de majoration RAFP selon l'âge de départ
+ * Retourne le coefficient de majoration RAFP selon l'âge de départ.
+ * Le barème démarre à 62 ans (coef 1,00) ; en dessous, la rente n'est pas servie
+ * (voir AGE_MIN_RAFP) — on renvoie 1,00 par défaut. Entre deux paliers, on retient
+ * le palier inférieur.
  * @param {number} ageDepart - Âge de départ en années
- * @returns {number} Coefficient de majoration (< 1 si avant 62 ans, > 1 si après)
+ * @returns {number} Coefficient de majoration (≥ 1)
  */
 export function getCoefficientRAFPAge(ageDepart) {
   const age = Math.floor(ageDepart);
   if (age in COEFFICIENTS_RAFP_AGE) {
     return COEFFICIENTS_RAFP_AGE[age];
   }
-  // Hors bornes : on clamp aux valeurs extrêmes de la table (50 → 70)
-  const ages = Object.keys(COEFFICIENTS_RAFP_AGE).map(Number);
-  const ageMin = Math.min(...ages);
-  const ageMax = Math.max(...ages);
-  if (age < ageMin) return COEFFICIENTS_RAFP_AGE[ageMin];
-  if (age > ageMax) return COEFFICIENTS_RAFP_AGE[ageMax];
-  return 1.00;
+  const ages = Object.keys(COEFFICIENTS_RAFP_AGE).map(Number).sort((a, b) => a - b);
+  if (age <= ages[0]) return COEFFICIENTS_RAFP_AGE[ages[0]];             // < 62 → 1,00
+  if (age >= ages[ages.length - 1]) return COEFFICIENTS_RAFP_AGE[ages[ages.length - 1]];
+  // Entre deux paliers connus : retenir le palier inférieur.
+  let coeff = COEFFICIENTS_RAFP_AGE[ages[0]];
+  for (const a of ages) {
+    if (a <= age) coeff = COEFFICIENTS_RAFP_AGE[a];
+  }
+  return coeff;
+}
+
+/**
+ * Retourne le coefficient de conversion en capital RAFP selon l'âge (62-64 sourcés).
+ * @param {number} ageDepart - Âge de départ
+ * @returns {number|null} Coefficient de conversion, ou null si non disponible pour cet âge
+ */
+export function getCoefficientConversionCapitalRAFP(ageDepart) {
+  const age = Math.floor(ageDepart);
+  if (age in COEFFICIENTS_CONVERSION_CAPITAL_RAFP) {
+    return COEFFICIENTS_CONVERSION_CAPITAL_RAFP[age];
+  }
+  // Âge < 62 : capital non liquidable ; > 64 : coefficient non sourcé.
+  if (age < AGE_MIN_RAFP) return null;
+  return null;
 }
 
 /**

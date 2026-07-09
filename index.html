@@ -279,11 +279,12 @@
                   <p class="step__description">Indiquez votre indice et les éléments de rémunération complémentaires.</p>
 
                   <div class="form-group">
-                    <label for="indiceBrut" class="form-label form-label--required">Indice brut actuel<span data-glossaire="indice-brut"></span></label>
+                    <!-- name="indiceBrut" conservé (identifiant interne) mais collecte l'indice MAJORÉ : le moteur fait indice × valeur du point, valable pour l'IM. -->
+                    <label for="indiceBrut" class="form-label form-label--required">Indice majoré actuel<span data-glossaire="indice-brut"></span></label>
                     <input type="number" id="indiceBrut" name="indiceBrut" class="form-input" required
-                           min="367" max="1027" placeholder="ex: 562"
+                           min="340" max="830" placeholder="ex: 526"
                            aria-required="true" aria-describedby="indiceBrut-hint">
-                    <span class="form-hint" id="indiceBrut-hint">Votre indice brut figure sur votre bulletin de paie (entre 367 et 1027).</span>
+                    <span class="form-hint" id="indiceBrut-hint">Votre <strong>indice majoré (IM)</strong> figure sur votre bulletin de paie (généralement entre 340 et 830). ⚠️ Ne pas saisir l'indice brut : c'est l'indice <em>majoré</em> qui sert au calcul de la pension.</span>
                   </div>
 
                   <div class="form-row">

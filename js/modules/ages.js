@@ -81,8 +81,12 @@ function dateAtteindreAgeAvecMois(dateNaissance, annees, mois = 0) {
  * @returns {Date} Date d'annulation de la décote
  */
 export function calculerDateAnnulationDecote(dateNaissance) {
-  const ageLegal = getAgeLegalSedentaire(dateNaissance);
-  return dateAtteindreAgeAvecMois(dateNaissance, ageLegal.ans, ageLegal.mois);
+  // Âge d'annulation de la décote FIXE à 62 ans pour un départ anticipé au titre de la
+  // catégorie active (générations ≥ 1963). Depuis la loi 2023-270, cet âge est décorrélé
+  // de la limite d'âge ET de l'âge sédentaire ; il dépend du motif d'ouverture du droit.
+  // Réf: art. 20-1 décret 2003-1306 ; CNRACL. (NB: la limite d'âge active étant 62 ans,
+  // utiliser l'âge sédentaire 62-64 produisait des scénarios juridiquement inatteignables.)
+  return dateAtteindreAge(dateNaissance, AGES.ANNULATION_DECOTE);
 }
 
 /**
@@ -433,8 +437,7 @@ export function genererScenariosDepart(donnees) {
  * @returns {number} Nombre de trimestres de décote (0 à 20)
  */
 export function calculerTrimestresDecote(dateNaissance, dateDepart, trimestresAssurance, trimestresRequis) {
-  // Âge d'annulation de la décote PROGRESSIF selon la génération (62 à 64 ans,
-  // réforme 2023) et non figé à 62 ans. Réf: Loi n°2023-270, Code des pensions Art. L14.
+  // Âge d'annulation de la décote FIXE à 62 ans pour un actif (cf. calculerDateAnnulationDecote).
   const dateAnnulation = calculerDateAnnulationDecote(dateNaissance);
 
   // Pas de décote si le départ intervient à/après l'âge d'annulation de la décote

@@ -20,7 +20,6 @@ import {
 } from '../js/modules/pension.js';
 import {
   calculerNBI,
-  calculerMoyennePondereeNBI,
   calculerNBIActivite,
 } from '../js/modules/nbi.js';
 import {
@@ -207,53 +206,32 @@ test('calculerCoefficientDecote(100) plafonné à 0.75 (décote max 25 %)',
 // ============================================================================
 section('3. modules/nbi');
 
-const nbi15ans = calculerNBI({
-  pointsNBI: 30,
-  dureeMoisNBI: 180,       // 15 ans pile
-  dureeServicesTotal: 172,
-  tauxLiquidation: 75,
-});
+// Formule officielle : points × (durée perception en trim.) × (75/requis/100) × valeur point.
+const nbi15ans = calculerNBI({ pointsNBI: 30, dureeMoisNBI: 180, dureeRequise: 172 });
+const supplementAttendu15 = 30 * (180 / 3) * (75 / 172 / 100) * POINT_INDICE.VALEUR_ANNUELLE / 12;
 
 test('NBI 15 ans — éligible', nbi15ans.eligible === true);
-test('NBI 15 ans — moyenne pondérée = points (intégration complète)',
-  nbi15ans.moyennePonderee === 30);
-test('NBI 15 ans — supplément mensuel > 0',
-  nbi15ans.supplementMensuel > 0);
-
-// Formule attendue : 30 × valeur point × 75 %
-const supplementAttendu15 = 30 * POINT_INDICE.VALEUR_ANNUELLE * 0.75 / 12;
-test('NBI 15 ans — supplément conforme à la formule',
+test('NBI 15 ans — supplément mensuel > 0', nbi15ans.supplementMensuel > 0);
+test('NBI 15 ans — supplément conforme à la formule officielle',
   proche(nbi15ans.supplementMensuel, supplementAttendu15, 0.05),
   `obtenu ${nbi15ans.supplementMensuel}, attendu ${supplementAttendu15.toFixed(2)}`);
 
-const nbi5ans = calculerNBI({
-  pointsNBI: 30,
-  dureeMoisNBI: 60,        // 5 ans
-  dureeServicesTotal: 172,
-  tauxLiquidation: 75,
-});
+const nbi5ans = calculerNBI({ pointsNBI: 30, dureeMoisNBI: 60, dureeRequise: 172 });
+test('NBI 5 ans — éligible', nbi5ans.eligible === true);
+test('NBI 5 ans — supplément < supplément 15 ans (durée plus courte)',
+  nbi5ans.supplementMensuel < nbi15ans.supplementMensuel && nbi5ans.supplementMensuel > 0);
 
-test('NBI 5 ans — éligible (≥ 1 an)', nbi5ans.eligible === true);
-test('NBI 5 ans — moyenne pondérée < points (prorata)',
-  nbi5ans.moyennePonderee < 30 && nbi5ans.moyennePonderee > 0);
-test('NBI 5 ans — supplément < supplément 15 ans',
-  nbi5ans.supplementMensuel < nbi15ans.supplementMensuel);
+// Plus de seuil de perception minimale : 6 mois est décompté nativement.
+const nbi6mois = calculerNBI({ pointsNBI: 30, dureeMoisNBI: 6, dureeRequise: 172 });
+test('NBI 6 mois — éligible (plus de seuil 1 an)', nbi6mois.eligible === true);
+test('NBI 6 mois — supplément > 0 et < 5 ans',
+  nbi6mois.supplementMensuel > 0 && nbi6mois.supplementMensuel < nbi5ans.supplementMensuel);
 
-const nbi6mois = calculerNBI({
-  pointsNBI: 30,
-  dureeMoisNBI: 6,         // < 12 mois
-  dureeServicesTotal: 172,
-  tauxLiquidation: 75,
-});
-
-test('NBI 6 mois — non éligible', nbi6mois.eligible === false);
-test('NBI 6 mois — supplément = 0', nbi6mois.supplementMensuel === 0);
-
-// Bornes de calculerMoyennePondereeNBI
-test('moyenne pondérée avec points=0 retourne 0',
-  calculerMoyennePondereeNBI(0, 180, 172) === 0);
-test('moyenne pondérée avec duree=0 retourne 0',
-  calculerMoyennePondereeNBI(30, 0, 172) === 0);
+// Bornes : 0 point ou 0 durée → non éligible, supplément 0.
+test('NBI 0 point → non éligible',
+  calculerNBI({ pointsNBI: 0, dureeMoisNBI: 180, dureeRequise: 172 }).eligible === false);
+test('NBI 0 durée → non éligible',
+  calculerNBI({ pointsNBI: 30, dureeMoisNBI: 0, dureeRequise: 172 }).eligible === false);
 
 const nbiActivite = calculerNBIActivite(30);
 test('NBI activité 30 pts > 0', nbiActivite > 0);
@@ -273,7 +251,7 @@ const surcoteOK = calculerSurcote({
   dateTauxPlein: new Date(2024, 0, 1),
 });
 
-test('Surcote — éligible quand âge légal actif atteint + taux plein',
+test('Surcote — éligible quand âge légal sédentaire atteint + taux plein',
   surcoteOK.eligible === true);
 test('Surcote — trimestres > 0', surcoteOK.trimestresSurcote > 0);
 test('Surcote — coefficient > 1', surcoteOK.coefficientMajoration > 1);
@@ -289,15 +267,15 @@ const surcoteKO1 = calculerSurcote({
 test('Surcote — non éligible si trimestres < requis',
   surcoteKO1.eligible === false);
 
-// Inéligible : âge < âge légal actif (57-59 ans selon génération)
+// Inéligible : âge < âge légal sédentaire (62-64 ans selon génération)
 const surcoteKO2 = calculerSurcote({
   dateNaissance: new Date(1970, 0, 1),
-  dateDepart: new Date(2026, 6, 1),  // ~56,5 ans < âge légal actif (58 ans 3 mois pour 1970)
+  dateDepart: new Date(2030, 0, 1),  // 60 ans < âge sédentaire (64 ans pour 1970)
   trimestresAssurance: 180,
   trimestresRequis: 172,
-  dateTauxPlein: new Date(2024, 0, 1),
+  dateTauxPlein: new Date(2028, 0, 1),
 });
-test('Surcote — non éligible si âge < âge légal actif',
+test('Surcote — non éligible si âge < âge légal sédentaire',
   surcoteKO2.eligible === false);
 
 // Calcul du taux

@@ -43,20 +43,18 @@ const attendu = {
   trimestresServicesEffectifs: 153,  // 38 ans 4 mois
   bonificationCinquieme: 20,  // plafonné
   majorationSPV: 3,  // décret 2026-18
-  // Liquidables (montant) = 153 services + 20 bonif = 173.
-  // La majoration SPV (3) ne compte QUE pour la durée d'assurance (correction C1),
-  // donc la durée d'assurance CNRACL = 176 (le total du document de référence).
-  // Le taux reste plafonné à 75 % dans les deux cas → montant identique.
-  totalLiquidable: 173,
+  // Liquidables = 153 services + 20 bonif + 3 SPV = 176 (SPV comptée dans le montant
+  // ET la durée d'assurance). Correspond au total du document CNRACL de référence.
+  totalLiquidable: 176,
   totalAssurance: 176,
   trimestresRequis: 172,
   tauxLiquidation: 75,
   tibMensuel: 2589.38,
   majorationPrimeFeu: 647.35,
   pensionCNRACL: 2427.54,
-  supplementNBI: 61.64,
-  renteRAFP: 68,
-  totalBrut: 2557.18,
+  supplementNBI: 41.21,   // formule officielle (le doc affichait 61,64 € — méthode erronée)
+  renteRAFP: 68,          // NB: sera revu au #6 (rente RAFP non servie avant 62 ans)
+  totalBrut: 2557.18,     // valeur du document ; s'écartera après corrections NBI/RAFP
 };
 
 let passed = 0;
@@ -144,11 +142,11 @@ test('Majoration SPV (décret 2026-18) = 3',
   `Calculé: ${durees.trimestresMajorationSPV} | Attendu: ${attendu.majorationSPV}`);
 
 const totalLiquidable = durees.trimestresLiquidables;
-test('Total trimestres liquidables = 173 (services + bonif, sans SPV)',
+test('Total trimestres liquidables = 176 (services + bonif + SPV)',
   approx(totalLiquidable, attendu.totalLiquidable, 1),
   `Calculé: ${totalLiquidable} | Attendu: ${attendu.totalLiquidable}`);
 
-test('Durée d\'assurance = 176 (avec majoration SPV)',
+test('Durée d\'assurance = 176 (SPV comptée dans les deux)',
   approx(durees.trimestresAssuranceTotale, attendu.totalAssurance, 1),
   `Calculé: ${durees.trimestresAssuranceTotale} | Attendu: ${attendu.totalAssurance}`);
 
@@ -212,16 +210,18 @@ console.log('');
 console.log('📋 TEST 6 : Supplément NBI');
 console.log('─────────────────────────────────────────────────────────────────');
 
+// Formule officielle (décret 2006-779) : 16 × 120 trim. × (75/172/100) × valeur point.
+// NB : le document de référence affichait 61,64 €, mais il appliquait à tort le taux de
+// liquidation (75 %) au lieu du taux d'un trimestre → la valeur correcte est ~41,21 €.
 const nbi = calculerNBI({
   pointsNBI: profil.pointsNBI,
-  dureeMoisNBI: profil.dureeNBI * 12,  // 14 ans = 168 mois
-  dureeServicesTotal: durees.trimestresServicesEffectifs,  // en trimestres
-  tauxLiquidation: tauxLiquidation,  // en pourcentage (75)
+  dureeMoisNBI: profil.dureeNBI * 12,  // 30 ans = 360 mois = 120 trim.
+  dureeRequise: trimestresRequis,      // 172
 });
 
-test('Supplément NBI ≈ 62 €/mois',
-  approx(nbi.supplementMensuel, attendu.supplementNBI, 10),
-  `Calculé: ${nbi.supplementMensuel.toFixed(2)} € | Attendu: ${attendu.supplementNBI} €`);
+test('Supplément NBI ≈ 41,21 €/mois (formule officielle)',
+  approx(nbi.supplementMensuel, 41.21, 1),
+  `Calculé: ${nbi.supplementMensuel.toFixed(2)} € | Attendu: 41,21 €`);
 
 console.log('');
 
@@ -241,9 +241,11 @@ const pfr = calculerPFR({
   anneesCotisation: anneesRAFP,
 }, 59);
 
-test('Rente RAFP estimée ≈ 68 €/mois',
-  approx(pfr.renteRAFPMensuelle, attendu.renteRAFP, 30),
-  `Calculé: ${pfr.renteRAFPMensuelle.toFixed(2)} € | Attendu: ${attendu.renteRAFP} €`);
+// Départ à 59 ans : la rente RAFP n'est pas servie avant 62 ans → différée (0 ici).
+// Elle sera versée à partir de 62 ans (à recalculer avec l'âge 62 le moment venu).
+test('Rente RAFP différée à 59 ans (servie à partir de 62 ans)',
+  pfr.renteRAFPMensuelle === 0 && pfr.renteDifferee === true,
+  `renteMensuelle: ${pfr.renteRAFPMensuelle} | différée: ${pfr.renteDifferee}`);
 
 console.log('');
 

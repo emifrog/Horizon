@@ -7,7 +7,10 @@
  * @module modules/pfr
  */
 
-import { PFR, PFR_SPV, POINT_INDICE, getCoefficientRAFPAge, getMontantPFRSPV } from '../config/parametres.js';
+import {
+  PFR, PFR_SPV, POINT_INDICE, AGE_MIN_RAFP,
+  getCoefficientRAFPAge, getCoefficientConversionCapitalRAFP, getMontantPFRSPV,
+} from '../config/parametres.js';
 import { arrondir } from '../utils/nombres.js';
 
 /**
@@ -99,10 +102,11 @@ export function estimerPointsRAFPAnnuels(cotisationAgent, cotisationEmployeur) {
  * @returns {number} Rente mensuelle estimée
  */
 export function calculerRenteRAFP(totalPoints, ageDepart = 62) {
-  // Coefficient de majoration selon l'âge de départ
+  // La rente RAFP n'est pas servie avant l'âge légal sédentaire (62 ans), même pour
+  // un actif ayant validé sa durée : la prestation est différée jusqu'à cet âge.
+  if (ageDepart < AGE_MIN_RAFP) return 0;
+
   const coeffAge = getCoefficientRAFPAge(ageDepart);
-  
-  // La valeur de service est utilisée pour calculer la rente annuelle
   const renteAnnuelle = totalPoints * PFR.VALEUR_SERVICE_POINT_RAFP * coeffAge;
   return arrondir(renteAnnuelle / 12, 2);
 }
@@ -197,24 +201,30 @@ export function calculerPFR(donnees, ageDepart = 62) {
   // Type de prestation (rente ou capital)
   const typePrestation = determinerTypePrestationRAFP(totalPointsRAFP);
 
-  // Calcul de la rente ou du capital RAFP
-  const renteRAFPMensuelle = typePrestation.type === 'rente' 
-    ? calculerRenteRAFP(totalPointsRAFP, ageDepart) 
+  // La rente n'est pas servie avant 62 ans (âge légal sédentaire) : elle est différée.
+  const renteDifferee = typePrestation.type === 'rente' && ageDepart < AGE_MIN_RAFP;
+  const renteRAFPMensuelle = typePrestation.type === 'rente'
+    ? calculerRenteRAFP(totalPointsRAFP, ageDepart)
     : 0;
-  
-  // Calcul du capital si applicable.
-  // ATTENTION : le versement en capital (points < seuil de rente) est calculé par la
-  // CNRACL via un BARÈME OFFICIEL DE CONVERSION EN CAPITAL (coefficient dépendant de
-  // l'âge, non intégré ici). La valeur ci-dessous, basée sur la valeur de service du
-  // point, ne représente qu'un ORDRE DE GRANDEUR (proche d'une annuité de rente) et
-  // sous-estime le capital réel. À afficher comme une estimation, pas comme un montant exact.
-  const capitalRAFP = typePrestation.type !== 'rente'
-    ? arrondir(totalPointsRAFP * PFR.VALEUR_SERVICE_POINT_RAFP * coefficientAge, 2)
-    : 0;
-  const capitalRAFPEstimation = typePrestation.type !== 'rente';
-  const capitalRAFPNote = capitalRAFPEstimation
-    ? 'Estimation indicative — le capital réel est déterminé par le barème de conversion officiel de la CNRACL (non disponible dans le simulateur).'
-    : '';
+
+  // Capital (points < seuil de rente) :
+  //   capital = points × valeur de service × coef. majoration × coef. de conversion.
+  // Le coefficient de conversion (≈ 27 à 62 ans) n'est sourcé que pour 62-64 ans.
+  const coefConversion = getCoefficientConversionCapitalRAFP(ageDepart);
+  let capitalRAFP = 0;
+  let capitalRAFPEstimation = false;
+  let capitalRAFPNote = '';
+  if (typePrestation.type !== 'rente') {
+    if (coefConversion) {
+      capitalRAFP = arrondir(
+        totalPointsRAFP * PFR.VALEUR_SERVICE_POINT_RAFP * coefficientAge * coefConversion, 2
+      );
+    } else {
+      // Âge hors 62-64 (ou < 62) : coefficient de conversion non disponible → non calculé.
+      capitalRAFPEstimation = true;
+      capitalRAFPNote = 'Capital non calculé : le barème de conversion en capital n\'est disponible que de 62 à 64 ans (et non liquidable avant 62 ans).';
+    }
+  }
 
   return {
     traitementIndiciaireAnnuel: arrondir(traitementIndiciaireAnnuel, 2),
@@ -228,6 +238,7 @@ export function calculerPFR(donnees, ageDepart = 62) {
     coefficientAge,
     typePrestation,
     renteRAFPMensuelle,
+    renteDifferee,
     capitalRAFP,
     capitalRAFPEstimation,
     capitalRAFPNote,

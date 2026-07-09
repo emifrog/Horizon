@@ -743,17 +743,14 @@ function effectuerCalculs(formData, profilEnrichi) {
     anneesCotisation: anneesRAFP,
   }, ageTauxPlein);
 
-  // 7. Calculer le supplément NBI — toujours en supplément séparé et proratisé
-  // (décret 2006-779). La NBI ne subit pas la majoration prime de feu.
+  // 7. Calculer le supplément NBI (décret 2006-779) — établi à part, sans décote
+  // ni majoration prime de feu. Le taux appliqué est celui d'un trimestre
+  // (75 / durée requise), et non le taux de liquidation de la pension.
   const nbi = calculerNBI({
     pointsNBI: formData.pointsNBI,
     dureeMoisNBI: formData.dureeNBI * 12,
-    dureeServicesTotal: dureeTauxPlein.trimestresLiquidables,
-    tauxLiquidation: pensionTauxPlein.tauxLiquidationNet,
+    dureeRequise: trimestresRequis,
   });
-  if (nbi.eligible) {
-    nbi.integreTIB = false;
-  }
 
   // 8. Calculer la PFR SPV (double statut) - utilise anneesSPV du profil
   const pfrSPV = calculerPFRSPV(formData.doubleStatut, formData.anneesSPV, formData.montantPFRSPV);

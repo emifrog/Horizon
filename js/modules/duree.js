@@ -162,14 +162,15 @@ export function verifierConditionDureePension(trimestresServices) {
 /**
  * Calcule la durée totale liquidable CNRACL (base du montant / taux de liquidation).
  *
- * NB : la majoration SPV (décret 2026-18) est une majoration de DURÉE D'ASSURANCE ;
- * elle n'entre PAS dans les trimestres liquidables (elle n'augmente pas le montant),
- * mais uniquement dans la durée d'assurance (décote / atteinte du taux plein).
+ * NB : la majoration SPV (décret 2026-18, inséré au 9° du I de l'art. 15 du décret
+ * 2003-1306 — titre III « liquidation ») compte DANS LES DEUX : trimestres liquidables
+ * (montant) ET durée d'assurance (décote). Réf: art. L.173-1-5 CSS.
  *
  * @param {Object} params - Paramètres de calcul
  * @param {number} params.trimestresServicesEffectifs - Services effectifs SPP (proratisés quotité)
  * @param {number} params.trimestresBonificationCinquieme - Bonification du 1/5e (SPP)
  * @param {number} params.trimestresBonificationEnfants - Bonification enfants
+ * @param {number} params.trimestresMajorationSPV - Majoration SPV (décret 2026-18)
  * @param {number} params.trimestresServicesMilitaires - Services militaires (BSPP/BMPM)
  * @param {number} params.trimestresBonificationMilitaire - Bonification du 1/5e sur services militaires
  * @returns {number} Total trimestres liquidables
@@ -178,6 +179,7 @@ export function calculerTrimestresLiquidables({
   trimestresServicesEffectifs,
   trimestresBonificationCinquieme,
   trimestresBonificationEnfants,
+  trimestresMajorationSPV = 0,
   trimestresServicesMilitaires = 0,
   trimestresBonificationMilitaire = 0,
 }) {
@@ -185,6 +187,7 @@ export function calculerTrimestresLiquidables({
     trimestresServicesEffectifs +
     trimestresBonificationCinquieme +
     trimestresBonificationEnfants +
+    trimestresMajorationSPV +
     trimestresServicesMilitaires +
     trimestresBonificationMilitaire
   );
@@ -282,11 +285,12 @@ export function calculerDurees(donnees, anneeNaissance) {
   const trimestresMajorationSPV = getMajorationSPVDecret2026(anneesSPV, dateDepart);
 
   // Trimestres liquidables (base du montant / taux de liquidation) :
-  // services PRORATISÉS + bonifications + services militaires. SANS majoration SPV.
+  // services PRORATISÉS + bonifications + majoration SPV + services militaires.
   const trimestresLiquidables = calculerTrimestresLiquidables({
     trimestresServicesEffectifs,
     trimestresBonificationCinquieme,
     trimestresBonificationEnfants,
+    trimestresMajorationSPV,
     trimestresServicesMilitaires: trimServicesMilitaires,
     trimestresBonificationMilitaire,
   });

@@ -39,9 +39,9 @@ console.log('        TESTS DE NON-RÉGRESSION — CORRECTIONS PRIORITÉ 1');
 console.log('═══════════════════════════════════════════════════════════════════\n');
 
 // ============================================================================
-// C1 — La majoration SPV ne compte QUE pour la durée d'assurance
+// C1 — La majoration SPV compte dans les liquidables ET la durée d'assurance
 // ============================================================================
-console.log('📋 C1 : Majoration SPV en durée d\'assurance uniquement');
+console.log('📋 C1 : Majoration SPV dans les liquidables ET l\'assurance');
 console.log('───────────────────────────────────────────────────────────────────');
 
 // SPP entré en 2004, départ 2036 (32 ans = 128 trim), 25 ans SPV → +3 trimestres
@@ -60,12 +60,12 @@ test('Services effectifs = 128', cSPV.trimestresServicesEffectifs === 128,
   `Calculé: ${cSPV.trimestresServicesEffectifs}`);
 test('Majoration SPV = 3', cSPV.trimestresMajorationSPV === 3,
   `Calculé: ${cSPV.trimestresMajorationSPV}`);
-test('Liquidables = 148 (128 + 20 bonif, SANS les 3 SPV)', cSPV.trimestresLiquidables === 148,
+test('Liquidables = 151 (128 + 20 bonif + 3 SPV)', cSPV.trimestresLiquidables === 151,
   `Calculé: ${cSPV.trimestresLiquidables}`);
-test('Assurance CNRACL = 151 (148 + 3 SPV)', cSPV.trimestresAssuranceCNRACL === 151,
+test('Assurance CNRACL = 151 (SPV comptée aussi)', cSPV.trimestresAssuranceCNRACL === 151,
   `Calculé: ${cSPV.trimestresAssuranceCNRACL}`);
-test('Assurance − liquidables = majoration SPV',
-  cSPV.trimestresAssuranceCNRACL - cSPV.trimestresLiquidables === cSPV.trimestresMajorationSPV,
+test('SPV comptée dans les deux : liquidables = assurance CNRACL',
+  cSPV.trimestresAssuranceCNRACL === cSPV.trimestresLiquidables,
   `Écart: ${cSPV.trimestresAssuranceCNRACL - cSPV.trimestresLiquidables}`);
 
 console.log('');
@@ -127,30 +127,30 @@ test('Liquidables = 150 (100 services + 20 bonif + 30 militaires)', m2.trimestre
 console.log('');
 
 // ============================================================================
-// M3 — Annulation de décote progressive (62 → 64 ans)
+// M3 — Annulation de décote FIXE à 62 ans (catégorie active)
 // ============================================================================
-console.log('📋 M3 : Décote progressive (génération 1969 → annulation à 64 ans)');
+console.log('📋 M3 : Décote — annulation FIXE à 62 ans (catégorie active)');
 console.log('───────────────────────────────────────────────────────────────────');
 
-// Né en 1969 : annulation décote à 64 ans (2033). Départ à 62 ans (2031),
-// durée insuffisante (160/172). L'ancienne garde figée à 62 ans renvoyait 0 à tort.
-const decote1969 = calculerTrimestresDecote(
+// Né en 1969 : annulation décote à 62 ans FIXE (2031). Départ à 61 ans (2030),
+// durée insuffisante (160/172) → décote = min(12 manquants durée, 4 trim jusqu'à 62).
+const decote61 = calculerTrimestresDecote(
+  new Date(1969, 0, 1),
+  new Date(2030, 0, 1), // 61 ans
+  160,
+  172
+);
+test('Décote à 61 ans (avant annulation à 62) = 4 trimestres', decote61 === 4,
+  `Calculé: ${decote61}`);
+
+// À 62 ans (âge d'annulation fixe), plus aucune décote.
+const decote62 = calculerTrimestresDecote(
   new Date(1969, 0, 1),
   new Date(2031, 0, 1), // 62 ans
   160,
   172
 );
-test('Décote à 62 ans (génération 1969) = 8 trimestres (et non 0)', decote1969 === 8,
-  `Calculé: ${decote1969}`);
-
-// Contrôle : au-delà de l'âge d'annulation (64 ans, 2033), plus de décote
-const decoteApres = calculerTrimestresDecote(
-  new Date(1969, 0, 1),
-  new Date(2033, 6, 1), // > 64 ans
-  160,
-  172
-);
-test('Décote après 64 ans = 0', decoteApres === 0, `Calculé: ${decoteApres}`);
+test('Décote à 62 ans (annulation fixe) = 0', decote62 === 0, `Calculé: ${decote62}`);
 
 console.log('');
 
@@ -195,14 +195,16 @@ console.log('');
 console.log('📋 Mineurs (b) : surcote (âge actif), minimum garanti, gén. < 1960');
 console.log('───────────────────────────────────────────────────────────────────');
 
-// m1 — Surcote basée sur l'âge légal ACTIF (57-59), atteignable par un SPP
-// Né en 1965 (âge actif 57 → dès 2022). Départ 2027 (62 ans), durée pleine → éligible.
-const surcOK = verifierEligibiliteSurcote(new Date(1965, 0, 1), new Date(2027, 0, 1), 176, 172);
-test('Surcote éligible pour un SPP à 62 ans (âge légal actif)', surcOK.eligible === true,
+// m1 — Surcote basée sur l'âge légal SÉDENTAIRE (62-64). Un SPP (limite d'âge 62) n'y
+// a quasi pas droit. Né en 1965 → âge sédentaire 63 ans 3 mois (2028).
+// Départ à 62 ans (2027) : âge sédentaire non atteint → NON éligible.
+const surcKO = verifierEligibiliteSurcote(new Date(1965, 0, 1), new Date(2027, 0, 1), 176, 172);
+test('Surcote NON éligible à 62 ans (âge sédentaire non atteint)', surcKO.eligible === false,
+  `motif: ${surcKO.motif}`);
+// Départ après l'âge sédentaire (65 ans) : éligible.
+const surcOK = verifierEligibiliteSurcote(new Date(1965, 0, 1), new Date(2030, 0, 1), 176, 172);
+test('Surcote éligible une fois l\'âge sédentaire atteint (65 ans)', surcOK.eligible === true,
   `motif: ${surcOK.motif}`);
-// Départ avant l'âge légal actif → non éligible
-const surcKO = verifierEligibiliteSurcote(new Date(1965, 0, 1), new Date(2021, 0, 1), 176, 172);
-test('Surcote non éligible avant l\'âge légal actif', surcKO.eligible === false);
 
 // m4 — Minimum garanti = plancher sur la BASE, prime de feu ajoutée par-dessus
 // Pension faible (indice min, peu de trimestres) → minimum garanti applicable.
@@ -228,6 +230,19 @@ test('Durée requise génération 1955 = 167 (et non 172)', getDureeAssuranceReq
   `Calculé: ${getDureeAssuranceRequise(1955)}`);
 test('Durée requise génération 1980 = 172', getDureeAssuranceRequise(1980) === 172,
   `Calculé: ${getDureeAssuranceRequise(1980)}`);
+
+// #3 — Table durée requise CATÉGORIE ACTIVE (≠ droit commun) : 1966→169 … 1970→172.
+test('Durée requise active 1966 = 169 (et non 172)', getDureeAssuranceRequise(1966) === 169,
+  `Calculé: ${getDureeAssuranceRequise(1966)}`);
+test('Durée requise active 1968 = 170 (exemple CNRACL)', getDureeAssuranceRequise(1968) === 170,
+  `Calculé: ${getDureeAssuranceRequise(1968)}`);
+test('Durée requise active 1969 = 171', getDureeAssuranceRequise(1969) === 171,
+  `Calculé: ${getDureeAssuranceRequise(1969)}`);
+// #4 — Deltas post-suspension LFSS (pension à effet ≥ 01/09/2026).
+test('Durée requise 1969 post-suspension = 170', getDureeAssuranceRequise(1969, '2027-01-01') === 170,
+  `Calculé: ${getDureeAssuranceRequise(1969, '2027-01-01')}`);
+test('Durée requise 1968 pré-suspension inchangée = 170', getDureeAssuranceRequise(1968, '2026-01-01') === 170,
+  `Calculé: ${getDureeAssuranceRequise(1968, '2026-01-01')}`);
 
 console.log('');
 
