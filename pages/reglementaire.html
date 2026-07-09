@@ -65,6 +65,7 @@
                     <h2 class="doc-nav__title">Sommaire</h2>
                     <ul class="doc-nav__list">
                         <li><a href="#cnracl" class="doc-nav__link">CNRACL</a></li>
+                        <li><a href="#lfss-2026" class="doc-nav__link">Suspension LFSS 2026</a></li>
                         <li><a href="#categorie-active" class="doc-nav__link">Catégorie active</a></li>
                         <li><a href="#services-militaires" class="doc-nav__link">BSPP / BMPM</a></li>
                         <li><a href="#duree-assurance" class="doc-nav__link">Durée d'assurance</a></li>
@@ -102,7 +103,8 @@
                                 75%</strong>
                         </div>
                         <p>Le traitement indiciaire pris en compte est celui des 6 derniers mois d'activité (hors
-                            primes, sauf exceptions).</p>
+                            primes, sauf exceptions). Il se calcule à partir de l'<strong>indice majoré</strong>
+                            (et non de l'indice brut) multiplié par la valeur du point d'indice.</p>
 
                         <div class="ref-box">
                             <div class="ref-box__title">Références réglementaires</div>
@@ -114,6 +116,78 @@
                                         L1 à L95)</li>
                                     <li><a href="https://www.cnracl.retraites.fr" target="_blank" rel="noopener">Site
                                             officiel CNRACL</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section Suspension LFSS 2026 -->
+                <section id="lfss-2026" class="doc-section">
+                    <h2 class="doc-section__title">Suspension de la réforme 2023 (LFSS 2026)</h2>
+                    <div class="doc-section__content">
+                        <div class="highlight-box highlight-box--warning">
+                            <strong>Point d'attention majeur :</strong> la loi de financement de la sécurité
+                            sociale pour 2026 <strong>suspend</strong> le calendrier d'accélération de la réforme
+                            2023. Les paramètres d'âge d'ouverture des droits et de durée d'assurance requise
+                            dépendent désormais de la <strong>date d'effet de la pension</strong>.
+                        </div>
+
+                        <h3>Deux régimes coexistent</h3>
+                        <ul>
+                            <li><strong>Pension prenant effet avant le 1<sup>er</sup> septembre 2026</strong> :
+                                paramètres de la réforme 2023 (colonne « avant » ci-dessous).</li>
+                            <li><strong>Pension prenant effet à compter du 1<sup>er</sup> septembre 2026</strong> :
+                                bascule vers les paramètres « gelés » — l'âge d'ouverture et la durée requise
+                                <strong>reculent d'environ une génération</strong> (colonne « après »).</li>
+                        </ul>
+                        <p>Le simulateur applique automatiquement le régime correspondant à chaque scénario, selon
+                            sa date de départ, en tenant compte de <strong>bornes de naissance infra-annuelles</strong>
+                            (par ex. 1<sup>er</sup> septembre 1966, 1<sup>er</sup> avril 1970).</p>
+
+                        <h3>Catégorie active — âge d'ouverture et durée requise</h3>
+                        <div class="table-wrapper">
+                            <table class="doc-table">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">Année de naissance</th>
+                                        <th colspan="2">Âge d'ouverture</th>
+                                        <th colspan="2">Durée requise (trimestres)</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Avant 09/2026</th>
+                                        <th>À partir de 09/2026</th>
+                                        <th>Avant 09/2026</th>
+                                        <th>À partir de 09/2026</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Jusqu'au 31/08/1966</td><td>57 ans</td><td>57 ans</td><td>168</td><td>168</td></tr>
+                                    <tr><td>Sept.-déc. 1966</td><td>57 ans 3 mois</td><td>57 ans 3 mois</td><td>169</td><td>169</td></tr>
+                                    <tr><td>1967</td><td>57 ans 6 mois</td><td>57 ans 6 mois</td><td>169</td><td>169</td></tr>
+                                    <tr><td>1968</td><td>57 ans 9 mois</td><td>57 ans 9 mois</td><td>170</td><td>170</td></tr>
+                                    <tr><td>1969</td><td>58 ans</td><td>57 ans 9 mois</td><td>171</td><td>170</td></tr>
+                                    <tr><td>Janv.-mars 1970</td><td>58 ans 3 mois</td><td>57 ans 9 mois</td><td>172</td><td>170</td></tr>
+                                    <tr><td>Avril-déc. 1970</td><td>58 ans 3 mois</td><td>58 ans</td><td>172</td><td>171</td></tr>
+                                    <tr><td>1971</td><td>58 ans 6 mois</td><td>58 ans 3 mois</td><td>172</td><td>172</td></tr>
+                                    <tr><td>1972</td><td>58 ans 9 mois</td><td>58 ans 6 mois</td><td>172</td><td>172</td></tr>
+                                    <tr><td>1973</td><td>59 ans</td><td>58 ans 9 mois</td><td>172</td><td>172</td></tr>
+                                    <tr><td>1974 et après</td><td>59 ans</td><td>59 ans</td><td>172</td><td>172</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-info">L'âge d'annulation de la décote reste fixé à <strong>62 ans</strong>
+                            dans les deux régimes (il ne recule pas avec la génération).</p>
+
+                        <div class="ref-box">
+                            <div class="ref-box__title">Références réglementaires</div>
+                            <div class="ref-box__content">
+                                <ul>
+                                    <li><strong>Loi de financement de la sécurité sociale pour 2026</strong>
+                                        (suspension de l'accélération de la réforme 2023)</li>
+                                    <li><strong>Loi n°2023-270</strong> du 14 avril 2023 (réforme suspendue)</li>
+                                    <li>Barèmes CNRACL « Âge légal » (MAJ 09/03/2026) et « Durée d'assurance »
+                                        (MAJ 16/02/2026)</li>
                                 </ul>
                             </div>
                         </div>
@@ -142,7 +216,10 @@
                         </ul>
 
                         <h3>Âge d'ouverture des droits (réforme 2023)</h3>
-                        <p>L'âge d'ouverture des droits évolue progressivement selon la génération :</p>
+                        <p>L'âge d'ouverture des droits évolue progressivement selon la génération. Le tableau
+                            ci-dessous correspond au régime applicable <strong>avant le 1<sup>er</sup> septembre
+                            2026</strong> ; pour les pensions prenant effet après cette date, voir la
+                            <a href="#lfss-2026">suspension LFSS 2026</a>.</p>
                         <div class="table-wrapper">
                             <table class="doc-table">
                                 <thead>
@@ -203,9 +280,15 @@
                             <strong>Avantages :</strong>
                             <ul style="margin-top: 0.5rem; margin-bottom: 0;">
                                 <li><strong>Services actifs</strong> : Ces services comptent comme services en catégorie active</li>
-                                <li><strong>Condition des 17 ans</strong> : Ils sont pris en compte pour atteindre les 17 ans de services actifs requis pour partir à 57 ans</li>
-                                <li><strong>Bonification du 1/5ème</strong> : Ils ouvrent droit à la bonification (1 an pour 5 ans de services)</li>
+                                <li><strong>Condition des 17 ans</strong> : Ils sont pris en compte pour atteindre les 17 ans de services actifs requis pour un départ anticipé</li>
                             </ul>
+                        </div>
+
+                        <div class="highlight-box highlight-box--warning">
+                            <strong>Exclusions :</strong> les services militaires BSPP/BMPM n'ouvrent
+                            <strong>pas</strong> droit à la bonification du 1/5<sup>ème</sup> (réservée aux
+                            services civils accomplis en qualité de SPP) et sont <strong>exclus de l'assiette</strong>
+                            de la majoration « prime de feu ».
                         </div>
 
                         <h3>Exemple de calcul</h3>
@@ -231,14 +314,14 @@
                                         <td>80 trimestres</td>
                                     </tr>
                                     <tr>
-                                        <td>Bonif. 1/5ème BSPP</td>
-                                        <td>5 ans ÷ 5</td>
-                                        <td>4 trimestres</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Bonif. 1/5ème SPP</td>
+                                        <td>Bonif. 1/5ème (SPP uniquement)</td>
                                         <td>20 ans ÷ 5</td>
                                         <td>16 trimestres</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Bonif. 1/5ème BSPP</td>
+                                        <td>exclue (services militaires)</td>
+                                        <td>0 trimestre</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Total services actifs</strong></td>
@@ -247,8 +330,8 @@
                                     </tr>
                                     <tr>
                                         <td><strong>Total liquidable</strong></td>
-                                        <td>100 + 4 + 16</td>
-                                        <td><strong>120 trimestres</strong></td>
+                                        <td>100 + 16</td>
+                                        <td><strong>116 trimestres</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -273,7 +356,7 @@
                                     <li><strong>Décret n°2003-1306</strong> article 8 (validation des services antérieurs)</li>
                                     <li><strong>Décret n°2000-1444</strong> du 31 décembre 1961 (statut BSPP)</li>
                                     <li><strong>Décret n°2000-1443</strong> du 17 décembre 2018 (statut BMPM)</li>
-                                    <li><strong>Article L12 du Code des pensions</strong> (bonification du 1/5ème applicable aux services actifs militaires)</li>
+                                    <li><strong>Article L12 du Code des pensions</strong> (la bonification du 1/5<sup>ème</sup> est réservée aux services civils de catégorie active ; les services militaires en sont exclus)</li>
                                 </ul>
                             </div>
                         </div>
@@ -285,7 +368,9 @@
                     <h2 class="doc-section__title">Durée d'assurance requise</h2>
                     <div class="doc-section__content">
                         <p>La durée d'assurance requise pour obtenir une pension à taux plein (75%) dépend de votre
-                            <strong>année de naissance</strong>.</p>
+                            <strong>année de naissance</strong>. Le tableau ci-dessous présente le barème de droit
+                            commun ; la <strong>catégorie active</strong> des SPP suit une table spécifique, détaillée
+                            (avec la bascule LFSS 2026) dans la section <a href="#lfss-2026">Suspension LFSS 2026</a>.</p>
 
                         <div class="table-wrapper">
                             <table class="doc-table">
@@ -460,7 +545,9 @@
                         <ul>
                             <li><strong>Taux de décote</strong> : 1,25% par trimestre manquant</li>
                             <li><strong>Maximum</strong> : 20 trimestres (soit 25% de réduction maximum)</li>
-                            <li><strong>Âge d'annulation</strong> : 62 ans pour les catégories actives</li>
+                            <li><strong>Âge d'annulation</strong> : 62 ans <strong>fixe</strong> pour la catégorie
+                                active (cet âge ne recule pas avec la génération, contrairement à la catégorie
+                                sédentaire)</li>
                         </ul>
 
                         <div class="highlight-box">
@@ -473,15 +560,27 @@
                         </div>
 
                         <h3>La Surcote</h3>
-                        <p>La surcote est une majoration de la pension accordée si vous continuez à travailler après
-                            avoir atteint le taux plein.</p>
+                        <p>La surcote est une majoration de la pension accordée si vous continuez à travailler
+                            au-delà du taux plein.</p>
 
                         <ul>
                             <li><strong>Taux de surcote</strong> : 1,25% par trimestre supplémentaire</li>
-                            <li><strong>Conditions</strong> : avoir atteint l'âge d'ouverture des droits ET la durée
-                                d'assurance requise</li>
+                            <li><strong>Condition d'âge</strong> : avoir atteint l'âge légal de la catégorie
+                                <strong>sédentaire</strong> (62 à 64 ans selon la génération), et non l'âge anticipé
+                                de la catégorie active</li>
+                            <li><strong>Condition de durée</strong> : avoir dépassé la durée d'assurance requise pour
+                                le taux plein</li>
+                            <li><strong>Trimestres retenus</strong> : les bonifications de service (1/5<sup>ème</sup>)
+                                sont <strong>exclues</strong> du décompte ; seules les bonifications pour enfants ou
+                                handicap sont prises en compte</li>
                             <li><strong>Pas de plafond</strong> : la surcote n'est pas limitée</li>
                         </ul>
+
+                        <div class="highlight-box highlight-box--info">
+                            <strong>En pratique :</strong> l'exigence de l'âge sédentaire (62 à 64 ans) rend la surcote
+                            <strong>quasi inatteignable</strong> pour un SPP, qui atteint le taux plein bien avant et
+                            est soumis à une limite d'âge d'activité de 62 ans.
+                        </div>
 
                         <div class="ref-box">
                             <div class="ref-box__title">Références réglementaires</div>
@@ -534,7 +633,12 @@
                         <h3>Conditions</h3>
                         <ul>
                             <li>Être ou avoir été SPP à la radiation des cadres (ou reclassement opérationnel)</li>
+                            <li>Justifier d'au moins <strong>17 ans de services effectifs</strong> en qualité de SPP</li>
+                            <li>La majoration n'est versée qu'<strong>à partir de 57 ans</strong> ; en cas de départ
+                                anticipé (invalidité), elle est différée jusqu'à cet âge</li>
                             <li>Le taux applicable est celui en vigueur à la date de perte de la qualité SPP</li>
+                            <li>Les services militaires <strong>BSPP/BMPM sont exclus</strong> de l'assiette de la
+                                majoration</li>
                         </ul>
 
                         <h3>Suppression de la surcotisation (Décret 2026-18, art. 7)</h3>
@@ -587,8 +691,14 @@
                             <small>Valeur de service 2026 : 0,05671 €/point/an | Valeur d'acquisition 2026 : 1,4596 €</small>
                         </div>
 
-                        <h3>Coefficient de majoration selon l'âge</h3>
-                        <p>La rente RAFP est majorée ou minorée selon l'âge de départ :</p>
+                        <h3>Âge de liquidation et coefficient de majoration</h3>
+                        <div class="highlight-box highlight-box--warning">
+                            <strong>Rente non servie avant 62 ans :</strong> le barème RAFP démarre à l'âge légal
+                            sédentaire (62 ans). Un SPP partant avant 62 ans ne perçoit pas la rente à son départ —
+                            elle est <strong>différée jusqu'à 62 ans</strong> (coefficient 1,00). Il n'existe
+                            <strong>aucun coefficient de minoration</strong> en dessous de 62 ans.
+                        </div>
+                        <p>Au-delà de 62 ans, la rente est majorée par un coefficient croissant :</p>
                         <div class="table-wrapper">
                             <table class="doc-table">
                                 <thead>
@@ -600,11 +710,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td>57 ans</td><td>0,84</td><td>62 ans</td><td>1,00</td></tr>
-                                    <tr><td>58 ans</td><td>0,88</td><td>63 ans</td><td>1,04</td></tr>
-                                    <tr><td>59 ans</td><td>0,92</td><td>64 ans</td><td>1,08</td></tr>
-                                    <tr><td>60 ans</td><td>0,96</td><td>65 ans</td><td>1,12</td></tr>
-                                    <tr><td>61 ans</td><td>0,98</td><td>66-67 ans</td><td>1,18-1,24</td></tr>
+                                    <tr><td>62 ans</td><td>1,00</td><td>67 ans</td><td>1,22</td></tr>
+                                    <tr><td>63 ans</td><td>1,04</td><td>68 ans</td><td>1,28</td></tr>
+                                    <tr><td>64 ans</td><td>1,08</td><td>69 ans</td><td>1,33</td></tr>
+                                    <tr><td>65 ans</td><td>1,12</td><td>70 ans</td><td>1,40</td></tr>
+                                    <tr><td>66 ans</td><td>1,17</td><td>75 ans</td><td>1,80</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -677,21 +787,27 @@
 
                 <!-- Section PFR SPV -->
                 <section id="pfr-spv" class="doc-section">
-                    <h2 class="doc-section__title">PFR SPV - Prestation de Fidélité et de Reconnaissance</h2>
+                    <h2 class="doc-section__title">NPFR - Nouvelle Prestation de Fidélisation et de Reconnaissance</h2>
                     <div class="doc-section__content">
-                        <p>La <strong>PFR</strong> (anciennement Allocation de Vétérance) est une rente viagère versée
-                            aux anciens sapeurs-pompiers volontaires.</p>
+                        <p>La <strong>NPFR</strong> (anciennement PFR / Allocation de Vétérance) est une prestation
+                            annuelle viagère versée aux anciens sapeurs-pompiers volontaires. Elle est régie par le
+                            <strong>décret n°2017-912</strong>, modifié par le décret n°2022-620.</p>
 
                         <h3>Conditions d'éligibilité</h3>
                         <ul>
-                            <li>Avoir cessé définitivement son activité de SPV</li>
-                            <li>Avoir accompli au moins <strong>20 ans de services</strong> en tant que SPV</li>
+                            <li>Avoir cessé définitivement son engagement de SPV</li>
+                            <li>Avoir accompli au moins <strong>15 ans de services</strong> en tant que SPV</li>
                             <li>Avoir atteint l'âge de <strong>55 ans</strong></li>
                         </ul>
 
                         <div class="highlight-box">
-                            <strong>Cas particulier :</strong> En cas d'incapacité opérationnelle, l'éligibilité est
-                            possible dès 15 ans de services.
+                            <strong>Cas particulier :</strong> en cas d'incapacité opérationnelle reconnue,
+                            l'éligibilité est possible dès <strong>10 ans</strong> de services.
+                        </div>
+
+                        <div class="highlight-box highlight-box--success">
+                            <strong>Fiscalité avantageuse :</strong> la NPFR est <strong>exonérée</strong> d'impôt sur
+                            le revenu ainsi que de CSG et de CRDS.
                         </div>
 
                         <h3>Barème de la PFR (montants annuels)</h3>
@@ -706,7 +822,12 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>15 ans (incapacité)</td>
+                                        <td>10 ans (incapacité)</td>
+                                        <td>512 €</td>
+                                        <td>≈ 43 €</td>
+                                    </tr>
+                                    <tr>
+                                        <td>15 ans</td>
                                         <td>512 €</td>
                                         <td>≈ 43 €</td>
                                     </tr>
@@ -742,10 +863,12 @@
                             <div class="ref-box__title">Références réglementaires</div>
                             <div class="ref-box__content">
                                 <ul>
-                                    <li><strong>Loi n°96-370</strong> du 3 mai 1996 relative au développement du
-                                        volontariat</li>
-                                    <li><strong>Décret n°2005-1150</strong> du 13 septembre 2005 relatif à la PFR</li>
-                                    <li><strong>Arrêté du 19 août 2019</strong> fixant les montants de la PFR</li>
+                                    <li><strong>Décret n°2017-912</strong> du 9 mai 2017 relatif à la NPFR
+                                        (régime en vigueur)</li>
+                                    <li><strong>Décret n°2022-620</strong> du 22 avril 2022 (modification de la NPFR)</li>
+                                    <li><strong>Décret n°2005-1150</strong> du 13 septembre 2005 (ancienne PFR —
+                                        <em>régime clos</em>)</li>
+                                    <li><em>Barème revalorisé chaque année par arrêté ; montants indicatifs à re-sourcer.</em></li>
                                 </ul>
                             </div>
                         </div>
@@ -844,16 +967,19 @@
                         </ul>
 
                         <h3>Montant</h3>
-                        <p>Le minimum garanti est calculé en fonction du nombre d'années de services :</p>
+                        <p>Le minimum garanti est calculé par paliers, sur la base du nombre d'<strong>années de
+                            services effectifs</strong> (bonifications exclues), en pourcentage du montant plein
+                            (référence : indice majoré 227) :</p>
                         <ul>
-                            <li><strong>Jusqu'à 15 ans</strong> : 57,5% de l'indice majoré 227</li>
-                            <li><strong>De 15 à 40 ans</strong> : +2,5% par année supplémentaire</li>
-                            <li><strong>Au-delà de 40 ans</strong> : +0,5% par année (plafonné)</li>
+                            <li><strong>Moins de 15 ans</strong> : 1/15 du montant des 15 ans par année de services</li>
+                            <li><strong>15 ans</strong> : 57,5% du montant plein</li>
+                            <li><strong>De 15 à 30 ans</strong> : +2,5 points par année (→ 95% à 30 ans)</li>
+                            <li><strong>De 30 à 40 ans</strong> : +0,5 point par année (→ 100% à 40 ans)</li>
                         </ul>
 
                         <div class="highlight-box highlight-box--info">
-                            <strong>Montant indicatif 2024 :</strong> Environ 1 200 € brut/mois pour une carrière
-                            complète.
+                            <strong>Montant plein 2026 :</strong> environ <strong>1 366 € brut/mois</strong>
+                            (16 396 € brut/an), atteint à 40 ans de services effectifs.
                         </div>
 
                         <div class="ref-box">
@@ -884,7 +1010,7 @@
         <footer class="doc-footer">
             <p><strong>Horizon</strong> - Simulateur de retraite SPP</p>
             <p>Développé par XRWeb</p>
-            <p class="doc-footer__date">Dernière mise à jour : Mars 2026</p>
+            <p class="doc-footer__date">Dernière mise à jour : Juillet 2026</p>
         </footer>
     </div>
 
