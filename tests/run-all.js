@@ -21,6 +21,7 @@ const SUITES = [
   'test-profil-xavier.js',
   'test-corrections-p1.js',
   'test-utils.js',
+  'test-lfss.js',
 ];
 
 let echecs = 0;

@@ -171,8 +171,9 @@ export function verifierEligibiliteAgeAnticipe(donnees) {
  */
 export function calculerDateTauxPlein(donnees) {
   const anneeNaissance = donnees.dateNaissance.getFullYear();
-  const trimestresRequis = getDureeAssuranceRequise(anneeNaissance);
   const dateOuverture = calculerDateOuvertureDroits(donnees.dateNaissance);
+  // Durée requise selon la date de naissance + date d'effet (bascule LFSS) + catégorie active.
+  const trimestresRequis = getDureeAssuranceRequise(donnees.dateNaissance, dateOuverture, 'actif');
   const dateAnnulationDecote = calculerDateAnnulationDecote(donnees.dateNaissance);
 
   // Calculer la durée d'assurance actuelle à la date d'ouverture des droits
@@ -292,7 +293,12 @@ export function calculerDateTauxPlein(donnees) {
 export function genererScenariosDepart(donnees) {
   const scenarios = [];
   const anneeNaissance = donnees.dateNaissance.getFullYear();
-  const trimestresRequis = getDureeAssuranceRequise(anneeNaissance);
+  // Durée requise date-aware (bascule LFSS) — évaluée à l'ouverture des droits.
+  const trimestresRequis = getDureeAssuranceRequise(
+    donnees.dateNaissance,
+    calculerDateOuvertureDroits(donnees.dateNaissance),
+    'actif'
+  );
 
   // Scénario 1 : Départ au plus tôt (57 ans)
   const eligibilite = verifierEligibiliteAgeAnticipe(donnees);

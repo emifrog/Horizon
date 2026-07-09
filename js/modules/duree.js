@@ -288,8 +288,15 @@ export function calculerDurees(donnees, anneeNaissance) {
     trimestresAutresRegimes
   );
 
-  // Durée requise selon la génération
-  const trimestresRequis = getDureeAssuranceRequise(anneeNaissance);
+  // Durée requise : dépend de la date de naissance (bornes infra-annuelles), de la date
+  // d'effet (bascule LFSS au 01/09/2026) et de la catégorie. On est en catégorie ACTIVE
+  // si la condition des 17 ans de services actifs est remplie, sinon SÉDENTAIRE.
+  const categorie = totalServicesActifs >= SERVICES.DUREE_MIN_SERVICES_ACTIFS ? 'actif' : 'sedentaire';
+  const trimestresRequis = getDureeAssuranceRequise(
+    donnees.dateNaissance || anneeNaissance,
+    dateDepart,
+    categorie
+  );
 
   // Écart avec le taux plein
   const ecartTauxPlein = calculerEcartTauxPlein(trimestresAssuranceTotale, trimestresRequis);

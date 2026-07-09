@@ -325,18 +325,20 @@ test('Durée requise génération 1955 = 167 (et non 172)', getDureeAssuranceReq
 test('Durée requise génération 1980 = 172', getDureeAssuranceRequise(1980) === 172,
   `Calculé: ${getDureeAssuranceRequise(1980)}`);
 
-// #3 — Table durée requise CATÉGORIE ACTIVE (≠ droit commun) : 1966→169 … 1970→172.
-test('Durée requise active 1966 = 169 (et non 172)', getDureeAssuranceRequise(1966) === 169,
-  `Calculé: ${getDureeAssuranceRequise(1966)}`);
+// #3 — Table durée requise CATÉGORIE ACTIVE (≠ droit commun), bornes par DATE.
+test('Durée requise né 01/09/1966 = 169', getDureeAssuranceRequise(new Date(1966, 8, 1)) === 169,
+  `Calculé: ${getDureeAssuranceRequise(new Date(1966, 8, 1))}`);
+test('Durée requise né 15/06/1966 = 168 (palier janv-août)', getDureeAssuranceRequise(new Date(1966, 5, 15)) === 168,
+  `Calculé: ${getDureeAssuranceRequise(new Date(1966, 5, 15))}`);
 test('Durée requise active 1968 = 170 (exemple CNRACL)', getDureeAssuranceRequise(1968) === 170,
   `Calculé: ${getDureeAssuranceRequise(1968)}`);
 test('Durée requise active 1969 = 171', getDureeAssuranceRequise(1969) === 171,
   `Calculé: ${getDureeAssuranceRequise(1969)}`);
-// #4 — Deltas post-suspension LFSS (pension à effet ≥ 01/09/2026).
-test('Durée requise 1969 post-suspension = 170', getDureeAssuranceRequise(1969, '2027-01-01') === 170,
-  `Calculé: ${getDureeAssuranceRequise(1969, '2027-01-01')}`);
-test('Durée requise 1968 pré-suspension inchangée = 170', getDureeAssuranceRequise(1968, '2026-01-01') === 170,
-  `Calculé: ${getDureeAssuranceRequise(1968, '2026-01-01')}`);
+// #4 — Bascule LFSS post-suspension (pension à effet ≥ 01/09/2026).
+test('Durée requise 1969 post-suspension = 170', getDureeAssuranceRequise(1969, new Date(2027, 0, 1)) === 170,
+  `Calculé: ${getDureeAssuranceRequise(1969, new Date(2027, 0, 1))}`);
+test('Durée requise né 15/03/1970 post-suspension = 170', getDureeAssuranceRequise(new Date(1970, 2, 15), new Date(2027, 0, 1)) === 170,
+  `Calculé: ${getDureeAssuranceRequise(new Date(1970, 2, 15), new Date(2027, 0, 1))}`);
 
 console.log('');
 

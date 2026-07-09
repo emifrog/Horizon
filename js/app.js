@@ -628,7 +628,8 @@ function collectFormData() {
  */
 function effectuerCalculs(formData, profilEnrichi) {
   const anneeNaissance = formData.dateNaissance.getFullYear();
-  const trimestresRequis = getDureeAssuranceRequise(anneeNaissance);
+  // Durée requise « de référence » date-aware (recalée sur la date du taux plein plus bas).
+  let trimestresRequis = getDureeAssuranceRequise(formData.dateNaissance, undefined, 'actif');
 
   // 1. Générer les scénarios de départ
   const donneesDepart = {
@@ -657,6 +658,8 @@ function effectuerCalculs(formData, profilEnrichi) {
     },
     anneeNaissance
   );
+  // Durée requise de référence = celle du scénario taux plein (date-aware, bascule LFSS).
+  trimestresRequis = dureeTauxPlein.trimestresRequis;
 
   // 3. La NBI est traitée comme un SUPPLÉMENT DE PENSION séparé et proratisé
   // (décret 2006-779), calculé à l'étape 7. Elle n'est PAS intégrée au TIB :
@@ -682,7 +685,7 @@ function effectuerCalculs(formData, profilEnrichi) {
       trimestresSPP: duree.trimestresServicesEffectifs,
       trimestresBonificationSPP: duree.trimestresBonificationCinquieme,
       trimestresTotal: duree.trimestresLiquidables,
-      trimestresRequis,
+      trimestresRequis: duree.trimestresRequis,  // date-aware par scénario (bascule LFSS)
       dateNaissance: formData.dateNaissance,
       dateDepart: scenario.date,
       pointsNBIIntegres,
@@ -837,10 +840,10 @@ function updatePreview() {
 
     // Afficher un aperçu simplifié
     const anneeNaissance = formData.dateNaissance.getFullYear();
-    const trimestresRequis = getDureeAssuranceRequise(anneeNaissance);
+    const aujourdhui = new Date();
+    const trimestresRequis = getDureeAssuranceRequise(formData.dateNaissance, aujourdhui, 'actif');
 
     // Calcul simplifié pour l'aperçu
-    const aujourdhui = new Date();
     const dureeActuelle = calculerDurees(
       {
         dateEntreeSPP: formData.dateEntreeSPP,

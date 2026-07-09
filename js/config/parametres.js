@@ -99,33 +99,89 @@ export const DUREE_ASSURANCE_PAR_GENERATION = {
 export const DUREE_ASSURANCE_DEFAUT = 172;
 
 // =============================================================================
-// DURÉE REQUISE — TABLE SPÉCIFIQUE CATÉGORIE ACTIVE (départ anticipé SPP)
-// Réf: art. 20-II décret 2003-1306 ; exemple CNRACL (SPP né 01/01/1968 → 170).
-// Différente de la table de droit commun ci-dessus. Borne fine : 01/09/1966
-// (nés avant → ancienne réglementation, durée de l'année d'ouverture du droit).
-// source: juris-cnracl / exemple officiel prime de feu — DATE_VERIFICATION: 2026-07-09
+// BASCULE LFSS 2026 — barèmes bornés par DATE DE NAISSANCE, régime avant/après.
+// S'applique aux pensions prenant effet à compter du 01/09/2026 (comme la SPV 2026-18).
+// Tables : âge légal + durée requise, catégories ACTIVE et SÉDENTAIRE (surcote), avec
+// bornes infra-annuelles (ex. 01/09/1966, 01/04/1970). `fin` inclusive.
+// Source : cnracl.retraites.fr « Âge légal » (MAJ 09/03/2026) et « Durée d'assurance »
+//          (MAJ 16/02/2026) — DATE_VERIFICATION: 2026-07-09
 // =============================================================================
-export const DUREE_ASSURANCE_ACTIVE_PAR_GENERATION = {
-  1966: 169, // nés à partir du 01/09/1966
-  1967: 169,
-  1968: 170,
-  1969: 171,
-  1970: 172, // 172 à compter de la génération 1970
+export const DATE_SUSPENSION_REFORME = '2026-09-01';
+// Alias conservé (compat) :
+export const DATE_SUSPENSION_LFSS = DATE_SUSPENSION_REFORME;
+
+/** Parsing local (évite le décalage UTC de new Date('YYYY-MM-DD')). */
+const D = (s) => new Date(s + 'T00:00:00');
+
+export const BAREMES = {
+  actif: {
+    age: [
+      // fin (incl.)   avant [a,m]   après [a,m]
+      ['1966-08-31', [57, 0], [57, 0]],
+      ['1966-12-31', [57, 3], [57, 3]],
+      ['1967-12-31', [57, 6], [57, 6]],
+      ['1968-12-31', [57, 9], [57, 9]],
+      ['1969-12-31', [58, 0], [57, 9]],
+      ['1970-03-31', [58, 3], [57, 9]],
+      ['1970-12-31', [58, 3], [58, 0]],
+      ['1971-12-31', [58, 6], [58, 3]],
+      ['1972-12-31', [58, 9], [58, 6]],
+      ['1973-12-31', [59, 0], [58, 9]],
+      [null,         [59, 0], [59, 0]],
+    ],
+    duree: [
+      // Antérieurs au 01/01/1966 : ancienne réglementation (cf. getDureeAssuranceRequise).
+      ['1966-08-31', 168, 168],
+      ['1966-12-31', 169, 169],
+      ['1967-12-31', 169, 169],
+      ['1968-12-31', 170, 170],
+      ['1969-12-31', 171, 170],
+      ['1970-03-31', 172, 170],
+      ['1970-12-31', 172, 171],
+      [null,         172, 172],
+    ],
+  },
+  sedentaire: {
+    age: [
+      ['1961-08-31', [62, 0], [62, 0]],
+      ['1961-12-31', [62, 3], [62, 3]],
+      ['1962-12-31', [62, 6], [62, 6]],
+      ['1963-12-31', [62, 9], [62, 9]],
+      ['1964-12-31', [63, 0], [62, 9]],
+      ['1965-03-31', [63, 3], [62, 9]],
+      ['1965-12-31', [63, 3], [63, 0]],
+      ['1966-12-31', [63, 6], [63, 3]],
+      ['1967-12-31', [63, 9], [63, 6]],
+      ['1968-12-31', [64, 0], [63, 9]],
+      [null,         [64, 0], [64, 0]],
+    ],
+    duree: [
+      ['1961-08-31', 168, 168],
+      ['1961-12-31', 169, 169],
+      ['1962-12-31', 169, 169],
+      ['1963-12-31', 170, 170],
+      ['1964-12-31', 171, 170],
+      ['1965-03-31', 172, 170],
+      ['1965-12-31', 172, 171],
+      [null,         172, 172],
+    ],
+  },
 };
 
-// =============================================================================
-// SUSPENSION DE LA RÉFORME 2023 (LFSS 2026)
-// Nouveaux paramètres pour les pensions prenant effet à compter de cette date.
-// ⚠️ Table post-suspension INCOMPLÈTE dans les sources disponibles : seuls les
-// deltas ci-dessous sont confirmés. À compléter avec le texte LFSS 2026 / l'arrêté.
-// =============================================================================
-export const DATE_SUSPENSION_LFSS = '2026-09-01';
+/** Âge d'annulation de la décote — 62 ans fixe pour un départ catégorie active. */
+export const AGE_ANNULATION_DECOTE_ACTIF = { ans: 62, mois: 0 };
 
-/** Deltas connus de durée requise (catégorie active) après la suspension. */
-export const DUREE_ASSURANCE_ACTIVE_POST_SUSPENSION = {
-  1969: 170, // au lieu de 171 (nés 01/01/1969 → 31/03/1970)
-  1970: 171, // au lieu de 172 (nés 01/04/1970 → 31/12/1970)
-};
+/** true si la pension prend effet sous le régime suspendu (≥ 01/09/2026). */
+export function regimeSuspendu(dateEffetPension) {
+  if (!dateEffetPension) return false;
+  return new Date(dateEffetPension) >= D(DATE_SUSPENSION_REFORME);
+}
+
+/** Résout la ligne de barème applicable à une date de naissance (`fin` inclusive). */
+function resoudreBareme(bareme, dateNaissance) {
+  const dn = new Date(dateNaissance);
+  return bareme.find(([fin]) => fin === null || dn <= D(fin));
+}
 
 // =============================================================================
 // CONDITIONS DE SERVICES - Catégorie active
@@ -463,41 +519,38 @@ export const ECHELLE_INDICIAIRE = {
 // =============================================================================
 
 /**
- * Retourne la durée d'assurance requise pour le taux plein (départ anticipé
- * catégorie active), en tenant compte de la suspension LFSS 2026.
+ * Retourne la durée d'assurance requise pour le taux plein (en trimestres), selon la
+ * date de naissance, la date d'effet de la pension (bascule LFSS) et la catégorie.
  *
- * @param {number|Date} anneeOuDate - Année (ou date) de naissance de l'agent
- * @param {Date|string} [dateEffet] - Date d'effet de la pension. Si ≥ 01/09/2026,
- *        applique les deltas post-suspension connus (table complète à sourcer).
+ * ⚠️ Passer une Date de naissance (et non une année) pour les bornes infra-annuelles
+ * (ex. 01/09/1966, 01/04/1970). Une année seule est acceptée (compat) mais perd cette
+ * précision (résolue au 30 juin).
+ *
+ * @param {number|Date} dateNaissanceOuAnnee - Date (préférée) ou année de naissance.
+ * @param {Date|string} [dateEffet] - Date d'effet de la pension (bascule au 01/09/2026).
+ * @param {'actif'|'sedentaire'} [categorie='actif'] - 'actif' si 17 ans de services actifs.
  * @returns {number} Nombre de trimestres requis
  */
-export function getDureeAssuranceRequise(anneeOuDate, dateEffet) {
-  const annee = anneeOuDate instanceof Date ? anneeOuDate.getFullYear() : anneeOuDate;
+export function getDureeAssuranceRequise(dateNaissanceOuAnnee, dateEffet, categorie = 'actif') {
+  const dn = dateNaissanceOuAnnee instanceof Date
+    ? dateNaissanceOuAnnee
+    : new Date(dateNaissanceOuAnnee, 5, 30); // année seule → 30 juin
 
-  // Suspension LFSS : pension à effet ≥ 01/09/2026 → deltas post-suspension connus.
-  if (dateEffet && new Date(dateEffet) >= new Date(DATE_SUSPENSION_LFSS)
-      && annee in DUREE_ASSURANCE_ACTIVE_POST_SUSPENSION) {
-    return DUREE_ASSURANCE_ACTIVE_POST_SUSPENSION[annee];
+  // Catégorie ACTIVE, générations antérieures au 01/01/1966 : ancienne réglementation
+  // (durée de l'année d'ouverture du droit) — table historique par génération.
+  // (La table SÉDENTAIRE couvre, elle, les générations 1961-1965 avec leurs deltas.)
+  if (categorie === 'actif' && dn < D('1966-01-01')) {
+    const annee = dn.getFullYear();
+    if (annee in DUREE_ASSURANCE_PAR_GENERATION) return DUREE_ASSURANCE_PAR_GENERATION[annee];
+    const anneesConnues = Object.keys(DUREE_ASSURANCE_PAR_GENERATION).map(Number);
+    const anneeMin = Math.min(...anneesConnues);
+    if (annee < anneeMin) return DUREE_ASSURANCE_PAR_GENERATION[anneeMin];
+    return DUREE_ASSURANCE_DEFAUT;
   }
 
-  // Table SPÉCIFIQUE catégorie active (générations ≥ 1966, ≠ droit commun).
-  if (annee in DUREE_ASSURANCE_ACTIVE_PAR_GENERATION) {
-    return DUREE_ASSURANCE_ACTIVE_PAR_GENERATION[annee];
-  }
-
-  // Droit commun / anciennes réglementations (générations ≤ 1965).
-  if (annee in DUREE_ASSURANCE_PAR_GENERATION) {
-    return DUREE_ASSURANCE_PAR_GENERATION[annee];
-  }
-  // Générations antérieures à la table (< 1960) : retenir la plus ancienne valeur
-  // connue (≤ 167) plutôt que 172, qui surestimerait la durée requise.
-  const anneesConnues = Object.keys(DUREE_ASSURANCE_PAR_GENERATION).map(Number);
-  const anneeMin = Math.min(...anneesConnues);
-  if (annee < anneeMin) {
-    return DUREE_ASSURANCE_PAR_GENERATION[anneeMin];
-  }
-  // Générations postérieures (≥ 1971) : 172 (cible de la réforme).
-  return DUREE_ASSURANCE_DEFAUT;
+  const bareme = (BAREMES[categorie] || BAREMES.actif).duree;
+  const ligne = resoudreBareme(bareme, dn);
+  return ligne[regimeSuspendu(dateEffet) ? 2 : 1];
 }
 
 /**
@@ -516,38 +569,38 @@ export function getMajorationSPV(anneesSPV) {
 }
 
 /**
- * Retourne l'âge légal d'ouverture des droits pour la catégorie active selon la date de naissance
- * @param {Date|string} dateNaissance - Date de naissance de l'agent
- * @returns {{ans: number, mois: number, totalMois: number}} Âge légal en années et mois
+ * Retourne l'âge légal selon la catégorie, la date de naissance et la date d'effet
+ * de la pension (bascule LFSS au 01/09/2026).
+ * @param {Date|string} dateNaissance - Date de naissance (bornes infra-annuelles)
+ * @param {Date|string} [dateEffet] - Date d'effet du scénario (régime avant/après)
+ * @param {'actif'|'sedentaire'} [categorie='actif']
+ * @returns {{ans: number, mois: number, totalMois: number}}
  */
-export function getAgeLegalActif(dateNaissance) {
-  const dn = new Date(dateNaissance);
-  for (const tranche of AGE_LEGAL_ACTIF) {
-    const debut = tranche.debut ? new Date(tranche.debut) : new Date('1900-01-01');
-    const fin = tranche.fin ? new Date(tranche.fin) : new Date('2100-12-31');
-    if (dn >= debut && dn <= fin) {
-      return { ans: tranche.age, mois: tranche.mois, totalMois: tranche.age * 12 + tranche.mois };
-    }
-  }
-  return { ans: 59, mois: 0, totalMois: 708 }; // Par défaut (génération >= 1973)
+export function getAgeLegal(dateNaissance, dateEffet, categorie = 'actif') {
+  const bareme = (BAREMES[categorie] || BAREMES.actif).age;
+  const ligne = resoudreBareme(bareme, dateNaissance);
+  const [ans, mois] = ligne[regimeSuspendu(dateEffet) ? 2 : 1];
+  return { ans, mois, totalMois: ans * 12 + mois };
 }
 
 /**
- * Retourne l'âge légal pour la catégorie sédentaire selon la date de naissance
- * Utilisé pour le calcul de la surcote (qui ne s'applique qu'à partir de cet âge)
- * @param {Date|string} dateNaissance - Date de naissance de l'agent
- * @returns {{ans: number, mois: number, totalMois: number}} Âge légal en années et mois
+ * Âge légal d'ouverture des droits — catégorie ACTIVE.
+ * @param {Date|string} dateNaissance
+ * @param {Date|string} [dateEffet] - date d'effet (défaut : régime « avant »)
+ * @returns {{ans: number, mois: number, totalMois: number}}
  */
-export function getAgeLegalSedentaire(dateNaissance) {
-  const dn = new Date(dateNaissance);
-  for (const tranche of AGE_LEGAL_SEDENTAIRE) {
-    const debut = tranche.debut ? new Date(tranche.debut) : new Date('1900-01-01');
-    const fin = tranche.fin ? new Date(tranche.fin) : new Date('2100-12-31');
-    if (dn >= debut && dn <= fin) {
-      return { ans: tranche.age, mois: tranche.mois, totalMois: tranche.age * 12 + tranche.mois };
-    }
-  }
-  return { ans: 64, mois: 0, totalMois: 768 }; // Par défaut (génération >= 1968)
+export function getAgeLegalActif(dateNaissance, dateEffet) {
+  return getAgeLegal(dateNaissance, dateEffet, 'actif');
+}
+
+/**
+ * Âge légal — catégorie SÉDENTAIRE (utilisé pour la surcote).
+ * @param {Date|string} dateNaissance
+ * @param {Date|string} [dateEffet]
+ * @returns {{ans: number, mois: number, totalMois: number}}
+ */
+export function getAgeLegalSedentaire(dateNaissance, dateEffet) {
+  return getAgeLegal(dateNaissance, dateEffet, 'sedentaire');
 }
 
 /**
