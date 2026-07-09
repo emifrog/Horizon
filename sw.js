@@ -12,7 +12,7 @@
  * cache et re-télécharger les ressources modifiées.
  */
 
-const CACHE_VERSION = 'horizon-v1';
+const CACHE_VERSION = 'horizon-v2';
 
 // Coquille minimale pré-cachée à l'installation (le reste est mis en cache à la volée).
 const APP_SHELL = [
