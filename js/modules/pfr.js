@@ -274,6 +274,8 @@ export function calculerPFRSPV(doubleStatut, anneesSPV, montantManuel) {
     anneesSPV,
     montantAnnuel,
     montantMensuel: arrondir(montantAnnuel / 12, 2),
+    // NPFR exonérée de CSG/CRDS et d'impôt sur le revenu (à ne pas soumettre aux prélèvements).
+    exonereCSGCRDS: true,
   };
 }
 

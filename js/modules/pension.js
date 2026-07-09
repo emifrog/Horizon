@@ -7,8 +7,9 @@
  * @module modules/pension
  */
 
-import { TAUX, POINT_INDICE, MINIMUM_GARANTI, COTISATIONS, PFR, getDureeAssuranceRequise } from '../config/parametres.js';
+import { TAUX, POINT_INDICE, MINIMUM_GARANTI, COTISATIONS, REGIMES_CSG, PFR, SERVICES, getDureeAssuranceRequise } from '../config/parametres.js';
 import { calculerTrimestresDecote } from './ages.js';
+import { calculerAge } from '../utils/dates.js';
 import { arrondir } from '../utils/nombres.js';
 
 /**
@@ -222,19 +223,24 @@ export function calculerMinimumGaranti(anneesServicesEffectifs) {
 }
 
 /**
- * Calcule les cotisations sur la pension (CSG, CRDS, CASA)
+ * Calcule les prélèvements sociaux sur la pension (CSG, CRDS, CASA) selon le régime
+ * applicable (dépend du revenu fiscal de référence). La CASA n'est due qu'aux taux
+ * médian et normal ; en exonération, aucun prélèvement.
  * @param {number} pensionBruteMensuelle - Pension brute mensuelle
- * @returns {{total: number, detail: Object}} Total des cotisations et détail
+ * @param {string} [regimeCSG='normal'] - 'exonere' | 'reduit' | 'median' | 'normal'
+ * @returns {{total: number, detail: Object}} Total des prélèvements et détail
  */
-export function calculerCotisationsPension(pensionBruteMensuelle) {
-  const csg = pensionBruteMensuelle * (COTISATIONS.CSG / 100);
-  const crds = pensionBruteMensuelle * (COTISATIONS.CRDS / 100);
-  const casa = pensionBruteMensuelle * (COTISATIONS.CASA / 100);
+export function calculerCotisationsPension(pensionBruteMensuelle, regimeCSG = 'normal') {
+  const r = REGIMES_CSG[regimeCSG] || REGIMES_CSG.normal;
+  const csg = pensionBruteMensuelle * (r.csg / 100);
+  const crds = pensionBruteMensuelle * (r.crds / 100);
+  const casa = pensionBruteMensuelle * (r.casa / 100);
 
   const total = csg + crds + casa;
 
   return {
     total: arrondir(total, 2),
+    regime: regimeCSG,
     detail: {
       csg: arrondir(csg, 2),
       crds: arrondir(crds, 2),
@@ -244,12 +250,13 @@ export function calculerCotisationsPension(pensionBruteMensuelle) {
 }
 
 /**
- * Calcule la pension nette estimée
+ * Calcule la pension nette estimée selon le régime de prélèvements.
  * @param {number} pensionBruteMensuelle - Pension brute mensuelle
+ * @param {string} [regimeCSG='normal']
  * @returns {number} Pension nette mensuelle estimée
  */
-export function calculerPensionNette(pensionBruteMensuelle) {
-  const cotisations = calculerCotisationsPension(pensionBruteMensuelle);
+export function calculerPensionNette(pensionBruteMensuelle, regimeCSG = 'normal') {
+  const cotisations = calculerCotisationsPension(pensionBruteMensuelle, regimeCSG);
   return arrondir(pensionBruteMensuelle - cotisations.total, 2);
 }
 
@@ -272,6 +279,7 @@ export function calculerPension(donnees) {
     trimestresBonificationSPP,        // bonif 1/5e SPP (pour l'exemption de proratisation prime de feu)
     trimestresTotal,
     trimestresServicesEffectifs,     // pour la base du minimum garanti (années de services)
+    regimeCSG = 'normal',            // régime de prélèvements sociaux (selon RFR)
   } = donnees;
 
   // Calcul du traitement indiciaire (avec NBI intégrée si ≥ 15 ans de perception)
@@ -295,15 +303,22 @@ export function calculerPension(donnees) {
   // Calcul de la pension brute (base CNRACL)
   const pensionBrute = calculerPensionBrute(traitement.annuel, tauxLiquidationNet);
 
+  // Conditions de la majoration prime de feu (art. 18) :
+  //  - durée : au moins 17 ans (68 trimestres) accomplis en QUALITÉ DE SPP ;
+  //  - âge : bénéfice différé jusqu'à 57 ans.
+  const ageDepart = calculerAge(dateNaissance, dateDepart);
+  const trimestresSPPeffectifs = trimestresSPP || trimestresLiquidables;
+  const conditionDureePrimeFeu = trimestresSPPeffectifs >= SERVICES.DUREE_MIN_SERVICES_ACTIFS; // 68 = 17 ans
+  const primeFeuDifferee = ageDepart < 57;
+  const droitPrimeFeu = droitMajorationPrimeFeu && conditionDureePrimeFeu && !primeFeuDifferee;
+
   // Calcul de la majoration prime de feu
   // Signature : (TIB, taux, droit, trimestresSPP, trimestresBonificationSPP, trimestresTotal, trimestresRequis)
-  // Les arguments doivent être passés dans le bon ordre, sinon la proratisation
-  // (carrières mixtes) ne s'active jamais.
   const majorationPrimeFeu = calculerMajorationPrimeFeu(
     traitement.annuel,
     tauxLiquidationNet,
-    droitMajorationPrimeFeu,
-    trimestresSPP || trimestresLiquidables,   // trimestresSPP (services en qualité SPP)
+    droitPrimeFeu,
+    trimestresSPPeffectifs,                    // trimestresSPP (services en qualité SPP)
     trimestresBonificationSPP || 0,           // trimestresBonificationSPP (1/5e SPP)
     trimestresTotal || trimestresLiquidables, // trimestresTotal (totalité des services liquidés)
     trimestresRequis                          // trimestresRequis (génération)
@@ -326,8 +341,8 @@ export function calculerPension(donnees) {
   const pensionBruteMensuelleFinale = pensionBaseFinaleMensuelle + majorationPrimeFeu.mensuelle;
   const pensionBruteAnnuelleFinale = pensionBruteMensuelleFinale * 12;
 
-  // Calcul de la pension nette
-  const pensionNetteMensuelle = calculerPensionNette(pensionBruteMensuelleFinale);
+  // Calcul de la pension nette (selon le régime de prélèvements choisi)
+  const pensionNetteMensuelle = calculerPensionNette(pensionBruteMensuelleFinale, regimeCSG);
 
   return {
     traitementIndiciaireAnnuel: traitement.annuel,

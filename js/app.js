@@ -604,6 +604,8 @@ function collectFormData() {
     anneesCotisationRAFP: parseInt(formData.get('anneesCotisationRAFP'), 10) || 0,
     // Services CNRACL hors qualité SPP (territorial/hospitalier) — en trimestres
     trimestresServicesHorsSPP: (parseInt(formData.get('anneesServicesHorsSPP'), 10) || 0) * 4,
+    // Régime de prélèvements sociaux (CSG) selon le RFR
+    tauxCSG: formData.get('tauxCSG') || 'normal',
     // Double statut SPP/SPV (utilise anneesSPV du profil)
     doubleStatut: formData.get('doubleStatut') === 'on',
     montantPFRSPV: parseFloat(formData.get('montantPFRSPV')) || 0,
@@ -684,6 +686,7 @@ function effectuerCalculs(formData, profilEnrichi) {
       dateNaissance: formData.dateNaissance,
       dateDepart: scenario.date,
       pointsNBIIntegres,
+      regimeCSG: formData.tauxCSG,
     });
 
     // Calculer la surcote si applicable
@@ -733,6 +736,7 @@ function effectuerCalculs(formData, profilEnrichi) {
     dateNaissance: formData.dateNaissance,
     dateDepart: dateTauxPlein,
     pointsNBIIntegres,
+    regimeCSG: formData.tauxCSG,
   });
 
   // 6. Calculer la PFR et le RAFP

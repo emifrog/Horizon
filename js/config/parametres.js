@@ -307,23 +307,35 @@ export const COEFFICIENTS_CONVERSION_CAPITAL_RAFP = {
 };
 
 // =============================================================================
-// PRESTATION DE FIDÉLISATION ET DE RECONNAISSANCE SPV (double statut)
-// Réf: Décret n°2005-1150 du 13 septembre 2005
+// NPFR — NOUVELLE PRESTATION DE FIDÉLISATION ET DE RECONNAISSANCE (double statut SPV)
+// Réf: Décret n°2017-912 du 9 mai 2017, modifié par le décret n°2022-620 du 22 avril 2022.
+// (L'ancien régime PFR — décret 2005-1150 — est CLOS.)
+// Due au SPV ayant ≥ 15 ans de service (10 ans si incapacité opérationnelle reconnue),
+// versée une fois par an, à partir de 55 ans et après cessation de l'engagement,
+// EXONÉRÉE d'impôt sur le revenu et de CSG/CRDS.
+// ⚠️ Barème revalorisé chaque année par arrêté conjoint — montants ci-dessous À RE-SOURCER/DATER.
+// source: décret 2017-912 / 2022-620 — DATE_VERIFICATION: 2026-07-09
 // =============================================================================
 
 export const PFR_SPV = {
-  /** Ancienneté minimale pour la prestation standard (20 ans) */
-  ANCIENNETE_MIN: 20,
+  /** Ancienneté minimale pour la prestation standard (NPFR : 15 ans) */
+  ANCIENNETE_MIN: 15,
 
-  /** Ancienneté minimale cas incapacité opérationnelle (15 ans) */
-  ANCIENNETE_MIN_INCAPACITE: 15,
+  /** Ancienneté minimale cas incapacité opérationnelle (NPFR : 10 ans) */
+  ANCIENNETE_MIN_INCAPACITE: 10,
+
+  /** Âge minimal de versement (55 ans) */
+  AGE_MIN: 55,
+
+  /** Prestation exonérée de CSG/CRDS et d'impôt sur le revenu. */
+  EXONEREE: true,
 
   /**
-   * Barème annuel brut en euros, par palier d'ancienneté SPV.
-   * Les seuils sont inclusifs : ≥ 15 ans = 512 €/an (cas incapacité), etc.
+   * Barème annuel brut en euros, par palier d'ancienneté SPV (millésime à re-sourcer).
    */
   BAREME: {
-    15: 512,   // Cas incapacité opérationnelle
+    10: 512,   // seuil incapacité opérationnelle
+    15: 512,   // seuil standard
     20: 1025,
     25: 2050,
     30: 2690,
@@ -332,16 +344,17 @@ export const PFR_SPV = {
 };
 
 /**
- * Retourne le montant annuel PFR SPV applicable pour une ancienneté donnée.
+ * Retourne le montant annuel NPFR applicable pour une ancienneté donnée.
  * @param {number} anneesSPV - Années de service SPV
- * @returns {number} Montant annuel (0 si < 15 ans)
+ * @returns {number} Montant annuel (0 si < seuil incapacité)
  */
 export function getMontantPFRSPV(anneesSPV) {
   if (anneesSPV >= 35) return PFR_SPV.BAREME[35];
   if (anneesSPV >= 30) return PFR_SPV.BAREME[30];
   if (anneesSPV >= 25) return PFR_SPV.BAREME[25];
   if (anneesSPV >= 20) return PFR_SPV.BAREME[20];
-  if (anneesSPV >= PFR_SPV.ANCIENNETE_MIN_INCAPACITE) return PFR_SPV.BAREME[15];
+  if (anneesSPV >= PFR_SPV.ANCIENNETE_MIN) return PFR_SPV.BAREME[15];
+  if (anneesSPV >= PFR_SPV.ANCIENNETE_MIN_INCAPACITE) return PFR_SPV.BAREME[10];
   return 0;
 }
 
@@ -396,7 +409,7 @@ export const COTISATIONS = {
   /** Taux de retenue pension civile */
   RETENUE_PC: 11.10,
 
-  /** CSG sur pension */
+  /** CSG sur pension (taux normal, conservé pour compatibilité) */
   CSG: 8.30,
 
   /** CRDS sur pension */
@@ -404,6 +417,18 @@ export const COTISATIONS = {
 
   /** CASA (Contribution Additionnelle de Solidarité pour l'Autonomie) */
   CASA: 0.30,
+};
+
+/**
+ * Régimes de prélèvements sociaux sur pension, selon le revenu fiscal de référence (RFR).
+ * La CASA (0,3 %) n'est due qu'aux taux médian et normal. La CRDS (0,5 %) ne s'applique
+ * pas en cas d'exonération.
+ */
+export const REGIMES_CSG = {
+  exonere: { label: 'Exonération (RFR faible)', csg: 0, crds: 0, casa: 0 },
+  reduit:  { label: 'Taux réduit (CSG 3,8 %)', csg: 3.8, crds: 0.5, casa: 0 },
+  median:  { label: 'Taux médian (CSG 6,6 %)', csg: 6.6, crds: 0.5, casa: 0.3 },
+  normal:  { label: 'Taux normal (CSG 8,3 %)', csg: 8.3, crds: 0.5, casa: 0.3 },
 };
 
 // =============================================================================

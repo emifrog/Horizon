@@ -65,12 +65,13 @@ test('getCoefficientRAFPAge(57) = 1.00 (plancher, pas de minoration avant 62)',
 test('getCoefficientRAFPAge(75) = 1.80 (clamp haut)',
   getCoefficientRAFPAge(75) === 1.80);
 
-// Barème PFR SPV
-test('PFR_SPV.ANCIENNETE_MIN = 20', PFR_SPV.ANCIENNETE_MIN === 20);
-test('PFR_SPV.ANCIENNETE_MIN_INCAPACITE = 15', PFR_SPV.ANCIENNETE_MIN_INCAPACITE === 15);
+// Barème NPFR (décret 2017-912 : seuils 15 ans / 10 ans incapacité)
+test('PFR_SPV.ANCIENNETE_MIN = 15 (NPFR)', PFR_SPV.ANCIENNETE_MIN === 15);
+test('PFR_SPV.ANCIENNETE_MIN_INCAPACITE = 10 (NPFR incapacité)', PFR_SPV.ANCIENNETE_MIN_INCAPACITE === 10);
 
-test('getMontantPFRSPV(10) = 0', getMontantPFRSPV(10) === 0);
-test('getMontantPFRSPV(15) = 512 (cas incapacité)', getMontantPFRSPV(15) === 512);
+test('getMontantPFRSPV(9) = 0 (< 10 ans)', getMontantPFRSPV(9) === 0);
+test('getMontantPFRSPV(10) = 512 (seuil incapacité NPFR)', getMontantPFRSPV(10) === 512);
+test('getMontantPFRSPV(15) = 512 (seuil standard)', getMontantPFRSPV(15) === 512);
 test('getMontantPFRSPV(20) = 1025', getMontantPFRSPV(20) === 1025);
 test('getMontantPFRSPV(25) = 2050', getMontantPFRSPV(25) === 2050);
 test('getMontantPFRSPV(30) = 2690', getMontantPFRSPV(30) === 2690);

@@ -338,6 +338,17 @@
                     </div>
                   </div>
 
+                  <div class="form-group">
+                    <label for="tauxCSG" class="form-label">Régime de prélèvements sociaux (CSG)</label>
+                    <select id="tauxCSG" name="tauxCSG" class="form-input" aria-describedby="tauxCSG-hint">
+                      <option value="normal" selected>Taux normal — CSG 8,3 %</option>
+                      <option value="median">Taux médian — CSG 6,6 %</option>
+                      <option value="reduit">Taux réduit — CSG 3,8 % (sans CASA)</option>
+                      <option value="exonere">Exonération (RFR faible)</option>
+                    </select>
+                    <span class="form-hint" id="tauxCSG-hint">Le taux dépend de votre revenu fiscal de référence (RFR). Détermine la pension nette estimée.</span>
+                  </div>
+
                   <!-- Section double statut SPP/SPV -->
                   <div class="form-group">
                     <div class="form-checkbox">

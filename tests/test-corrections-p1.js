@@ -158,6 +158,53 @@ test('Avec 8 trim hors SPP : condition 27 ans remplie → bonification 1/5e > 0'
 console.log('');
 
 // ============================================================================
+// #12 — Conditions de la majoration prime de feu (17 ans SPP + différée à 57 ans)
+// ============================================================================
+console.log('📋 #12 : Conditions prime de feu (17 ans SPP + 57 ans)');
+console.log('───────────────────────────────────────────────────────────────────');
+
+// Départ à 55 ans (< 57) → majoration prime de feu DIFFÉRÉE (0).
+const pfDiffere = calculerPension({
+  indiceBrut: 500, trimestresLiquidables: 140, trimestresAssurance: 140,
+  trimestresServicesEffectifs: 140, trimestresSPP: 140, trimestresBonificationSPP: 20, trimestresTotal: 140,
+  trimestresRequis: 172, dateNaissance: new Date(1975, 0, 1), dateDepart: new Date(2030, 0, 1),
+});
+test('Prime de feu différée avant 57 ans (majoration = 0)', pfDiffere.majorationPrimeFeu.mensuelle === 0,
+  `majoration: ${pfDiffere.majorationPrimeFeu.mensuelle}`);
+
+// Moins de 17 ans SPP (60 trim < 68) → pas de majoration, même à 62 ans.
+const pfCourt = calculerPension({
+  indiceBrut: 500, trimestresLiquidables: 60, trimestresAssurance: 60,
+  trimestresServicesEffectifs: 60, trimestresSPP: 60, trimestresTotal: 60,
+  trimestresRequis: 172, dateNaissance: new Date(1965, 0, 1), dateDepart: new Date(2027, 0, 1),
+});
+test('Prime de feu refusée si < 17 ans SPP (majoration = 0)', pfCourt.majorationPrimeFeu.mensuelle === 0,
+  `majoration: ${pfCourt.majorationPrimeFeu.mensuelle}`);
+
+console.log('');
+
+// ============================================================================
+// #13 — Régimes de prélèvements CSG (selon RFR)
+// ============================================================================
+console.log('📋 #13 : Régimes CSG (net selon RFR)');
+console.log('───────────────────────────────────────────────────────────────────');
+
+const baseCSG = {
+  indiceBrut: 500, trimestresLiquidables: 172, trimestresAssurance: 172,
+  trimestresServicesEffectifs: 172, trimestresRequis: 172,
+  dateNaissance: new Date(1965, 0, 1), dateDepart: new Date(2027, 0, 1),
+};
+const pNormal = calculerPension({ ...baseCSG, regimeCSG: 'normal' });
+const pExonere = calculerPension({ ...baseCSG, regimeCSG: 'exonere' });
+const pReduit = calculerPension({ ...baseCSG, regimeCSG: 'reduit' });
+test('CSG : net exonéré > net réduit > net normal', pExonere.pensionNetteMensuelle > pReduit.pensionNetteMensuelle
+  && pReduit.pensionNetteMensuelle > pNormal.pensionNetteMensuelle);
+test('CSG exonéré : net = brut (aucun prélèvement)',
+  pExonere.pensionNetteMensuelle === pExonere.pensionBruteMensuelle);
+
+console.log('');
+
+// ============================================================================
 // M3 — Annulation de décote FIXE à 62 ans (catégorie active)
 // ============================================================================
 console.log('📋 M3 : Décote — annulation FIXE à 62 ans (catégorie active)');

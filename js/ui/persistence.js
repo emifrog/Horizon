@@ -38,6 +38,7 @@ const FIELDS = [
   'dureeNBI',
   'montantPFR',
   'anneesCotisationRAFP',
+  'tauxCSG',
   'doubleStatut',
   'montantPFRSPV',
 ];
